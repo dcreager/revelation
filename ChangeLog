@@ -2,6 +2,11 @@ Revelation changelog
 
 ---------------[ xxxx-xx-xx : 0.4.1 ]---------------
 
+2005-02-09  Erik Grinaker <erikg@codepoet.no>
+
+	* make a workaround for a gnome-python 2.9.x crasher bug with
+	the session client
+
 2005-02-05  Erik Grinaker <erikg@codepoet.no>
 
 	* monitor events on preference, password generator and search

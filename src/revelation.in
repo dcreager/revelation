@@ -22,7 +22,7 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 
-import gnome, gtk, gtk.gdk, os, pwd, sys
+import gnome, gobject, gtk, gtk.gdk, os, pwd, sys
 
 if "@pythondir@" not in sys.path:
 	sys.path.insert(0, "@pythondir@")
@@ -83,9 +83,11 @@ class Revelation(ui.App):
 		self.datafile.connect("content-changed", self.__cb_file_content_changed)
 		self.entryclipboard.connect("content-toggled", lambda w,d: self.__state_clipboard(d))
 		self.locktimer.connect("ring", self.__cb_file_autolock)
-		self.sessionclient.connect("die", lambda w: self.quit())
-		self.sessionclient.connect("save-yourself", self.__cb_session_save)
 		self.undoqueue.connect("changed", lambda w: self.__state_undo(self.undoqueue.get_undo_action(), self.undoqueue.get_redo_action()))
+
+		# workaround for gnome-python 2.9.x api bug
+		gobject.GObject.connect(self.sessionclient, "die", lambda w: self.quit())
+		gobject.GObject.connect(self.sessionclient, "save-yourself", self.__cb_session_save)
 
 		self.config.monitor("search/folders",		lambda k,v,d: setattr(self.entrysearch, "folders", v))
 		self.config.monitor("search/namedesc",		lambda k,v,d: setattr(self.entrysearch, "namedesconly", v))
