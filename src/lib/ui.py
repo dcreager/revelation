@@ -604,6 +604,7 @@ class PasswordEntry(Entry):
 
 	def __init__(self, cfg = None, password = None):
 		Entry.__init__(self, password)
+		self.set_visibility(False)
 
 		self.config	= cfg
 		self.clipboard	= data.Clipboard()

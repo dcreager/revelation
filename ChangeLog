@@ -7,6 +7,8 @@ Revelation changelog
 	* monitor events on preference, password generator and search
 	dialogs
 
+	* check data file password strength
+
 2005-02-04  Erik Grinaker <erikg@codepoet.no>
 
 	* preference, password generator and search dialogs are no

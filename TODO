@@ -10,6 +10,7 @@
 - update documentation
 - gnome panel applets (account lookup, password generator etc)
   - show complete account tree as a popup-submenu of the applet
+- check all dialog buttons, and use better stock items where useful
 
 0.5.x:
 - ensure complete UTF-8 support
@@ -23,7 +24,6 @@
   - add remote desktop account type
   - clean up the account types
   - possibility for custom account types
-  - add "note" entry type (large field for free-text data)
 - file merging (union - this *really* need unique entry ids)
 - accessibility improvements
 - translations

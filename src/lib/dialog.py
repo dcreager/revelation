@@ -498,13 +498,14 @@ class Password(Message):
 		self.contents.pack_start(self.sect_passwords)
 
 
-	def add_entry(self, name):
+	def add_entry(self, name, entry = None):
 		"Adds a password entry to the dialog"
 
-		entry = ui.Entry()
-		entry.set_visibility(False)
-		self.sect_passwords.append_widget(name, entry)
+		if entry == None:
+			entry = ui.Entry()
+			entry.set_visibility(False)
 
+		self.sect_passwords.append_widget(name, entry)
 		self.entries.append(entry)
 
 		return entry
@@ -537,30 +538,64 @@ class PasswordChange(Password):
 		if password is not None:
 			self.entry_current = self.add_entry("Current password")
 
-		self.entry_new = self.add_entry("New password")
+		self.entry_new = self.add_entry("New password", ui.PasswordEntry())
 		self.entry_confirm = self.add_entry("Confirm password")
+
+		self.entry_confirm.connect("changed", self.__cb_check_match)
+		self.entry_confirm.connect("focus-in-event", self.__cb_check_match)
+		self.entry_confirm.connect("focus-out-event", self.__cb_check_match)
+
+
+	def __cb_check_match(self, widget, data = None):
+		"Checks if passwords match"
+
+		password = self.entry_new.get_text()
+		confirm = self.entry_confirm.get_text()
+
+		if len(confirm) == 0 or self.entry_confirm.is_focus() == False:
+			color = ui.Entry().rc_get_style().base[gtk.STATE_NORMAL]
+
+		elif password == confirm:
+			color = gtk.gdk.color_parse("#baffba")
+
+		else:
+			color = gtk.gdk.color_parse("#ffbaba")
+
+		self.entry_confirm.modify_base(gtk.STATE_NORMAL, color)
 
 
 	def run(self):
 		"Displays the dialog"
 
 		while 1:
-			if Password.run(self) == gtk.RESPONSE_OK:
-
-				if self.password is not None and self.entry_current.get_text() != self.password:
-					Error(self, "Incorrect password", "The password you entered as the current file password is incorrect.").run()
-
-				elif self.entry_new.get_text() != self.entry_confirm.get_text():
-					Error(self, "Passwords don't match", "The password and password confirmation you entered does not match.").run()
-
-				else:
-					password = self.entry_new.get_text()
-					self.destroy()
-					return password
-
-			else:
+			if Password.run(self) != gtk.RESPONSE_OK:
 				self.destroy()
 				raise CancelError
+
+			elif self.password is not None and self.entry_current.get_text() != self.password:
+				Error(self, "Incorrect password", "The password you entered as the current file password is incorrect.").run()
+
+			elif self.entry_new.get_text() != self.entry_confirm.get_text():
+				Error(self, "Passwords don't match", "The password and password confirmation you entered does not match.").run()
+
+			else:
+				password = self.entry_new.get_text()
+
+				try:
+					util.check_password(password)
+
+				except ValueError, res:
+					response = Warning(
+						self, "Use insecure password?",
+						"The password you entered is not secure; " + str(res).lower() + ". Are you sure you want to use it?",
+						( ( gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL ), ( gtk.STOCK_OK, gtk.RESPONSE_CANCEL ) )
+					).run()
+
+					if response == gtk.RESPONSE_CANCEL:
+						continue
+
+				self.destroy()
+				return password
 
 
 
@@ -606,7 +641,8 @@ class PasswordOpen(Password):
 	def __init__(self, parent, filename):
 		Password.__init__(
 			self, parent, "Enter file password",
-			"The file '%s' is encrypted. Please enter the file password to open it." % filename
+			"The file '%s' is encrypted. Please enter the file password to open it." % filename,
+			gtk.STOCK_OPEN
 		)
 
 		self.entry_password = self.add_entry("Password")
@@ -633,11 +669,34 @@ class PasswordSave(Password):
 	def __init__(self, parent, filename):
 		Password.__init__(
 			self, parent, "Enter password for file",
-			"Please enter a password for the file '%s'. You will need this password to open the file at a later time." % filename
+			"Please enter a password for the file '%s'. You will need this password to open the file at a later time." % filename,
+			gtk.STOCK_SAVE
 		)
 
-		self.entry_new		= self.add_entry("New password")
+		self.entry_new		= self.add_entry("New password", ui.PasswordEntry())
 		self.entry_confirm	= self.add_entry("Confirm password")
+
+		self.entry_confirm.connect("changed", self.__cb_check_match)
+		self.entry_confirm.connect("focus-in-event", self.__cb_check_match)
+		self.entry_confirm.connect("focus-out-event", self.__cb_check_match)
+
+
+	def __cb_check_match(self, widget, data = None):
+		"Checks if passwords match"
+
+		password = self.entry_new.get_text()
+		confirm = self.entry_confirm.get_text()
+
+		if len(confirm) == 0 or self.entry_confirm.is_focus() == False:
+			color = ui.Entry().rc_get_style().base[gtk.STATE_NORMAL]
+
+		elif password == confirm:
+			color = gtk.gdk.color_parse("#baffba")
+
+		else:
+			color = gtk.gdk.color_parse("#ffbaba")
+
+		self.entry_confirm.modify_base(gtk.STATE_NORMAL, color)
 
 
 	def run(self):
@@ -656,8 +715,22 @@ class PasswordSave(Password):
 
 			else:
 				password = self.entry_new.get_text()
-				self.destroy()
 
+				try:
+					util.check_password(password)
+
+				except ValueError, res:
+					response = Warning(
+						self, "Use insecure password?",
+						"The password you entered is not secure; " + str(res).lower() + ". Are you sure you want to use it?",
+						( ( gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL ), ( gtk.STOCK_OK, gtk.RESPONSE_CANCEL ) )
+					).run()
+
+					if response == gtk.RESPONSE_CANCEL:
+						continue
+
+
+				self.destroy()
 				return password
 
 
