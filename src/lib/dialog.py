@@ -966,6 +966,9 @@ class Find(Utility):
 		self.show_all()
 		self.entry_string.grab_focus()
 
+		if EVENT_FILTER != None:
+			self.window.add_filter(EVENT_FILTER)
+
 
 
 class PasswordGenerator(Utility):
@@ -1019,6 +1022,9 @@ class PasswordGenerator(Utility):
 
 		self.show_all()
 		self.get_button(0).grab_focus()
+
+		if EVENT_FILTER != None:
+			self.window.add_filter(EVENT_FILTER)
 
 
 
@@ -1145,4 +1151,7 @@ class Preferences(Utility):
 		"Runs the preference dialog"
 
 		self.show_all()
+
+		if EVENT_FILTER != None:
+			self.window.add_filter(EVENT_FILTER)
 

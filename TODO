@@ -1,6 +1,8 @@
 0.4.x:
 - string cleanups
-- password strength check - build python-crack as part of revelation
+- check file passwords with cracklib
+- add "password strength" dialog
+- password checker should check capital/small letters etc
 - add import/export of PasswordSafe files
 - add import/export of GPasMan files
 - add import/export of zsafe files
