@@ -1,11 +1,13 @@
 Revelation changelog
 
----------------[ xxx-xx-xx : 0.3.4 ]---------------
+---------------[ 2004-09-27 : 0.3.4 ]---------------
 
 2004-09-27  Erik Grinaker <erikg@codepoet.no>
 
 	* created a workaround for a possible python bug which crashed
 	revelation when editing an entry on certain systems
+
+	* bumped version number to 0.3.4
 
 2004-09-23  Erik Grinaker <erikg@codepoet.no>
 
@@ -15,7 +17,6 @@ Revelation changelog
 	an unhandled exception occurs
 
 	* activate searchbar button when hitting return in the entry
-
 
 2004-09-07  Erik Grinaker <erikg@codepoet.no>
 
