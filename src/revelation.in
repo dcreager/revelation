@@ -962,24 +962,27 @@ class Revelation(ui.App):
 	def entry_find(self):
 		"Searches for an entry"
 
+		def cb_response(widget, response):
+			string = widget.entry_string.get_text()
+			entrytype = widget.dropdown.get_active_type()
+
+			if response == dialog.RESPONSE_NEXT:
+				self.__entry_find(widget, string, entrytype, data.SEARCH_NEXT)
+				widget.entry_string.grab_focus()
+
+			elif response == dialog.RESPONSE_PREVIOUS:
+				self.__entry_find(widget, string, entrytype, data.SEARCH_PREVIOUS)
+				widget.entry_string.grab_focus()
+
+			else:
+				widget.destroy()
+
+
 		d = dialog.Find(self, self.config)
 		d.entry_string.set_text(self.entrysearch.string)
 		d.dropdown.set_active_type(self.entrysearch.type)
-
-		while 1:
-			response	= d.run()
-			string		= d.entry_string.get_text()
-			entrytype	= d.dropdown.get_active_type()
-
-			if response == dialog.RESPONSE_NEXT:
-				self.__entry_find(d, string, entrytype, data.SEARCH_NEXT)
-
-			elif response == dialog.RESPONSE_PREVIOUS:
-				self.__entry_find(d, string, entrytype, data.SEARCH_PREVIOUS)
-
-			else:
-				d.destroy()
-				break
+		d.connect("response", cb_response)
+		d.run()
 
 
 	def entry_goto(self, iters):

@@ -908,6 +908,7 @@ class Find(Utility):
 		)
 
 		self.config = cfg
+		self.set_modal(False)
 
 		section = self.add_section("Find an entry")
 
@@ -965,8 +966,6 @@ class Find(Utility):
 		self.show_all()
 		self.entry_string.grab_focus()
 
-		return Utility.run(self)
-
 
 
 class PasswordGenerator(Utility):
@@ -979,6 +978,8 @@ class PasswordGenerator(Utility):
 		)
 
 		self.config = cfg
+		self.set_modal(False)
+
 		self.section = self.add_section("Password Generator")
 
 		self.entry = ui.Entry()
@@ -997,23 +998,27 @@ class PasswordGenerator(Utility):
 		self.tooltips.set_tip(self.check_ambiguous, "When enabled, generated passwords will not contain ambiguous characters - like 0 (zero) and O (capital o)")
 		self.section.append_widget(None, self.check_ambiguous)
 
+		self.connect("response", self.__cb_response)
+
+
+	def __cb_response(self, widget, response):
+		"Callback for dialog responses"
+
+		if response == gtk.RESPONSE_OK:
+			self.entry.set_text(util.generate_password(
+				self.spin_pwlen.get_value(),
+				self.check_ambiguous.get_active()
+			))
+
+		else:
+			self.destroy()
+
 
 	def run(self):
 		"Displays the dialog"
 
 		self.show_all()
 		self.get_button(0).grab_focus()
-
-		while 1:
-			if Utility.run(self) == gtk.RESPONSE_OK:
-				self.entry.set_text(util.generate_password(
-					self.spin_pwlen.get_value(),
-					self.check_ambiguous.get_active()
-				))
-
-			else:
-				self.destroy()
-				break
 
 
 
@@ -1023,6 +1028,7 @@ class Preferences(Utility):
 	def __init__(self, parent, cfg):
 		Utility.__init__(self, parent, "Preferences")
 		self.config = cfg
+		self.set_modal(False)
 
 		self.notebook = ui.Notebook()
 		self.vbox.pack_start(self.notebook)
@@ -1033,6 +1039,8 @@ class Preferences(Utility):
 
 		self.page_gotocmd = self.notebook.create_page("Goto commands")
 		self.__init_section_gotocmd(self.page_gotocmd)
+
+		self.connect("response", lambda w,d: self.destroy())
 
 
 	def __init_section_file(self, page):
@@ -1137,6 +1145,4 @@ class Preferences(Utility):
 		"Runs the preference dialog"
 
 		self.show_all()
-		Utility.run(self)
-		self.destroy()
 

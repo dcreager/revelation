@@ -5,6 +5,9 @@ New features:
 - option to autolock file after a period of inactivity
 - ask user to reload file if it is changed outside revelation
 
+Bugfixes:
+- prefs, password generator and search dialogs are no longer modal
+
 
 xxxx-xx-xx: Revelation 0.4.0
 ============================

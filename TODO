@@ -1,6 +1,5 @@
 0.4.x:
 - string cleanups
-- don't use modal dialogs unless absolutely necessary
 - password strength check - build python-crack as part of revelation
 - add import/export of PasswordSafe files
 - add import/export of GPasMan files
@@ -9,8 +8,6 @@
 - update documentation
 - gnome panel applets (account lookup, password generator etc)
   - show complete account tree as a popup-submenu of the applet
-- bugfix: make autolock filter trigger on certain events only
-  (needs pygtk bug #156948 to be fixed first)
 
 0.5.x:
 - ensure complete UTF-8 support
@@ -35,6 +32,8 @@
   available
 - port to gtk+ 2.6 / gnome 2.10
   - gtk.AboutDialog
+- bugfix: make autolock filter trigger on certain events only
+  (needs pygtk bug #156948 to be fixed first)
 
 1.0.x:
 - attempt full HIG compliance
