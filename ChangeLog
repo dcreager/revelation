@@ -1,5 +1,13 @@
 Revelation changelog
 
+---------------[ xxx-xx-xx : 0.3.4 ]---------------
+
+2004-09-07  Erik Grinaker <erikg@codepoet.no>
+
+	* fixed a bug which displayed the Domain fields tooltip as
+	its name
+
+
 ---------------[ 2004-08-30 : 0.3.3 ]---------------
 
 2004-08-30  Erik Grinaker <erikg@codepoet.no>
