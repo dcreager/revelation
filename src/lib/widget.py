@@ -972,7 +972,12 @@ class App(gnome.ui.App):
 		"Adds a toolbar"
 
 		# FIXME: use bonobo.ui.DOCK: constants when ported to pygtk 2.4
-		gnome.ui.App.add_toolbar(self, toolbar, name, 16 | 1, 0, band, 0, 0)
+		behavior = 1
+
+		if revelation.data.config_get("/desktop/gnome/interface/toolbar_detachable") == gtk.FALSE:
+			behavior |= 16
+
+		gnome.ui.App.add_toolbar(self, toolbar, name, behavior, 0, band, 0, 0)
 
 		toolbar.connect("show", self.__cb_toolbar_show, name)
 		toolbar.connect("hide", self.__cb_toolbar_hide, name)

@@ -805,7 +805,10 @@ def config_get(key):
 
 	client = gconf.client_get_default()
 
-	value = client.get("/apps/revelation/" + key)
+	if key[:1] != "/":
+		key = "/apps/revelation/" + key
+
+	value = client.get(key)
 
 	if value is None:
 		raise ConfigError

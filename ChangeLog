@@ -7,6 +7,8 @@ Revelation changelog
 	* fixed a bug which displayed the Domain fields tooltip as
 	its name
 
+	* the searchbar follows the detachable toolbar setting in gnome
+
 
 ---------------[ 2004-08-30 : 0.3.3 ]---------------
 
