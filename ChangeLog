@@ -1,5 +1,12 @@
 Revelation changelog
 
+---------------[ xxxx-xx-xx : 0.3.5 ]---------------
+
+2004-10-20  Erik Grinaker <erikg@codepoet.no>
+
+	* fixed a bug which broke the figaro's password manager importer
+
+
 ---------------[ 2004-09-27 : 0.3.4 ]---------------
 
 2004-09-27  Erik Grinaker <erikg@codepoet.no>

@@ -1,3 +1,9 @@
+xxxx-xx-xx: Revelation 0.3.5
+============================
+
+Bugfixes:
+- fixed a bug which broke the figaro's password manager importer
+
 2004-09-27: Revelation 0.3.4
 ============================
 

@@ -196,7 +196,7 @@ class FPM(base.DataHandler):
 		while entrynode is not None:
 
 			if entrynode.type != "element" or entrynode.name != "PasswordItem":
-				node = node.next
+				entrynode = entrynode.next
 				continue
 
 			parent = None
