@@ -9,6 +9,8 @@ Revelation changelog
 	* the user may attempt to continue running Revelation when
 	an unhandled exception occurs
 
+	* activate searchbar button when hitting return in the entry
+
 
 2004-09-07  Erik Grinaker <erikg@codepoet.no>
 

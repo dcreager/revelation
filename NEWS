@@ -5,6 +5,7 @@ Bugfixes:
 - the Domain field had the tooltip set as its name
 - the searchbar follows the detachable toolbar setting in gnome
 - ask to continue running when an unknown error occurs
+- activate searchbar button when hitting return in the entry
 
 
 2004-08-30: Revelation 0.3.3
