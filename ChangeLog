@@ -7,6 +7,8 @@ Revelation changelog
 	* preference, password generator and search dialogs are no
 	longer modal
 
+	* check password strength while entered, using cracklib
+
 2005-02-03  Erik Grinaker <erikg@codepoet.no>
 
 	* added option for autolocking file when inactive

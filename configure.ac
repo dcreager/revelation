@@ -5,6 +5,40 @@ AM_INIT_AUTOMAKE(revelation, 0.4.0-pre2)
 
 
 dnl some macros
+AC_DEFUN(AC_CRACKLIB_DICTPATH,
+[
+	AC_MSG_CHECKING([cracklib dictionary database])
+	AC_ARG_WITH(cracklib-dict, [  --with-cracklib-dict=PATH  path to cracklib dictionary database], CRACK_DICTPATH=$withval)
+
+	if test -z "$CRACK_DICTPATH"; then
+		cat > dictpath-test.c << EOF
+#include <crack.h>
+
+int main()
+{
+	printf(CRACKLIB_DICTPATH);
+	return 0;
+}
+EOF
+
+		${CC-cc} -o dictpath-test $CFLAGS dictpath-test.c >/dev/null 2>&1
+
+		if test -e dictpath-test; then
+			CRACK_DICTPATH=`./dictpath-test`
+			AC_MSG_RESULT($CRACK_DICTPATH)
+		else
+			CRACK_DICTPATH="$datadir/revelation/pwdict"
+			AC_MSG_RESULT(using builtin)
+		fi
+
+		rm -f dictpath-test* core core.dictpath-test
+	else
+		AC_MSG_RESULT($CRACK_DICTPATH)
+	fi
+
+	AC_SUBST(CRACK_DICTPATH)
+])
+
 AC_DEFUN([AC_PYTHON_MODULE],[
 	AC_MSG_CHECKING(python module: $1)
 	python -c "import $1" 2>/dev/null
@@ -25,9 +59,7 @@ AC_DEFUN([AC_PYTHON_MODULE],[
 
 AC_DEFUN(PFK_PYTHON_PATH,[
 	AC_MSG_CHECKING(Python include path)
-	AC_ARG_WITH(python-include, 
-		[  --with-python-include=PATH  path to where Python.h lives 
-			(default: /usr/local/include/pythonN.M], PY_INCLUDE=$withval )
+	AC_ARG_WITH(python-include, [  --with-python-include=PATH  path to where Python.h lives], PY_INCLUDE=$withval )
 
 	if test -z "$PY_INCLUDE" ; then
 		PY_INCLUDE=$PYTHON
@@ -37,17 +69,30 @@ AC_DEFUN(PFK_PYTHON_PATH,[
 	fi
 
 	AC_MSG_RESULT($PY_INCLUDE)
-	AC_SUBST(PY_INCLUDE)dnl
+	AC_SUBST(PY_INCLUDE)
 ])
+
 
 
 dnl check for dependencies
 AC_PROG_CC()
+
 AM_PATH_PYTHON(2.3)
 PFK_PYTHON_PATH()
 PKG_CHECK_MODULES(PYGTK, pygtk-2.0 >= 2.3.90)
 PKG_CHECK_MODULES(GNOME_PYTHON, gnome-python-2.0 >= 2.5.90)
 AC_PYTHON_MODULE(Crypto, yes)
+
+AC_CHECK_LIB(crack, FascistCheck, [], AC_MSG_ERROR(cracklib2 not found))
+AC_CRACKLIB_DICTPATH
+AC_PATH_PROG(CRACK_MKDICT, mkdict, no)
+if test x"$CRACK_MKDICT" = xno; then
+	AC_MSG_ERROR([mkdict executable from cracklib not found in your path])
+fi
+AC_PATH_PROG(CRACK_PACKER, packer, no)
+if test x"$CRACK_PACKER" = xno; then
+	AC_MSG_ERROR([packer executable from cracklib not found in your path])
+fi
 
 AC_PATH_PROG(GCONFTOOL, gconftool-2, no)
 if test x"$GCONFTOOL" = xno; then
@@ -78,5 +123,7 @@ AC_OUTPUT([
 	src/lib/datahandler/Makefile
 	test/Makefile
 	wrap/Makefile
+	wrap/authmanager/Makefile
+	wrap/crack/Makefile
 ])
 

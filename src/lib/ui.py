@@ -611,7 +611,31 @@ class PasswordEntry(Entry):
 		if cfg != None:
 			self.config.monitor("view/passwords", lambda k,v,d: self.set_visibility(v))
 
+		self.connect("changed", self.__cb_check_password)
+		self.connect("focus-in-event", self.__cb_check_password)
+		self.connect("focus-out-event", self.__cb_check_password)
 		self.connect("populate-popup", self.__cb_popup)
+
+
+	def __cb_check_password(self, widget, data = None):
+		"Callback for changed, checks the password"
+
+		password = self.get_text()
+
+		if len(password) == 0 or self.is_focus() == False:
+			color = Entry().rc_get_style().base[gtk.STATE_NORMAL]
+
+		else:
+			try:
+				util.check_password(password)
+
+			except ValueError:
+				color = gtk.gdk.color_parse("#ffbaba")
+
+			else:
+				color = gtk.gdk.color_parse("#baffba")
+
+		self.modify_base(gtk.STATE_NORMAL, color)
 
 
 	def __cb_popup(self, widget, menu):

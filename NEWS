@@ -2,6 +2,7 @@ xxxx-xx-xx: Revelation 0.4.1
 ============================
 
 New features:
+- check password strength while entering, using cracklib
 - option to autolock file after a period of inactivity
 - ask user to reload file if it is changed outside revelation
 
