@@ -1067,7 +1067,7 @@ class Preferences(Utility):
 		self.section_file.append_widget(None, hbox)
 
 		# check-button for autoloading a file
-		self.check_autoload = ui.CheckButton("Open file on startup:")
+		self.check_autoload = ui.CheckButton("Open file on startup")
 		ui.config_bind(self.config, "file/autoload", self.check_autoload)
 		self.check_autoload.connect("toggled", lambda w: self.entry_autoload_file.set_sensitive(w.get_active()))
 

@@ -438,7 +438,6 @@ class Revelation(ui.App):
 
 		if self.config.get("file/autolock") == True:
 			self.locktimer.stop()
-			print "lock"
 			self.file_lock()
 			self.locktimer.start(self.config.get("file/autolock_timeout") * 60)
 
