@@ -80,6 +80,7 @@ class Revelation(ui.App):
 		self.undoqueue		= data.UndoQueue()
 
 		self.datafile.connect("changed", lambda w,f: self.__state_file(f))
+		self.datafile.connect("content-changed", self.__cb_file_content_changed)
 		self.entryclipboard.connect("content-toggled", lambda w,d: self.__state_clipboard(d))
 		self.sessionclient.connect("die", lambda w: self.quit())
 		self.sessionclient.connect("save-yourself", self.__cb_session_save)
@@ -405,6 +406,19 @@ class Revelation(ui.App):
 
 		else:
 			sys.exit(1)
+
+
+	def __cb_file_content_changed(self, widget, file):
+		"Callback for changed file"
+
+		try:
+			print "changed!"
+
+			if dialog.FileChanged(self, file).run() == True:
+				self.file_open(self.datafile.get_file(), self.datafile.get_password())
+
+		except dialog.CancelError:
+			self.statusbar.set_status("Open cancelled")
 
 
 	def __cb_session_save(self, widget, phase, what, end, interaction, fast, data = None):
@@ -1141,7 +1155,7 @@ class Revelation(ui.App):
 		"Opens a new file"
 
 		try:
-			self.__save_changes(dialog.FileChangedNew)
+			self.__save_changes(dialog.FileChangesNew)
 
 			self.entrystore.clear()
 			self.datafile.close()
@@ -1156,7 +1170,7 @@ class Revelation(ui.App):
 		"Opens a data file"
 
 		try:
-			self.__save_changes(dialog.FileChangedOpen)
+			self.__save_changes(dialog.FileChangesOpen)
 
 			if file is None:
 				file = dialog.OpenFileSelector(self).run()
@@ -1199,7 +1213,7 @@ class Revelation(ui.App):
 		"Quits the application"
 
 		try:
-			self.__save_changes(dialog.FileChangedQuit)
+			self.__save_changes(dialog.FileChangesQuit)
 
 			self.clipboard.clear()
 			self.entryclipboard.clear()

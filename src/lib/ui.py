@@ -42,6 +42,7 @@ STOCK_NEXT			= "revelation-next"
 STOCK_OVERWRITE			= "revelation-overwrite"
 STOCK_PASSWORD_CHANGE		= "revelation-password-change"
 STOCK_PREVIOUS			= "revelation-previous"
+STOCK_RELOAD			= "revelation-reload"
 STOCK_REMOVE			= "revelation-remove"
 
 
@@ -1140,6 +1141,7 @@ class ItemFactory(gtk.IconFactory):
 			( STOCK_OVERWRITE,	"_Overwrite",	gtk.STOCK_SAVE_AS ),
 			( STOCK_PASSWORD_CHANGE,"_Change",	"stock_lock-ok" ),
 			( STOCK_PREVIOUS,	"Pre_vious",	gtk.STOCK_GO_BACK ),
+			( STOCK_RELOAD,		"_Reload",	gtk.STOCK_REFRESH ),
 			( STOCK_REMOVE,		"Re_move",	gtk.STOCK_DELETE )
 		)
 

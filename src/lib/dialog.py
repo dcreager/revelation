@@ -188,6 +188,26 @@ class Warning(Message):
 ##### QUESTION DIALOGS #####
 
 class FileChanged(Warning):
+	"Notifies about changed file"
+
+	def __init__(self, parent, filename):
+		Warning.__init__(
+			self, parent, "File has changed", "The current file '%s' has changed. Do you want to reload it?" % filename,
+			( ( gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL ), ( ui.STOCK_RELOAD, gtk.RESPONSE_OK ) )
+		)
+
+
+	def run(self):
+		"Displays the dialog"
+
+		if Warning.run(self) == gtk.RESPONSE_OK:
+			return True
+
+		else:
+			raise CancelError
+
+
+class FileChanges(Warning):
 	"Asks to save changes before proceeding"
 
 	def __init__(self, parent, title, text):
@@ -213,33 +233,33 @@ class FileChanged(Warning):
 
 
 
-class FileChangedNew(FileChanged):
+class FileChangesNew(FileChanges):
 	"Asks the user to save changes when creating a new file"
 
 	def __init__(self, parent):
-		FileChanged.__init__(
+		FileChanges.__init__(
 			self, parent, "Save changes to current file?",
 			"You have made changes which have not been saved. If you create a new file without saving then these changes will be lost."
 		)
 
 
 
-class FileChangedOpen(FileChanged):
+class FileChangesOpen(FileChanges):
 	"Asks the user to save changes when opening a different file"
 
 	def __init__(self, parent):
-		FileChanged.__init__(
+		FileChanges.__init__(
 			self, parent, "Save changes before opening?",
 			"You have made changes which have not been saved. If you open a different file without saving then these changes will be lost."
 		)
 
 
 
-class FileChangedQuit(FileChanged):
+class FileChangesQuit(FileChanges):
 	"Asks the user to save changes when quitting"
 
 	def __init__(self, parent):
-		FileChanged.__init__(
+		FileChanges.__init__(
 			self, parent, "Save changes before quitting?",
 			"You have made changes which have not been saved. If you quit without saving, then these changes will be lost."
 		)

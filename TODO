@@ -8,12 +8,10 @@
 - option for autolocking the file after a period of inactivity
 - sorting of the tree
 - update documentation
-- monitor file for changes
 - gnome panel applets (account lookup, password generator etc)
   - show complete account tree as a popup-submenu of the applet
 
 0.5.x:
-- remove support for version 0 data files
 - ensure complete UTF-8 support
 - improve the file format
   - remove namespacing for field identifiers
@@ -28,8 +26,6 @@
   - add "note" entry type (large field for free-text data)
 - file merging (union - this *really* need unique entry ids)
 - accessibility improvements
-- help / documentation
-- internationalization
 - translations
 - add a dropdown widget for list fields (like email protocol etc)
 - restructure the configuration layout
@@ -38,11 +34,11 @@
   available
 - port to gtk+ 2.6 / gnome 2.10
   - gtk.AboutDialog
-- HIG review
 
 1.0.x:
 - attempt full HIG compliance
 - misc polishing
+- help / documentation
 
 1.1.x:
 - allow users to create custom account types
