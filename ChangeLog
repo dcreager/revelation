@@ -4,6 +4,12 @@ Revelation changelog
 
 2005-02-09  Erik Grinaker <erikg@codepoet.no>
 
+	* make undo actually for for edit actions
+
+	* don't crash when redoing an undone edit action
+
+2005-02-09  Erik Grinaker <erikg@codepoet.no>
+
 	* make a workaround for a gnome-python 2.9.x crasher bug with
 	the session client
 

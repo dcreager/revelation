@@ -7,6 +7,8 @@ New features:
 - ask user to reload file if it is changed outside revelation
 
 Bugfixes:
+- make undo actually for for edit actions
+- don't crash when redoing an undone edit action
 - workaround for gnome-python 2.9.x crasher bug in the session client
 - prefs, password generator and search dialogs are no longer modal
 

@@ -570,7 +570,7 @@ class Revelation(ui.App):
 		path, preentry, postentry = actiondata
 		iter = self.entrystore.get_iter(path)
 
-		self.entrystore.update_entry(iter, postdata)
+		self.entrystore.update_entry(iter, postentry)
 		self.tree.select(iter)
 
 
@@ -644,7 +644,7 @@ class Revelation(ui.App):
 		path, preentry, postentry = actiondata
 		iter = self.entrystore.get_iter(path)
 
-		self.entrystore.update_entry(iter, postentry)
+		self.entrystore.update_entry(iter, preentry)
 		self.tree.select(iter)
 
 
