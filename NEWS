@@ -4,6 +4,7 @@ xxxx-xx-xx: Revelation 0.3.4
 Bugfixes:
 - the Domain field had the tooltip set as its name
 - the searchbar follows the detachable toolbar setting in gnome
+- ask to continue running when an unknown error occurs
 
 
 2004-08-30: Revelation 0.3.3

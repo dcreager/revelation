@@ -2,12 +2,18 @@ Revelation changelog
 
 ---------------[ xxx-xx-xx : 0.3.4 ]---------------
 
+2004-09-23  Erik Grinaker <erikg@codepoet.no>
+
+	* the searchbar follows the detachable toolbar setting in gnome
+
+	* the user may attempt to continue running Revelation when
+	an unhandled exception occurs
+
+
 2004-09-07  Erik Grinaker <erikg@codepoet.no>
 
 	* fixed a bug which displayed the Domain fields tooltip as
 	its name
-
-	* the searchbar follows the detachable toolbar setting in gnome
 
 
 ---------------[ 2004-08-30 : 0.3.3 ]---------------
