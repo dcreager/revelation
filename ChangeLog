@@ -2,6 +2,11 @@ Revelation changelog
 
 ---------------[ xxx-xx-xx : 0.3.4 ]---------------
 
+2004-09-27  Erik Grinaker <erikg@codepoet.no>
+
+	* created a workaround for a possible python bug which crashed
+	revelation when editing an entry on certain systems
+
 2004-09-23  Erik Grinaker <erikg@codepoet.no>
 
 	* the searchbar follows the detachable toolbar setting in gnome

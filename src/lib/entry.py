@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 
-import revelation, copy, gobject, gtk, time
+import revelation, gobject, gtk, time
 
 
 DATATYPE_EMAIL		= "email"
@@ -93,7 +93,13 @@ class Entry(gobject.GObject):
 	def copy(self):
 		"Create a copy of the entry"
 
-		return copy.deepcopy(self)
+		entry = type(self)()
+		entry.name = self.name
+		entry.description = self.description
+		entry.updated = self.updated
+		entry.fields = self.fields[:]
+
+		return entry
 
 
 	def get_field(self, fieldtype):

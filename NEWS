@@ -6,6 +6,7 @@ Bugfixes:
 - the searchbar follows the detachable toolbar setting in gnome
 - ask to continue running when an unknown error occurs
 - activate searchbar button when hitting return in the entry
+- workaround for crasher bug when editing an entry on some systems
 
 
 2004-08-30: Revelation 0.3.3
