@@ -32,6 +32,8 @@ import gtk, gnome.ui
 RESPONSE_NEXT		= 10
 RESPONSE_PREVIOUS	= 11
 
+EVENT_FILTER		= None
+
 
 
 ##### EXCEPTIONS #####
@@ -84,6 +86,17 @@ class Dialog(gtk.Dialog):
 
 		if index < len(buttons):
 			return buttons[index]
+
+
+	def run(self):
+		"Runs the dialog"
+
+		self.show_all()
+
+		if EVENT_FILTER != None:
+			self.window.add_filter(EVENT_FILTER)
+
+		return gtk.Dialog.run(self)
 
 
 
@@ -356,6 +369,10 @@ class FileSelector(gtk.FileChooserDialog):
 		"Displays and runs the file selector, returns the filename"
 
 		self.show_all()
+
+		if EVENT_FILTER != None:
+			self.window.add_filter(EVENT_FILTER)
+
 		response = gtk.FileChooserDialog.run(self)
 		filename = self.get_filename()
 		self.destroy()
@@ -1030,8 +1047,27 @@ class Preferences(Utility):
 		self.tooltips.set_tip(self.check_autosave, "Automatically saves the data file when an entry is added, modified or removed")
 		self.section_file.append_widget(None, self.check_autosave)
 
+		# autolock file
+		self.check_autolock = ui.CheckButton("Autolock file when inactive for")
+		ui.config_bind(self.config, "file/autolock", self.check_autolock)
+		self.check_autolock.connect("toggled", lambda w: self.spin_autolock_timeout.set_sensitive(w.get_active()))
+		self.tooltips.set_tip(self.check_autolock, "Automatically lock the data file after a period of inactivity")
+
+		self.spin_autolock_timeout = ui.SpinEntry()
+		self.spin_autolock_timeout.set_range(1, 120)
+		self.spin_autolock_timeout.set_sensitive(self.check_autolock.get_active())
+		ui.config_bind(self.config, "file/autolock_timeout", self.spin_autolock_timeout)
+		self.tooltips.set_tip(self.spin_autolock_timeout, "The period of inactivity before locking the file, in minutes")
+
+		hbox = ui.HBox()
+		hbox.set_spacing(3)
+		hbox.pack_start(self.check_autolock)
+		hbox.pack_start(self.spin_autolock_timeout)
+		hbox.pack_start(ui.Label("minutes"))
+		self.section_file.append_widget(None, hbox)
+
 		# check-button for autoloading a file
-		self.check_autoload = ui.CheckButton("Open file on startup")
+		self.check_autoload = ui.CheckButton("Open file on startup:")
 		ui.config_bind(self.config, "file/autoload", self.check_autoload)
 		self.check_autoload.connect("toggled", lambda w: self.entry_autoload_file.set_sensitive(w.get_active()))
 
