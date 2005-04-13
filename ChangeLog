@@ -6,6 +6,10 @@ Revelation changelog
 
 	* don't crash on missing revelation logo icon
 
+2005-04-13  Erik Grinaker <erikg@codepoet.no>
+
+	* added initial applet skeleton
+
 
 ---------------[ 2005-03-31 : 0.4.3 ]---------------
 
