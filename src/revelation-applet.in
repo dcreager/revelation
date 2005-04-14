@@ -48,10 +48,10 @@ class RevelationApplet(object):
 </popup>
 """
 
-		self.applet.setup_menu(menuxml (
+		self.applet.setup_menu(menuxml, (
 			( "about",	lambda w,d=None: True ),
 			( "kill",	lambda w,d=None: sys.exit() ),
-			( "prefs",	lambda w,d=None: True )
+			( "prefs",	lambda w,d=None: True ),
 		), None)
 
 		label = gtk.Label("Revelation applet")

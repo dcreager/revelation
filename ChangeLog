@@ -2,13 +2,17 @@ Revelation changelog
 
 ---------------[ xxxx-xx-xx : 0.4.4 ]---------------
 
-2005-04-06  Erik Grinaker <erikg@codepoet.no>
+2005-04-14  Erik Grinaker <erikg@codepoet.no>
 
-	* don't crash on missing revelation logo icon
+	* fix syntax error in applet
 
 2005-04-13  Erik Grinaker <erikg@codepoet.no>
 
 	* added initial applet skeleton
+
+2005-04-06  Erik Grinaker <erikg@codepoet.no>
+
+	* don't crash on missing revelation logo icon
 
 
 ---------------[ 2005-03-31 : 0.4.3 ]---------------
