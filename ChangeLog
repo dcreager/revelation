@@ -6,6 +6,8 @@ Revelation changelog
 
 	* fix syntax error in applet
 
+	* wrote initial user interface
+
 2005-04-13  Erik Grinaker <erikg@codepoet.no>
 
 	* added initial applet skeleton

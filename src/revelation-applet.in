@@ -30,7 +30,7 @@ import gnome, gnome.applet, gtk, sys
 if "@pythondir@" not in sys.path:
 	sys.path.insert(0, "@pythondir@")
 
-from revelation import config
+from revelation import config, dialog, ui, util
 
 
 class RevelationApplet(object):
@@ -40,6 +40,22 @@ class RevelationApplet(object):
 		self.applet	= applet
 		self.iid	= iid
 
+		sys.excepthook = self.__cb_exception
+
+		self.__init_facilities()
+		self.__init_ui()
+
+
+	def __init_facilities(self):
+		"Sets up facilities"
+
+		self.items	= ui.ItemFactory(self.applet)
+
+
+	def __init_ui(self):
+		"Sets up the main ui"
+
+		# set up popup menu
 		menuxml = """
 <popup name="button3">
 	<menuitem name="prefs"	verb="prefs"	label="Preferences"	pixtype="stock"	pixname="gtk-properties" />
@@ -54,8 +70,38 @@ class RevelationApplet(object):
 			( "prefs",	lambda w,d=None: True ),
 		), None)
 
-		label = gtk.Label("Revelation applet")
-		self.applet.add(label)
+		# set up ui items
+		self.icon	= ui.Image(ui.STOCK_REVELATION, ui.ICON_SIZE_APPLET)
+		self.entry	= ui.Entry()
+
+		self.applet.add(ui.HBox(self.icon, self.entry))
+
+		# set up callbacks
+		self.entry.connect("button_press_event", self.__cb_focus_entry)
+
+
+	def __cb_exception(self, type, value, trace):
+		"Callback for unhandled exceptions"
+
+		if type == KeyboardInterrupt:
+			sys.exit(1)
+
+		traceback = util.trace_exception(type, value, trace)
+		sys.stderr.write(traceback)
+
+		if dialog.Exception(None, traceback).run() == True:
+			gtk.main()
+
+		else:
+			sys.exit(1)
+
+
+	def __cb_focus_entry(self, widget, data = None):
+		"Callback for button presses"
+
+		# from gnome 2.10, the panel doesn't receive focus when clicked
+		if hasattr(self.applet, "request_focus") == True:
+			self.applet.request_focus(data.time)
 
 
 

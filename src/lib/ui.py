@@ -67,11 +67,15 @@ STOCK_ENTRY_WEBSITE		= "revelation-account-website"
 STOCK_REVELATION		= "revelation-revelation"
 
 
+ICON_SIZE_APPLET		= gtk.icon_size_from_name("revelation-applet")
 ICON_SIZE_DATAVIEW		= gtk.icon_size_from_name("revelation-dataview")
 ICON_SIZE_DROPDOWN		= gtk.icon_size_from_name("revelation-dropdown")
 ICON_SIZE_LABEL			= gtk.icon_size_from_name("revelation-label")
 ICON_SIZE_LOGO			= gtk.icon_size_from_name("revelation-logo")
 ICON_SIZE_TREEVIEW		= gtk.icon_size_from_name("revelation-treeview")
+
+if ICON_SIZE_APPLET == gtk.ICON_SIZE_INVALID:
+	ICON_SIZE_APPLET	= gtk.icon_size_register("revelation-applet", 24, 24)
 
 if ICON_SIZE_DATAVIEW == gtk.ICON_SIZE_INVALID:
 	ICON_SIZE_DATAVIEW	= gtk.icon_size_register("revelation-dataview", 24, 24)
@@ -1163,7 +1167,7 @@ class ItemFactory(gtk.IconFactory):
 		if config.DIR_ICONS not in self.theme.get_search_path():
 			self.theme.append_search_path(config.DIR_ICONS)
 
-		self.load_stock_icon(STOCK_REVELATION, "revelation", ( ICON_SIZE_LOGO, gtk.ICON_SIZE_DIALOG ))
+		self.load_stock_icon(STOCK_REVELATION, "revelation", ( ICON_SIZE_APPLET, ICON_SIZE_LOGO, gtk.ICON_SIZE_DIALOG ))
 
 		self.__init_entryicons()
 		self.__init_items()
