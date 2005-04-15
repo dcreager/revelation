@@ -2,6 +2,10 @@ Revelation changelog
 
 ---------------[ xxxx-xx-xx : 0.4.4 ]---------------
 
+2005-04-15  Erik Grinaker <erikg@codepoet.no>
+
+	* initial file handling
+
 2005-04-14  Erik Grinaker <erikg@codepoet.no>
 
 	* fix syntax error in applet

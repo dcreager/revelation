@@ -1167,7 +1167,7 @@ class ItemFactory(gtk.IconFactory):
 		if config.DIR_ICONS not in self.theme.get_search_path():
 			self.theme.append_search_path(config.DIR_ICONS)
 
-		self.load_stock_icon(STOCK_REVELATION, "revelation", ( ICON_SIZE_APPLET, ICON_SIZE_LOGO, gtk.ICON_SIZE_DIALOG ))
+		self.load_stock_icon(STOCK_REVELATION, "revelation", ( ICON_SIZE_APPLET, ICON_SIZE_LOGO, gtk.ICON_SIZE_DIALOG, gtk.ICON_SIZE_MENU ))
 
 		self.__init_entryicons()
 		self.__init_items()
