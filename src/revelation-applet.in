@@ -30,7 +30,7 @@ import gnome, gnome.applet, gtk, os, sys
 if "@pythondir@" not in sys.path:
 	sys.path.insert(0, "@pythondir@")
 
-from revelation import config, data, datahandler, dialog, io, ui, util
+from revelation import config, data, datahandler, dialog, entry, io, ui, util
 
 
 class RevelationApplet(object):
@@ -174,10 +174,7 @@ class RevelationApplet(object):
 			if file in ( "", None ):
 				return
 
-			if password == None:
-				password = dialog.PasswordOpen(None, os.path.basename(file)).run()
-
-			entrystore = self.datafile.load(file, password)
+			entrystore = self.datafile.load(file, password, lambda: dialog.PasswordOpen(None, os.path.basename(file)).run())
 
 			self.entrystore.clear()
 			self.entrystore.import_entry(entrystore, None)
@@ -187,23 +184,18 @@ class RevelationApplet(object):
 			return
 
 		except datahandler.FormatError:
-			None.statusbar.set_status("Open failed")
 			dialog.Error(None, "Invalid file format", "The file '%s' contains invalid data." % file).run()
 
 		except ( datahandler.DataError, entry.EntryTypeError, entry.EntryFieldError ):
-			None.statusbar.set_status("Open failed")
 			dialog.Error(None, "Unknown data", "The file '%s' contains unknown data. It may have been created by a more recent version of Revelation.." % file).run()
 
 		except datahandler.VersionError:
-			None.statusbar.set_status("Open failed")
 			dialog.Error(None, "Unknown data version", "The file '%s' has a future version number, please upgrade Revelation to open it." % file).run()
 
 		except datahandler.DetectError:
-			None.statusbar.set_status("Open failed")
 			dialog.Error(None, "Unable to detect filetype", "The file type of the file '%s' could not be automatically detected. Try specifying the file type manually." % file).run()
 
 		except IOError:
-			None.statusbar.set_status("Open failed")
 			dialog.Error(None, "Unable to open file", "The file '%s' could not be opened. Make sure that the file exists, and that you have permissions to open it." % file).run()
 
 
