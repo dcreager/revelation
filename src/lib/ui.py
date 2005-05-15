@@ -25,7 +25,7 @@
 
 import config, data, dialog, entry, io, util
 
-import bonobo.ui, gobject, gtk, gnome.ui, os, pango, pwd, time, xml.dom.minidom
+import bonobo.ui, gobject, gtk, gtk.gdk, gnome.ui, os, pango, pwd, time, xml.dom.minidom
 from xml.parsers.expat import ExpatError
 
 
@@ -1260,10 +1260,12 @@ class ItemFactory(gtk.IconFactory):
 		"Loads an icon"
 
 		if self.theme.has_icon(id):
-			return self.theme.load_icon(id, size, 0)
+			pixbuf = self.theme.load_icon(id, size, 0)
 
 		else:
-			return self.parent.render_icon(gtk.STOCK_MISSING_IMAGE, size)
+			pixbuf = self.parent.render_icon(gtk.STOCK_MISSING_IMAGE, size)
+
+		return pixbuf
 
 
 	def load_stock_icon(self, id, icon, sizes):

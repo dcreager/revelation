@@ -40,7 +40,7 @@ class RevelationApplet(object):
 		self.applet	= applet
 		self.iid	= iid
 
-		sys.excepthook = self.__cb_exception
+		sys.excepthook	= self.__cb_exception
 
 		self.__init_facilities()
 		self.__init_ui()
@@ -91,13 +91,55 @@ class RevelationApplet(object):
 		), None)
 
 		# set up ui items
-		self.icon	= ui.Image(ui.STOCK_REVELATION, ui.ICON_SIZE_APPLET)
 		self.entry	= ui.Entry()
+		self.entry.connect("button_press_event", self.__cb_entry_buttonpress)
 
-		self.applet.add(ui.HBox(self.icon, self.entry))
+		self.icon	= ui.Image(ui.STOCK_REVELATION, ui.ICON_SIZE_APPLET)
+		self.button	= ui.Button(None)
+		self.button.add(self.icon)
+		self.button.set_relief(gtk.RELIEF_NONE)
+		self.button.connect("button_press_event", self.__cb_button_buttonpress)
+		self.button.connect("clicked", self.__cb_button_clicked)
 
-		# set up callbacks
-		self.entry.connect("button_press_event", self.__cb_entry_clicked)
+		self.applet.add(ui.HBox(self.button, self.entry))
+
+		# set up menu
+		self.entrymenu = None
+
+
+	def __cb_button_buttonpress(self, widget, data = None):
+		"Callback for buttonpress on button"
+
+		if data.button != 1:
+			self.applet.emit("button_press_event", data)
+			return True
+
+		else:
+			return False
+
+
+	def __cb_button_clicked(self, widget, data = None):
+		"Callback for clicked button"
+
+		if self.datafile.get_file() == None:
+			self.file_open(self.file_get_current())
+
+		elif self.entrymenu != None:
+
+			def position(data):
+				x, y = self.applet.window.get_origin()
+
+				a = self.applet.get_allocation()
+				x += a.x
+				y += a.y
+
+				rx, ry = self.applet.size_request()
+				y += ry
+
+				return x, y, False
+
+			self.entrymenu.show_all()
+			self.entrymenu.popup(None, None, position, 1, 0)
 
 
 	def __cb_exception(self, type, value, trace):
@@ -116,12 +158,18 @@ class RevelationApplet(object):
 			sys.exit(1)
 
 
-	def __cb_entry_clicked(self, widget, data = None):
+	def __cb_entry_buttonpress(self, widget, data = None):
 		"Callback for button presses"
 
-		# from gnome 2.10, the panel doesn't receive focus when clicked
-		if hasattr(self.applet, "request_focus") == True:
-			self.applet.request_focus(data.time)
+		if data.button == 1:
+
+			# from gnome 2.10, the panel doesn't receive focus when clicked
+			if hasattr(self.applet, "request_focus") == True:
+				self.applet.request_focus(data.time)
+
+		#else:
+		#	if self.entry.is_sensitive() == False:
+		#		self.applet.emit("button_press_event", data)
 
 
 	def __cb_file_changed(self, widget, data = None):
@@ -130,6 +178,7 @@ class RevelationApplet(object):
 		popup = self.applet.get_popup_component()
 
 		if self.datafile.get_file() == None:
+			self.entry.set_text("")
 			self.entry.set_sensitive(False)
 
 			if self.file_get_current() != "":
@@ -159,6 +208,7 @@ class RevelationApplet(object):
 
 		self.datafile.close()
 		self.entrystore.clear()
+		self.entrymenu = None
 
 
 	def file_get_current(self):
@@ -179,6 +229,8 @@ class RevelationApplet(object):
 			self.entrystore.clear()
 			self.entrystore.import_entry(entrystore, None)
 			self.entrystore.changed = False
+
+			self.entrymenu = self.generate_entrymenu(self.entrystore)
 
 		except dialog.CancelError:
 			return
@@ -210,6 +262,25 @@ class RevelationApplet(object):
 		"Launches Revelation"
 
 		util.execute_child("revelation")
+
+
+	def generate_entrymenu(self, entrystore, parent = None):
+		"Generates an entry menu tree"
+
+		menu = gtk.Menu()
+
+		for i in range(entrystore.iter_n_children(parent)):
+			iter = entrystore.iter_nth_child(parent, i)
+
+			e = entrystore.get_entry(iter)
+			item = ui.ImageMenuItem(e.icon, e.name)
+
+			if type(e) == entry.FolderEntry:
+				item.set_submenu(self.generate_entrymenu(entrystore, iter))
+
+			menu.append(item)
+
+		return menu
 
 
 
