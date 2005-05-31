@@ -2,6 +2,14 @@ Revelation changelog
 
 ---------------[ xxxx-xx-xx : 0.4.4 ]---------------
 
+2005-05-31  Erik Grinaker <erikg@codepoet.no>
+
+	* removed "New file" item from toolbar
+
+	* added new toolbar item "Add Folder", instead of creating
+	folders via "Add Entry"
+
+	* removed unit tests
 
 2005-05-15  Erik Grinaker <erikg@codepoet.no>
 

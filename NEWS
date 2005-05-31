@@ -2,7 +2,12 @@
 ============================
 
 Bugfixes:
+- new "Add folder" item, instead of adding folders through "Add entry"
+- removed "New file" item from toolbar
 - don't crash on missing revelation logo icon
+
+Code changes:
+- removed unit tests
 
 
 2005-03-31: Revelation 0.4.3
