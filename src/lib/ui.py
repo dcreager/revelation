@@ -1214,6 +1214,7 @@ class ItemFactory(gtk.IconFactory):
 			( STOCK_DISCARD,	"_Discard",	gtk.STOCK_DELETE ),
 			( STOCK_EDIT,		"_Edit",	"stock_edit" ),
 			( STOCK_EXPORT,		"_Export",	gtk.STOCK_EXECUTE ),
+			( STOCK_FOLDER,		"",		"stock_folder" ),
 			( STOCK_GENERATE,	"_Generate",	gtk.STOCK_EXECUTE ),
 			( STOCK_GOTO,		"_Go to",	gtk.STOCK_JUMP_TO ),
 			( STOCK_IMPORT,		"_Import",	gtk.STOCK_CONVERT ),

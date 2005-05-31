@@ -247,6 +247,9 @@ class RevelationApplet(object):
 		except datahandler.DetectError:
 			dialog.Error(None, "Unable to detect filetype", "The file type of the file '%s' could not be automatically detected. Try specifying the file type manually." % file).run()
 
+		except datahandler.PasswordError:
+			dialog.Error(None, "Incorrect password", "You entered an incorrect password for the file '%s', please try again." % file).run()
+
 		except IOError:
 			dialog.Error(None, "Unable to open file", "The file '%s' could not be opened. Make sure that the file exists, and that you have permissions to open it." % file).run()
 
@@ -273,7 +276,7 @@ class RevelationApplet(object):
 			iter = entrystore.iter_nth_child(parent, i)
 
 			e = entrystore.get_entry(iter)
-			item = ui.ImageMenuItem(e.icon, e.name)
+			item = ui.ImageMenuItem(type(e) == entry.FolderEntry and ui.STOCK_FOLDER or e.icon, e.name)
 
 			if type(e) == entry.FolderEntry:
 				item.set_submenu(self.generate_entrymenu(entrystore, iter))
