@@ -158,6 +158,21 @@ class Config(object):
 		self.client.set(self.__resolve_keypath(key), node)
 
 
+	def set_force(self, key, value):
+		"Sets a value directly, ignoring if it already exists"
+
+		key = self.__resolve_keypath(key)
+
+		if type(value) == str:
+			self.client.set_string(key, value)
+
+		elif type(value) == bool:
+			self.client.set_bool(key, value)
+
+		elif type(value) == int:
+			self.client.set_int(key, value)
+
+
 
 def install_schema(file):
 	"Installs a gconf schema"

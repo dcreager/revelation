@@ -2,6 +2,12 @@ Revelation changelog
 
 ---------------[ xxxx-xx-xx : 0.4.4 ]---------------
 
+2005-06-01  Erik Grinaker <erikg@codepoet.no>
+
+	* moved config checking from config module to application
+
+	* implemented initial applet configuration handling
+
 2005-05-31  Erik Grinaker <erikg@codepoet.no>
 
 	* removed "New file" item from toolbar
@@ -10,8 +16,6 @@ Revelation changelog
 	folders via "Add Entry"
 
 	* removed unit tests
-
-	* moved config checking from config module to application
 
 2005-05-15  Erik Grinaker <erikg@codepoet.no>
 

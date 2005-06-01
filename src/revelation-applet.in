@@ -50,11 +50,16 @@ class RevelationApplet(object):
 	def __init_facilities(self):
 		"Sets up facilities"
 
+		self.applet.add_preferences("/schemas/apps/revelation-applet/prefs")
+
+		self.config	= config.Config(self.applet.get_preferences_key())
 		self.datafile	= io.DataFile(datahandler.Revelation)
 		self.entrystore	= data.EntryStore()
 		self.items	= ui.ItemFactory(self.applet)
 
 		self.datafile.connect("changed", self.__cb_file_changed)
+
+		self.__setup_prefs()
 
 
 	def __init_states(self):
@@ -65,6 +70,8 @@ class RevelationApplet(object):
 
 	def __init_ui(self):
 		"Sets up the main ui"
+
+		self.applet.set_flags(gnome.applet.EXPAND_MINOR)
 
 		# set up popup menu
 		menuxml = """
@@ -86,7 +93,7 @@ class RevelationApplet(object):
 			( "file-reload",	lambda w,d=None: self.file_reload() ),
 			( "file-unlock",	lambda w,d=None: self.file_open(self.file_get_current()) ),
 			( "kill",		lambda w,d=None: sys.exit() ),
-			( "prefs",		lambda w,d=None: True ),
+			( "prefs",		lambda w,d=None: Preferences(None, self.config).run() ),
 			( "revelation",		lambda w,d=None: self.launch_revelation() ),
 		), None)
 
@@ -197,6 +204,25 @@ class RevelationApplet(object):
 			popup.set_prop("/commands/file-reload", "sensitive", "1")
 
 
+	def __setup_prefs(self):
+		"Sets up any missing preferences"
+
+		# TODO this shouldn't really be necessary, the schema should
+		# be used for defaults - is this possible with the current
+		# applet api?
+
+		defaults = {
+			"file"	: "",
+		}
+
+		for key, value in defaults.items():
+			try:
+				self.config.get(key)
+
+			except config.ConfigError:
+				self.config.set_force(key, value)
+
+
 	def about(self):
 		"Displays an about dialog"
 
@@ -301,6 +327,30 @@ class About(gnome.ui.About):
 
 	def run(self):
 		"Displays the dialog"
+
+		self.show_all()
+
+
+
+class Preferences(dialog.Utility):
+	"A preference dialog"
+
+	def __init__(self, parent, cfg):
+		dialog.Utility.__init__(self, parent, "Preferences")
+		self.config = cfg
+		self.set_modal(False)
+
+		self.section_file = self.add_section("File handling")
+
+		self.entry_file = ui.FileEntry("Select File to Use")
+		ui.config_bind(self.config, "file", self.entry_file)
+		self.section_file.append_widget("File to use", self.entry_file)
+
+		self.connect("response", lambda w,d: self.destroy())
+
+
+	def run(self):
+		"Runs the dialog"
 
 		self.show_all()
 
