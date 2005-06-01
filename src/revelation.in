@@ -89,6 +89,16 @@ class Revelation(ui.App):
 		gobject.GObject.connect(self.sessionclient, "die", lambda w: self.quit())
 		gobject.GObject.connect(self.sessionclient, "save-yourself", self.__cb_session_save)
 
+		# check if configuration is updated, install schema if not
+		if self.__check_config() == False:
+
+			if config.install_schema("%s/revelation.schemas" % config.DIR_GCONFSCHEMAS) == False:
+				raise config.ConfigError
+
+			if self.__check_config() == False:
+				raise config.ConfigError
+
+
 		self.config.monitor("search/folders",		lambda k,v,d: setattr(self.entrysearch, "folders", v))
 		self.config.monitor("search/namedesc",		lambda k,v,d: setattr(self.entrysearch, "namedesconly", v))
 		self.config.monitor("search/casesens",		lambda k,v,d: setattr(self.entrysearch, "casesensitive", v))
@@ -745,6 +755,21 @@ class Revelation(ui.App):
 
 
 	##### PRIVATE METHODS #####
+
+	def __check_config(self):
+		"Checks if the configuration is correct"
+
+		try:
+			self.config.get("launcher/website")
+			self.config.get("view/searchbar")
+			self.config.get("clipboard/chain_username")
+			self.config.get("behavior/doubleclick")
+
+			return True
+
+		except config.ConfigError:
+			return False
+
 
 	def __entry_find(self, parent, string, entrytype, direction = data.SEARCH_NEXT):
 		"Searches for an entry"

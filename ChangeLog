@@ -11,6 +11,8 @@ Revelation changelog
 
 	* removed unit tests
 
+	* moved config checking from config module to application
+
 2005-05-15  Erik Grinaker <erikg@codepoet.no>
 
 	* implemented basic applet user interface
