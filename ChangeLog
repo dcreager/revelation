@@ -2,6 +2,10 @@ Revelation changelog
 
 ---------------[ xxxx-xx-xx : 0.4.4 ]---------------
 
+2005-06-02  Erik Grinaker <erikg@codepoet.no>
+
+	* applet popup menu now actually does stuff
+
 2005-06-01  Erik Grinaker <erikg@codepoet.no>
 
 	* moved config checking from config module to application

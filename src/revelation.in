@@ -1065,7 +1065,6 @@ class Revelation(ui.App):
 			self.statusbar.set_status("Add folder cancelled")
 	
 
-
 	def entry_goto(self, iters):
 		"Goes to an entry"
 
@@ -1084,7 +1083,7 @@ class Revelation(ui.App):
 				for field in e.fields:
 					subst[field.symbol] = field.value
 
-				# copy passwords to clipboar
+				# copy passwords to clipboard
 				chain = []
 
 				for field in e.fields:

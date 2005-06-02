@@ -52,14 +52,16 @@ class RevelationApplet(object):
 
 		self.applet.add_preferences("/schemas/apps/revelation-applet/prefs")
 
+		self.clipboard	= data.Clipboard()
 		self.config	= config.Config(self.applet.get_preferences_key())
 		self.datafile	= io.DataFile(datahandler.Revelation)
 		self.entrystore	= data.EntryStore()
 		self.items	= ui.ItemFactory(self.applet)
 
-		self.datafile.connect("changed", self.__cb_file_changed)
-
 		self.__setup_prefs()
+		self.config.monitor("file",	lambda k,v,d: self.file_close())
+
+		self.datafile.connect("changed", self.__cb_file_changed)
 
 
 	def __init_states(self):
@@ -204,6 +206,21 @@ class RevelationApplet(object):
 			popup.set_prop("/commands/file-reload", "sensitive", "1")
 
 
+	def __cb_popup_activate(self, widget, data):
+		"Takes appropriate action when a menu item is activated"
+
+		action = self.config.get("menuaction")
+
+		if action == "show":
+			self.entry_show(data)
+
+		elif action == "copy":
+			self.entry_copychain(data)
+
+		else:
+			self.entry_goto(data)
+
+
 	def __setup_prefs(self):
 		"Sets up any missing preferences"
 
@@ -212,7 +229,8 @@ class RevelationApplet(object):
 		# applet api?
 
 		defaults = {
-			"file"	: "",
+			"file"		: "",
+			"menuaction"	: "goto",
 		}
 
 		for key, value in defaults.items():
@@ -229,6 +247,65 @@ class RevelationApplet(object):
 		About(self.applet).run()
 
 
+	def entry_copychain(self, e):
+		"Copies all passwords from an entry as a chain"
+
+		if e == None:
+			return
+
+		secrets = [ field.value for field in e.fields if field.datatype == entry.DATATYPE_PASSWORD and field.value != "" ]
+
+		if len(secrets) > 0 and e.has_field(entry.UsernameField) and e[entry.UsernameField] != "":
+			secrets.insert(0, e[entry.UsernameField])
+
+		self.clipboard.set(secrets)
+
+
+	def entry_goto(self, e):
+		"Goes to an entry"
+
+		try:
+
+			# fetch goto data
+			command = self.config.get("/apps/revelation/launcher/%s" % e.id)
+
+			if command in ( "", None ):
+				self.entry_show(e)
+				return
+
+			subst = {}
+			for field in e.fields:
+				subst[field.symbol] = field.value
+
+			# copy passwords to clipboard
+			chain = []
+
+			for field in e.fields:
+				if field.datatype == entry.DATATYPE_PASSWORD and field.value != "":
+					chain.append(field.value)
+
+			if len(chain) > 0 and e.has_field(entry.UsernameField) == True and e[entry.UsernameField] != "" and "%" + entry.UsernameField.symbol not in command:
+				chain.insert(0, e[entry.UsernameField])
+
+			self.clipboard.set(chain)
+
+			# generate and run goto command
+			command = util.parse_subst(command, subst)
+			util.execute_child(command)
+
+		except ( util.SubstFormatError, config.ConfigError ):
+			dialog.Error(self, "Invalid goto command format", "The goto command for '" + e.typename + "' entries is invalid, please correct this in the preferences.").run()
+
+		except util.SubstValueError:
+			self.entry_show(e)
+
+
+	def entry_show(self, e):
+		"Shows an entry"
+
+		self.entry.set_text("show " + e.name)
+
+
 	def file_close(self):
 		"Closes the current data file"
 
@@ -240,7 +317,7 @@ class RevelationApplet(object):
 	def file_get_current(self):
 		"Returns the current data file"
 
-		return "/home/erikg/dev/revelation/pwtest"
+		return self.config.get("file")
 
 
 	def file_open(self, file, password = None):
@@ -287,12 +364,6 @@ class RevelationApplet(object):
 			self.file_open(self.datafile.get_file(), self.datafile.get_password())
 
 
-	def launch_revelation(self):
-		"Launches Revelation"
-
-		util.execute_child("revelation")
-
-
 	def generate_entrymenu(self, entrystore, parent = None):
 		"Generates an entry menu tree"
 
@@ -307,9 +378,18 @@ class RevelationApplet(object):
 			if type(e) == entry.FolderEntry:
 				item.set_submenu(self.generate_entrymenu(entrystore, iter))
 
+			else:
+				item.connect("activate", self.__cb_popup_activate, e)
+
 			menu.append(item)
 
 		return menu
+
+
+	def launch_revelation(self):
+		"Launches Revelation"
+
+		util.execute_child("revelation")
 
 
 
@@ -340,11 +420,36 @@ class Preferences(dialog.Utility):
 		self.config = cfg
 		self.set_modal(False)
 
-		self.section_file = self.add_section("File handling")
+		self.section_file = self.add_section("File")
 
 		self.entry_file = ui.FileEntry("Select File to Use")
 		ui.config_bind(self.config, "file", self.entry_file)
 		self.section_file.append_widget("File to use", self.entry_file)
+
+
+		self.section_menu = self.add_section("Menu Action")
+
+		# radio-button for goto
+		self.radio_goto = ui.RadioButton(None, "Go to account, if possible")
+		ui.config_bind(self.config, "menuaction", self.radio_goto, "goto")
+
+		self.tooltips.set_tip(self.radio_goto, "Open the account in an external application if possible, otherwise display it")
+		self.section_menu.append_widget(None, self.radio_goto)
+
+		# radio-button for show
+		self.radio_show = ui.RadioButton(self.radio_goto, "Display the account info")
+		ui.config_bind(self.config, "menuaction", self.radio_show, "show")
+
+		self.tooltips.set_tip(self.radio_show, "Display the account information")
+		self.section_menu.append_widget(None, self.radio_show)
+
+		# radio-button for copy username/password
+		self.radio_copy = ui.RadioButton(self.radio_goto, "Copy username and password to clipboard")
+		ui.config_bind(self.config, "menuaction", self.radio_copy, "copy")
+
+		self.tooltips.set_tip(self.radio_copy, "Copy the username and password to the clipboard as a clipboard \"chain\"")
+		self.section_menu.append_widget(None, self.radio_copy)
+
 
 		self.connect("response", lambda w,d: self.destroy())
 
