@@ -6,6 +6,8 @@ Revelation changelog
 
 	* applet popup menu now actually does stuff
 
+	* applet can now autolock file when inactive
+
 2005-06-01  Erik Grinaker <erikg@codepoet.no>
 
 	* moved config checking from config module to application

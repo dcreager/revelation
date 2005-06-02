@@ -67,7 +67,10 @@ class Config(object):
 
 		value = entry.get_value()
 
-		if value.type == gconf.VALUE_STRING:
+		if value == None:
+			raise config.ConfigError
+
+		elif value.type == gconf.VALUE_STRING:
 			v = value.get_string()
 
 		elif value.type == gconf.VALUE_BOOL:

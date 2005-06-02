@@ -2,6 +2,36 @@
 <gconfschemafile>
 	<schemalist>
 		<schema>
+			<key>/schemas/apps/revelation-applet/prefs/autolock</key>
+			<owner>revelation-applet</owner>
+			<type>bool</type>
+			<default>true</default>
+
+			<locale name="C">
+				<short>Lock file when inactive</short>
+				<long>
+					When enabled, the file will automatically
+					be locked after a period of inactivity.
+				</long>
+			</locale>
+		</schema>
+
+		<schema>
+			<key>/schemas/apps/revelation-applet/prefs/autolock_timeout</key>
+			<owner>revelation-applet</owner>
+			<type>int</type>
+			<default>15</default>
+
+			<locale name="C">
+				<short>Timeout before locking file</short>
+				<long>
+					The number of minutes of inactivity
+					before autolocking the file.
+				</long>
+			</locale>
+		</schema>
+
+		<schema>
 			<key>/schemas/apps/revelation-applet/prefs/file</key>
 			<owner>revelation-applet</owner>
 			<type>string</type>

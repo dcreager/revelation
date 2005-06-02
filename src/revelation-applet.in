@@ -57,11 +57,14 @@ class RevelationApplet(object):
 		self.datafile	= io.DataFile(datahandler.Revelation)
 		self.entrystore	= data.EntryStore()
 		self.items	= ui.ItemFactory(self.applet)
+		self.locktimer	= ui.Timer()
 
 		self.__setup_prefs()
-		self.config.monitor("file",	lambda k,v,d: self.file_close())
+		self.config.monitor("file",		lambda k,v,d: self.file_close())
+		self.config.monitor("autolock_timeout",	lambda k,v,d: self.locktimer.start(v * 60))
 
 		self.datafile.connect("changed", self.__cb_file_changed)
+		self.locktimer.connect("ring", self.__cb_file_autolock)
 
 
 	def __init_states(self):
@@ -102,6 +105,7 @@ class RevelationApplet(object):
 		# set up ui items
 		self.entry	= ui.Entry()
 		self.entry.connect("button_press_event", self.__cb_entry_buttonpress)
+		self.entry.connect("key_press_event", lambda w,d=None: self.locktimer.reset())
 
 		self.icon	= ui.Image(ui.STOCK_REVELATION, ui.ICON_SIZE_APPLET)
 		self.button	= ui.Button(None)
@@ -129,6 +133,8 @@ class RevelationApplet(object):
 
 	def __cb_button_clicked(self, widget, data = None):
 		"Callback for clicked button"
+
+		self.locktimer.reset()
 
 		if self.datafile.get_file() == None:
 			self.file_open(self.file_get_current())
@@ -170,6 +176,8 @@ class RevelationApplet(object):
 	def __cb_entry_buttonpress(self, widget, data = None):
 		"Callback for button presses"
 
+		self.locktimer.reset()
+
 		if data.button == 1:
 
 			# from gnome 2.10, the panel doesn't receive focus when clicked
@@ -179,6 +187,13 @@ class RevelationApplet(object):
 		#else:
 		#	if self.entry.is_sensitive() == False:
 		#		self.applet.emit("button_press_event", data)
+
+
+	def __cb_file_autolock(self, widget, data = None):
+		"Callback for autolocking the file"
+
+		if self.config.get("autolock") == True:
+			self.file_close()
 
 
 	def __cb_file_changed(self, widget, data = None):
@@ -209,6 +224,8 @@ class RevelationApplet(object):
 	def __cb_popup_activate(self, widget, data):
 		"Takes appropriate action when a menu item is activated"
 
+		self.locktimer.reset()
+
 		action = self.config.get("menuaction")
 
 		if action == "show":
@@ -229,8 +246,10 @@ class RevelationApplet(object):
 		# applet api?
 
 		defaults = {
-			"file"		: "",
-			"menuaction"	: "goto",
+			"autolock"		: True,
+			"autolock_timeout"	: 15,
+			"file"			: "",
+			"menuaction"		: "goto",
 		}
 
 		for key, value in defaults.items():
@@ -309,6 +328,8 @@ class RevelationApplet(object):
 	def file_close(self):
 		"Closes the current data file"
 
+		self.locktimer.stop()
+
 		self.datafile.close()
 		self.entrystore.clear()
 		self.entrymenu = None
@@ -334,6 +355,7 @@ class RevelationApplet(object):
 			self.entrystore.changed = False
 
 			self.entrymenu = self.generate_entrymenu(self.entrystore)
+			self.locktimer.start(self.config.get("autolock_timeout") * 60)
 
 		except dialog.CancelError:
 			return
@@ -374,6 +396,7 @@ class RevelationApplet(object):
 
 			e = entrystore.get_entry(iter)
 			item = ui.ImageMenuItem(type(e) == entry.FolderEntry and ui.STOCK_FOLDER or e.icon, e.name)
+			item.connect("select", lambda w,d=None: self.locktimer.reset())
 
 			if type(e) == entry.FolderEntry:
 				item.set_submenu(self.generate_entrymenu(entrystore, iter))
@@ -420,11 +443,29 @@ class Preferences(dialog.Utility):
 		self.config = cfg
 		self.set_modal(False)
 
-		self.section_file = self.add_section("File")
+		self.section_file = self.add_section("File Handling")
 
 		self.entry_file = ui.FileEntry("Select File to Use")
 		ui.config_bind(self.config, "file", self.entry_file)
 		self.section_file.append_widget("File to use", self.entry_file)
+
+		self.check_autolock = ui.CheckButton("Lock file when inactive for")
+		ui.config_bind(self.config, "autolock", self.check_autolock)
+		self.check_autolock.connect("toggled", lambda w: self.spin_autolock_timeout.set_sensitive(w.get_active()))
+		self.tooltips.set_tip(self.check_autolock, "Automatically lock the file after a period of inactivity")
+
+		self.spin_autolock_timeout = ui.SpinEntry()
+		self.spin_autolock_timeout.set_range(1, 120)
+		self.spin_autolock_timeout.set_sensitive(self.check_autolock.get_active())
+		ui.config_bind(self.config, "autolock_timeout", self.spin_autolock_timeout)
+		self.tooltips.set_tip(self.spin_autolock_timeout, "The period of inactivity before locking the file, in minutes")
+
+		hbox = ui.HBox()
+		hbox.set_spacing(3)
+		hbox.pack_start(self.check_autolock)
+		hbox.pack_start(self.spin_autolock_timeout)
+		hbox.pack_start(ui.Label("minutes"))
+		self.section_file.append_widget(None, hbox)
 
 
 		self.section_menu = self.add_section("Menu Action")
