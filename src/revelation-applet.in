@@ -155,7 +155,7 @@ class RevelationApplet(object):
 			if file == "":
 				d = dialog.Info(
 					None, "File not selected",
-					"You must select a Revelation data file to use - this can be sone in the applet preferences.",
+					"You must select a Revelation data file to use - this can be done in the applet preferences.",
 					(
 						( gtk.STOCK_PREFERENCES, gtk.RESPONSE_ACCEPT ),
 						( gtk.STOCK_OK, gtk.RESPONSE_OK ),
