@@ -150,7 +150,23 @@ class RevelationApplet(object):
 		self.locktimer.reset()
 
 		if self.datafile.get_file() == None:
-			self.file_open(self.file_get_current())
+			file = self.file_get_current()
+
+			if file == "":
+				d = dialog.Info(
+					None, "File not selected",
+					"You must select a Revelation data file to use - this can be sone in the applet preferences.",
+					(
+						( gtk.STOCK_PREFERENCES, gtk.RESPONSE_ACCEPT ),
+						( gtk.STOCK_OK, gtk.RESPONSE_OK ),
+					)
+				)
+
+				if d.run() == gtk.RESPONSE_ACCEPT:
+					Preferences(None, self.config).run()
+
+			else:
+				self.file_open(file)
 
 		elif self.entrymenu != None:
 

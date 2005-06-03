@@ -8,6 +8,8 @@ Revelation changelog
 
 	* applet dialogs use Revelation icon
 
+	* applet displays info message when file not selected
+
 2005-06-02  Erik Grinaker <erikg@codepoet.no>
 
 	* applet popup menu now actually does stuff
