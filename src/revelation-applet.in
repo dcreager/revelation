@@ -65,7 +65,7 @@ class RevelationApplet(object):
 		self.locktimer	= ui.Timer()
 
 		self.__setup_prefs()
-		self.config.monitor("file",		lambda k,v,d: self.file_close())
+		self.config.monitor("file",		self.__cb_config_file)
 		self.config.monitor("autolock_timeout",	lambda k,v,d: self.locktimer.start(v * 60))
 
 		self.datafile.connect("changed", self.__cb_file_changed)
@@ -186,6 +186,15 @@ class RevelationApplet(object):
 			self.entrymenu.popup(None, None, position, 1, 0)
 
 
+	def __cb_config_file(self, key, value, data):
+		"Config callback for file key"
+
+		self.file_close()
+
+		popup = self.applet.get_popup_component()
+		popup.set_prop("/commands/file-unlock", "sensitive", self.file_get_current() != "" and "1" or "0")
+
+
 	def __cb_exception(self, type, value, trace):
 		"Callback for unhandled exceptions"
 
@@ -234,12 +243,7 @@ class RevelationApplet(object):
 			self.entry.set_text("")
 			self.entry.set_sensitive(False)
 
-			if self.file_get_current() != "":
-				popup.set_prop("/commands/file-unlock", "sensitive", "1")
-
-			else:
-				popup.set_prop("/commands/file-unlock", "sensitive", "1")
-
+			popup.set_prop("/commands/file-unlock", "sensitive", self.file_get_current() != "" and "1" or "0")
 			popup.set_prop("/commands/file-lock", "sensitive", "0")
 			popup.set_prop("/commands/file-reload", "sensitive", "0")
 

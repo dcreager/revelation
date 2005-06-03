@@ -10,6 +10,9 @@ Revelation changelog
 
 	* applet displays info message when file not selected
 
+	* make "Unlock file" item in applet popup menu insensitive
+	when no file is selected
+
 2005-06-02  Erik Grinaker <erikg@codepoet.no>
 
 	* applet popup menu now actually does stuff
