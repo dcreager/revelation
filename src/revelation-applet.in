@@ -81,6 +81,14 @@ class RevelationApplet(object):
 	def __init_ui(self):
 		"Sets up the main ui"
 
+		# set up window icons
+		pixbufs = [ self.items.load_icon("revelation", size) for size in ( 48, 32, 24, 16) ]
+		pixbufs = [ pixbuf for pixbuf in pixbufs if pixbuf != None ]
+
+		if len(pixbufs) > 0:
+			gtk.window_set_default_icon_list(*pixbufs)
+
+		# set up applet
 		self.applet.set_flags(gnome.applet.EXPAND_MINOR)
 
 		# set up popup menu

@@ -6,6 +6,8 @@ Revelation changelog
 
 	* added global launcher settings to the applet preference dialog
 
+	* applet dialogs use Revelation icon
+
 2005-06-02  Erik Grinaker <erikg@codepoet.no>
 
 	* applet popup menu now actually does stuff
