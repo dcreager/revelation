@@ -2,6 +2,10 @@ Revelation changelog
 
 ---------------[ xxxx-xx-xx : 0.4.4 ]---------------
 
+2005-06-06  Erik Grinaker <erikg@codepoet.no>
+
+	* applet automatically reloads file when changed
+
 2005-06-03  Erik Grinaker <erikg@codepoet.no>
 
 	* added global launcher settings to the applet preference dialog
