@@ -77,6 +77,7 @@ class RevelationApplet(object):
 		"Sets up the initial states"
 
 		self.datafile.emit("changed", self.datafile.get_file())
+		os.chdir(os.path.expanduser("~/"))
 
 
 	def __init_ui(self):
