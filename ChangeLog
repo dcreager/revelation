@@ -2,6 +2,10 @@ Revelation changelog
 
 ---------------[ xxxx-xx-xx : 0.4.4 ]---------------
 
+2005-06-25  Erik Grinaker <erikg@codepoet.no>
+
+	* added entry view to applet
+
 2005-06-07  Erik Grinaker <erikg@codepoet.no>
 
 	* applet sets cwd to users homedir on startup

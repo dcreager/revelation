@@ -129,10 +129,15 @@ class RevelationApplet(object):
 		self.button.connect("button_press_event", self.__cb_button_buttonpress)
 		self.button.connect("clicked", self.__cb_button_clicked)
 
-		self.applet.add(ui.HBox(self.button, self.entry))
+		self.hbox = ui.HBox(self.button, self.entry)
+		self.hbox.set_spacing(0)
+		self.applet.add(self.hbox)
 
 		# set up menu
 		self.entrymenu = None
+
+		# set up entry popup
+		self.entrypopup = None
 
 
 	def __cb_button_buttonpress(self, widget, data = None):
@@ -150,6 +155,9 @@ class RevelationApplet(object):
 		"Callback for clicked button"
 
 		self.locktimer.reset()
+
+		if self.entrypopup != None:
+			self.entrypopup.destroy()
 
 		if self.datafile.get_file() == None:
 			file = self.file_get_current()
@@ -172,20 +180,10 @@ class RevelationApplet(object):
 
 		elif self.entrymenu != None:
 
-			def position(data):
-				x, y = self.applet.window.get_origin()
-
-				a = self.applet.get_allocation()
-				x += a.x
-				y += a.y
-
-				rx, ry = self.applet.size_request()
-				y += ry
-
-				return x, y, False
+			x, y = self.get_popup_offset()
 
 			self.entrymenu.show_all()
-			self.entrymenu.popup(None, None, position, 1, 0)
+			self.entrymenu.popup(None, None, lambda d: (x, y, False), 1, 0)
 
 
 	def __cb_config_file(self, key, value, data):
@@ -390,7 +388,33 @@ class RevelationApplet(object):
 	def entry_show(self, e):
 		"Shows an entry"
 
-		self.entry.set_text("show " + e.name)
+		if self.entrypopup != None:
+			self.entrypopup.destroy()
+
+		view = ui.EntryView()
+		view.set_border_width(12)
+		view.display_entry(e)
+
+		x, y = self.get_popup_offset()
+		popup = dialog.Popup(view, x, y)
+
+
+		def cb_goto(widget):
+			self.entry_goto(e)
+			popup.destroy()
+
+		button_goto = ui.Button(ui.STOCK_GOTO, cb_goto)
+		button_close = ui.Button(gtk.STOCK_CLOSE, lambda w: popup.destroy())
+
+		if self.config.get("/apps/revelation/launcher/%s" % e.id) in ( "", None ):
+			button_goto.set_sensitive(False)
+
+		buttonbox = ui.HButtonBox(button_goto, button_close)
+		view.pack_start(buttonbox)
+
+
+		self.entrypopup = popup
+		popup.show_all()
 
 
 	def file_close(self):
@@ -483,6 +507,21 @@ class RevelationApplet(object):
 			menu.append(item)
 
 		return menu
+
+
+	def get_popup_offset(self):
+		"Returns a tuple of x and y oppset coords for popups"
+
+		x, y = self.applet.window.get_origin()
+
+		a = self.applet.get_allocation()
+		x += a.x
+		y += a.y
+
+		rx, ry = self.applet.size_request()
+		y += ry
+
+		return x, y
 
 
 	def launch_revelation(self):

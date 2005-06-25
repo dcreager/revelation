@@ -205,6 +205,20 @@ class HBox(gtk.HBox):
 
 
 
+class HButtonBox(gtk.HButtonBox):
+	"A horizontal button box"
+
+	def __init__(self, *args):
+		gtk.HButtonBox.__init__(self)
+
+		self.set_layout(gtk.BUTTONBOX_END)
+		self.set_spacing(12)
+
+		for button in args:
+			self.pack_start(button)
+
+
+
 class VBox(gtk.VBox):
 	"A vertical container"
 
