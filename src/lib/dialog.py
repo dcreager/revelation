@@ -113,11 +113,21 @@ class Popup(gtk.Window):
 	def __init__(self, widget = None, x = None, y = None):
 		gtk.Window.__init__(self, gtk.WINDOW_POPUP)
 
+		self.border = gtk.Frame()
+		self.border.set_shadow_type(gtk.SHADOW_OUT)
+		gtk.Window.add(self, self.border)
+
 		if widget != None:
 			self.add(widget)
 
 		if x != None and y != None:
 			self.move(x, y)
+
+
+	def add(self, widget):
+		"Adds a widget to the window"
+
+		self.border.add(widget)
 
 
 

@@ -2,6 +2,10 @@ Revelation changelog
 
 ---------------[ xxxx-xx-xx : 0.4.4 ]---------------
 
+2005-06-27  Erik Grinaker <erikg@codepoet.no>
+
+	* added frame around entry view window, like popup menus
+
 2005-06-25  Erik Grinaker <erikg@codepoet.no>
 
 	* added entry view to applet
