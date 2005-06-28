@@ -6,9 +6,9 @@
 - add import/export of web confidential files
 - sorting of the tree
 - string cleanups
-- gnome panel applets (account lookup, password generator etc)
-  - show complete account tree as a popup-submenu of the applet
+- gnome panel applet
   - make library modules more independent, so only a few are imported
+  - fix crash on panel remove, ConfigError exception
 - run unit tests on built libraries instead of installed ones
 
 0.5.x:

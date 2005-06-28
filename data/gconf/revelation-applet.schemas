@@ -50,13 +50,14 @@
 			<key>/schemas/apps/revelation-applet/prefs/menuaction</key>
 			<owner>revelation-applet</owner>
 			<type>string</type>
-			<default>goto</default>
+			<default>show</default>
 
 			<locale name="C">
 				<short>Popup-menu account action</short>
 				<long>
 					Action to take when activating an account in the
-					popup-menu.
+					popup-menu. Valid values are "show", "goto", and
+					"copy".
 				</long>
 			</locale>
 		</schema>
