@@ -6,6 +6,8 @@ Revelation changelog
 
 	* changed default action for applet menu to "show", not "goto"
 
+	* reordered applet prefs for menu action
+
 2005-06-27  Erik Grinaker <erikg@codepoet.no>
 
 	* added frame around applet entry view
