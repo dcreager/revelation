@@ -2,6 +2,10 @@ Revelation changelog
 
 ---------------[ xxxx-xx-xx : 0.4.4 ]---------------
 
+2005-07-01  Erik Grinaker <erikg@codepoet.no>
+
+	* made middle-button click on applet button move applet
+
 2005-06-28  Erik Grinaker <erikg@codepoet.no>
 
 	* changed default action for applet menu to "show", not "goto"

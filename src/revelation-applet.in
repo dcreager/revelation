@@ -143,12 +143,16 @@ class RevelationApplet(object):
 	def __cb_button_buttonpress(self, widget, data = None):
 		"Callback for buttonpress on button"
 
-		if data.button != 1:
-			self.applet.emit("button_press_event", data)
-			return True
+		if data.button == 1:
+			return False
+
+		elif data.button == 2:
+			widget.emit_stop_by_name("button_press_event")
+			return False
 
 		else:
-			return False
+			self.applet.emit("button_press_event", data)
+			return True
 
 
 	def __cb_button_clicked(self, widget, data = None):
