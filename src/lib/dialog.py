@@ -110,7 +110,7 @@ class Dialog(gtk.Dialog):
 class Popup(gtk.Window):
 	"Base class for popup (frameless) dialogs"
 
-	def __init__(self, widget = None, x = None, y = None):
+	def __init__(self, widget = None):
 		gtk.Window.__init__(self, gtk.WINDOW_POPUP)
 
 		self.border = gtk.Frame()
@@ -119,10 +119,6 @@ class Popup(gtk.Window):
 
 		if widget != None:
 			self.add(widget)
-
-		if x != None and y != None:
-			self.move(x, y)
-
 
 	def add(self, widget):
 		"Adds a widget to the window"

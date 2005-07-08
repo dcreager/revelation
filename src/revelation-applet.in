@@ -103,7 +103,6 @@ class RevelationApplet(object):
 	<menuitem name="revelation"	verb="revelation"	label="Start Revelation"	pixtype="stock" pixname="revelation-revelation" />
 	<menuitem name="prefs"		verb="prefs"		label="Preferences"		pixtype="stock"	pixname="gtk-properties" />
 	<menuitem name="about"		verb="about"		label="About"			pixtype="stock"	pixname="gnome-stock-about" />
-	<menuitem name="kill"		verb="kill"		label="Kill"			pixtype="stock"	pixname="gtk-quit" />
 </popup>
 """
 
@@ -119,18 +118,15 @@ class RevelationApplet(object):
 
 		# set up ui items
 		self.entry	= ui.Entry()
+		self.entry.set_width_chars(16)
 		self.entry.connect("button_press_event", self.__cb_entry_buttonpress)
 		self.entry.connect("key_press_event", lambda w,d=None: self.locktimer.reset())
 
 		self.icon	= ui.Image(ui.STOCK_REVELATION, ui.ICON_SIZE_APPLET)
-		self.button	= ui.Button(None)
-		self.button.add(self.icon)
-		self.button.set_relief(gtk.RELIEF_NONE)
-		self.button.connect("button_press_event", self.__cb_button_buttonpress)
-		self.button.connect("clicked", self.__cb_button_clicked)
+		self.eventbox	= ui.EventBox(self.icon)
+		self.eventbox.connect("button_press_event", self.__cb_icon_buttonpress)
 
-		self.hbox = ui.HBox(self.button, self.entry)
-		self.hbox.set_spacing(0)
+		self.hbox = ui.HBox(self.eventbox, self.entry)
 		self.applet.add(self.hbox)
 
 		# set up menu
@@ -140,23 +136,11 @@ class RevelationApplet(object):
 		self.entrypopup = None
 
 
-	def __cb_button_buttonpress(self, widget, data = None):
+	def __cb_icon_buttonpress(self, widget, data = None):
 		"Callback for buttonpress on button"
 
-		if data.button == 1:
+		if data.button != 1:
 			return False
-
-		elif data.button == 2:
-			widget.emit_stop_by_name("button_press_event")
-			return False
-
-		else:
-			self.applet.emit("button_press_event", data)
-			return True
-
-
-	def __cb_button_clicked(self, widget, data = None):
-		"Callback for clicked button"
 
 		self.locktimer.reset()
 
@@ -184,10 +168,12 @@ class RevelationApplet(object):
 
 		elif self.entrymenu != None:
 
-			x, y = self.get_popup_offset()
+			x, y = self.get_popup_offset(self.entrymenu)
 
 			self.entrymenu.show_all()
-			self.entrymenu.popup(None, None, lambda d: (x, y, False), 1, 0)
+			self.entrymenu.popup(None, None, lambda d: (x, y, False), 1, data.time)
+
+		return True
 
 
 	def __cb_config_file(self, key, value, data):
@@ -281,8 +267,11 @@ class RevelationApplet(object):
 		elif action == "copy":
 			self.entry_copychain(data)
 
-		else:
+		elif self.entry_can_goto(data):
 			self.entry_goto(data)
+
+		else:
+			self.entry_show(data)
 
 
 	def __setup_prefs(self):
@@ -336,6 +325,21 @@ class RevelationApplet(object):
 		About(self.applet).run()
 
 
+	def entry_can_goto(self, e):
+		"Checks if an entry can be gone to"
+
+		try:
+			command = self.entry_get_launcher(e)
+
+			return command != None
+
+		except ( util.SubstFormatError ):
+			return True
+
+		except ( util.SubstValueError, config.ConfigError ):
+			return False
+
+
 	def entry_copychain(self, e):
 		"Copies all passwords from an entry as a chain"
 
@@ -350,21 +354,32 @@ class RevelationApplet(object):
 		self.clipboard.set(secrets)
 
 
+	def entry_get_launcher(self, e):
+		"Returns a launcher command for an entry, if possible"
+
+		command = self.config.get("/apps/revelation/launcher/%s" % e.id)
+
+		if command in ( "", None ):
+			return None
+
+		subst = {}
+		for field in e.fields:
+			subst[field.symbol] = field.value
+
+		command = util.parse_subst(command, subst)
+
+		return command
+
+
 	def entry_goto(self, e):
 		"Goes to an entry"
 
 		try:
+			# fetch command
+			command = self.entry_get_launcher(e)
 
-			# fetch goto data
-			command = self.config.get("/apps/revelation/launcher/%s" % e.id)
-
-			if command in ( "", None ):
-				self.entry_show(e)
+			if command == None:
 				return
-
-			subst = {}
-			for field in e.fields:
-				subst[field.symbol] = field.value
 
 			# copy passwords to clipboard
 			chain = []
@@ -378,12 +393,11 @@ class RevelationApplet(object):
 
 			self.clipboard.set(chain)
 
-			# generate and run goto command
-			command = util.parse_subst(command, subst)
+			# run command
 			util.execute_child(command)
 
 		except ( util.SubstFormatError, config.ConfigError ):
-			dialog.Error(self, "Invalid goto command format", "The goto command for '" + e.typename + "' entries is invalid, please correct this in the preferences.").run()
+			dialog.Error(None, "Invalid goto command format", "The goto command for '" + e.typename + "' entries is invalid, please correct this in the preferences.").run()
 
 		except util.SubstValueError:
 			self.entry_show(e)
@@ -395,30 +409,37 @@ class RevelationApplet(object):
 		if self.entrypopup != None:
 			self.entrypopup.destroy()
 
+		popup = dialog.Popup()
+
 		view = ui.EntryView()
 		view.set_border_width(12)
 		view.display_entry(e)
 
-		x, y = self.get_popup_offset()
-		popup = dialog.Popup(view, x, y)
-
-
 		def cb_goto(widget):
-			self.entry_goto(e)
+			if self.entry_can_goto(e):
+				self.entry_goto(e)
+
 			popup.destroy()
 
 		button_goto = ui.Button(ui.STOCK_GOTO, cb_goto)
 		button_close = ui.Button(gtk.STOCK_CLOSE, lambda w: popup.destroy())
 
-		if self.config.get("/apps/revelation/launcher/%s" % e.id) in ( "", None ):
-			button_goto.set_sensitive(False)
+		button_goto.set_sensitive(self.entry_can_goto(e))
 
 		buttonbox = ui.HButtonBox(button_goto, button_close)
 		view.pack_start(buttonbox)
 
+		popup.add(view)
+		popup.realize()
+
+		for child in popup.get_children():
+			child.show_all()
+
+		x, y = self.get_popup_offset(popup)
+		popup.move(x, y)
+		popup.show_all()
 
 		self.entrypopup = popup
-		popup.show_all()
 
 
 	def file_close(self):
@@ -513,17 +534,36 @@ class RevelationApplet(object):
 		return menu
 
 
-	def get_popup_offset(self):
-		"Returns a tuple of x and y oppset coords for popups"
+	def get_popup_offset(self, popup):
+		"Returns a tuple of x and y offset coords for popups"
 
-		x, y = self.applet.window.get_origin()
+		screen	= self.applet.get_screen()
+		a	= self.applet.get_allocation()
+		rw, rh	= popup.size_request()
 
-		a = self.applet.get_allocation()
-		x += a.x
-		y += a.y
+		x, y	= self.applet.window.get_origin()
+		x	+= a.x
+		y	+= a.y
 
-		rx, ry = self.applet.size_request()
-		y += ry
+
+		# TODO use constants ORIENT_UP etc here, if available
+		if self.applet.get_orient() in ( 0, 1 ):
+			x = min(x, screen.get_width() - rw)
+
+			if (y > screen.get_height() / 2):
+				y -= rh
+
+			else:
+				y += a.height
+
+		else:
+			y = min(y, screen.get_height() - rh)
+
+			if (x > screen.get_width() / 2):
+				x -= rw
+
+			else:
+				x += a.width
 
 		return x, y
 
