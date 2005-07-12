@@ -25,7 +25,7 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 
-import gnome, gnome.applet, gtk, os, sys
+import gnome, gnome.applet, gobject, gtk, os, sys
 
 if "@pythondir@" not in sys.path:
 	sys.path.insert(0, "@pythondir@")
@@ -57,12 +57,13 @@ class RevelationApplet(object):
 
 		self.applet.add_preferences("/schemas/apps/revelation-applet/prefs")
 
-		self.clipboard	= data.Clipboard()
-		self.config	= config.Config(self.applet.get_preferences_key())
-		self.datafile	= io.DataFile(datahandler.Revelation)
-		self.entrystore	= data.EntryStore()
-		self.items	= ui.ItemFactory(self.applet)
-		self.locktimer	= ui.Timer()
+		self.clipboard		= data.Clipboard()
+		self.config		= config.Config(self.applet.get_preferences_key())
+		self.datafile		= io.DataFile(datahandler.Revelation)
+		self.entrystore		= data.EntryStore()
+		self.entrysearch	= data.EntrySearch(self.entrystore)
+		self.items		= ui.ItemFactory(self.applet)
+		self.locktimer		= ui.Timer()
 
 		self.__setup_prefs()
 		self.config.monitor("file",		self.__cb_config_file)
@@ -71,6 +72,8 @@ class RevelationApplet(object):
 		self.datafile.connect("changed", self.__cb_file_changed)
 		self.datafile.connect("content-changed", self.__cb_file_content_changed)
 		self.locktimer.connect("ring", self.__cb_file_autolock)
+
+		self.entrysearch.folders = False
 
 
 	def __init_states(self):
@@ -119,6 +122,7 @@ class RevelationApplet(object):
 		# set up ui items
 		self.entry	= ui.Entry()
 		self.entry.set_width_chars(16)
+		self.entry.connect("activate", self.__cb_entry_activate)
 		self.entry.connect("button_press_event", self.__cb_entry_buttonpress)
 		self.entry.connect("key_press_event", lambda w,d=None: self.locktimer.reset())
 
@@ -133,7 +137,8 @@ class RevelationApplet(object):
 		self.entrymenu = None
 
 		# set up entry popup
-		self.entrypopup = None
+		self.entrypopup	= None
+		self.listpopup	= None
 
 
 	def __cb_icon_buttonpress(self, widget, data = None):
@@ -146,6 +151,10 @@ class RevelationApplet(object):
 
 		if self.entrypopup != None:
 			self.entrypopup.destroy()
+
+		if self.listpopup != None:
+			self.listpopup.destroy()
+
 
 		if self.datafile.get_file() == None:
 			file = self.file_get_current()
@@ -199,6 +208,19 @@ class RevelationApplet(object):
 
 		else:
 			sys.exit(1)
+
+
+	def __cb_entry_activate(self, widget, data = None):
+		"Callback for entry activation (pressing enter etc)"
+
+		term = self.entry.get_text()
+
+		if term.strip() == "":
+			return
+
+		self.entry_search(term)
+
+		self.entry.select_region(0, -1)
 
 
 	def __cb_entry_buttonpress(self, widget, data = None):
@@ -403,11 +425,58 @@ class RevelationApplet(object):
 			self.entry_show(e)
 
 
+	def entry_search(self, term):
+		"Searches for an entry"
+
+		if self.entrypopup != None:
+			self.entrypopup.destroy()
+
+		if self.listpopup != None:
+			self.listpopup.destroy()
+
+		matches = self.entrysearch.find_all(term)
+
+		if len(matches) == 0:
+			self.entry.modify_base(gtk.STATE_NORMAL, gtk.gdk.color_parse("#ffbaba"))
+			gobject.timeout_add(500, lambda: self.entry.modify_base(gtk.STATE_NORMAL, ui.Entry().rc_get_style().base[gtk.STATE_NORMAL]))
+
+		elif len(matches) == 1:
+			e = self.entrystore.get_entry(matches[0])
+			self.entry_show(e)
+
+		else:
+			entrystore = data.EntryStore()
+
+			for iter in matches:
+				entrystore.add_entry(self.entrystore.get_entry(iter))
+
+			treeview = ui.EntryTree(entrystore)
+			treeview.connect("row-activated", lambda w,p,d: self.entry_show(entrystore.get_entry(entrystore.get_iter(p))))
+			sw = ui.ScrolledWindow(treeview)
+
+			popup = dialog.Popup(sw)
+			popup.set_default_size(225, 250)
+
+			popup.realize()
+
+			for child in popup.get_children():
+				child.show_all()
+
+			x, y = self.get_popup_offset(popup)
+			popup.move(x, y)
+			popup.show_all()
+
+			self.listpopup = popup
+
+
 	def entry_show(self, e):
 		"Shows an entry"
 
 		if self.entrypopup != None:
 			self.entrypopup.destroy()
+
+		if self.listpopup != None:
+			self.listpopup.destroy()
 
 		popup = dialog.Popup()
 
