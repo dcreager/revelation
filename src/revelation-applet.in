@@ -446,6 +446,7 @@ class RevelationApplet(object):
 
 		else:
 			entrystore = data.EntryStore()
+			entrystore.set_sort_column_id(0, gtk.SORT_ASCENDING)
 
 			for iter in matches:
 				entrystore.add_entry(self.entrystore.get_entry(iter))
@@ -508,6 +509,8 @@ class RevelationApplet(object):
 		popup.move(x, y)
 		popup.show_all()
 
+		button_close.grab_focus()
+
 		self.entrypopup = popup
 
 
@@ -542,6 +545,7 @@ class RevelationApplet(object):
 
 			self.entrymenu = self.generate_entrymenu(self.entrystore)
 			self.locktimer.start(self.config.get("autolock_timeout") * 60)
+			self.entry.grab_focus()
 
 		except dialog.CancelError:
 			return

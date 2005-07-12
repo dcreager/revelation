@@ -111,7 +111,8 @@ class Popup(gtk.Window):
 	"Base class for popup (frameless) dialogs"
 
 	def __init__(self, widget = None):
-		gtk.Window.__init__(self, gtk.WINDOW_POPUP)
+		gtk.Window.__init__(self)
+		self.set_decorated(False)
 
 		self.border = gtk.Frame()
 		self.border.set_shadow_type(gtk.SHADOW_OUT)
