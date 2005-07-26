@@ -10,6 +10,9 @@ Revelation changelog
 
 	* don't crash when removing applet from panel
 
+	* added applet options for displaying password and
+	copying username to clipboard as chain
+
 2005-07-12  Erik Grinaker <erikg@codepoet.no>
 
 	* implemented initial applet searching

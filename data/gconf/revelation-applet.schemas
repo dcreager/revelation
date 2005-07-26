@@ -32,6 +32,39 @@
 		</schema>
 
 		<schema>
+			<key>/schemas/apps/revelation-applet/prefs/chain_username</key>
+			<owner>revelation-applet</owner>
+			<type>bool</type>
+			<default>false</default>
+
+			<locale name="C">
+				<short>When copying password, also copy username (chained)</short>
+				<long>
+					If set, both the username and the password will be
+					copied to the clipboard when pressing
+					"Copy Password" one after the other (when username
+					is pasted, the password is automatically copied).
+				</long>
+			</locale>
+		</schema>
+
+		<schema>
+			<key>/schemas/apps/revelation-applet/show_passwords</key>
+			<owner>revelation-applet</owner>
+			<type>bool</type>
+			<default>true</default>
+
+			<locale name="C">
+				<short>Show passwords</short>
+				<long>
+					When set, passwords will be displayed
+					in plain text. Turning this option off
+					will obscure passwords with ******.
+				</long>
+			</locale>
+		</schema>
+
+		<schema>
 			<key>/schemas/apps/revelation-applet/prefs/file</key>
 			<owner>revelation-applet</owner>
 			<type>string</type>

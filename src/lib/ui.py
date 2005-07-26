@@ -470,7 +470,11 @@ class PasswordLabel(Label):
 		self.set_selectable(True)
 
 		if self.config is not None:
-			self.config.monitor("view/passwords", lambda k,v,d: self.show_password(v))
+			try:
+				self.config.monitor("view/passwords", lambda k,v,d: self.show_password(v))
+
+			except config.ConfigError:
+				self.config.monitor("show_passwords", lambda k,v,d: self.show_password(v))
 
 		self.connect("populate-popup", self.__cb_popup)
 
