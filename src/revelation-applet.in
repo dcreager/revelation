@@ -41,6 +41,9 @@ class RevelationApplet(object):
 		self.iid	= iid
 
 		sys.excepthook	= self.__cb_exception
+		self.applet.connect("destroy", self.__cb_destroy)
+
+		self.ccbs = []
 
 		try:
 			self.__init_facilities()
@@ -66,8 +69,8 @@ class RevelationApplet(object):
 		self.locktimer		= ui.Timer()
 
 		self.__setup_prefs()
-		self.config.monitor("file",		self.__cb_config_file)
-		self.config.monitor("autolock_timeout",	lambda k,v,d: self.locktimer.start(v * 60))
+		self.ccbs.append(self.config.monitor("file", self.__cb_config_file))
+		self.ccbs.append(self.config.monitor("autolock_timeout", lambda k,v,d: self.locktimer.start(v * 60)))
 
 		self.datafile.connect("changed", self.__cb_file_changed)
 		self.datafile.connect("content-changed", self.__cb_file_content_changed)
@@ -115,7 +118,7 @@ class RevelationApplet(object):
 			( "file-reload",	lambda w,d=None: self.file_reload() ),
 			( "file-unlock",	lambda w,d=None: self.file_open(self.file_get_current()) ),
 			( "kill",		lambda w,d=None: sys.exit() ),
-			( "prefs",		lambda w,d=None: Preferences(None, self.config).run() ),
+			( "prefs",		lambda w,d=None: self.prefs() ),
 			( "revelation",		lambda w,d=None: self.launch_revelation() ),
 		), None)
 
@@ -139,6 +142,18 @@ class RevelationApplet(object):
 		# set up entry popup
 		self.entrypopup	= None
 		self.listpopup	= None
+
+		# set up dialog checkers
+		self.dialog_about	= None
+		self.dialog_password	= None
+		self.dialog_prefs	= None
+
+
+	def __cb_destroy(self, widget, data = None):
+		"Callback for destroy"
+
+		for id in self.ccbs:
+			self.config.forget(id)
 
 
 	def __cb_icon_buttonpress(self, widget, data = None):
@@ -170,7 +185,7 @@ class RevelationApplet(object):
 				)
 
 				if d.run() == gtk.RESPONSE_ACCEPT:
-					Preferences(None, self.config).run()
+					self.prefs()
 
 			else:
 				self.file_open(file)
@@ -344,7 +359,14 @@ class RevelationApplet(object):
 	def about(self):
 		"Displays an about dialog"
 
-		About(self.applet).run()
+		if self.dialog_about != None:
+			self.dialog_about.present()
+
+		else:
+			self.dialog_about = About(self.applet)
+			self.dialog_about.connect("destroy", lambda w: setattr(self, "dialog_about", None))
+
+			self.dialog_about.run()
 
 
 	def entry_can_goto(self, e):
@@ -452,6 +474,7 @@ class RevelationApplet(object):
 				entrystore.add_entry(self.entrystore.get_entry(iter))
 
 			treeview = ui.EntryTree(entrystore)
+			treeview.set_cursor((0,))
 			treeview.connect("row-activated", lambda w,p,d: self.entry_show(entrystore.get_entry(entrystore.get_iter(p))))
 			sw = ui.ScrolledWindow(treeview)
 
@@ -480,6 +503,7 @@ class RevelationApplet(object):
 			self.listpopup.destroy()
 
 		popup = dialog.Popup()
+		popup.set_title(e.name)
 
 		view = ui.EntryView()
 		view.set_border_width(12)
@@ -537,7 +561,15 @@ class RevelationApplet(object):
 			if file in ( "", None ):
 				return
 
-			entrystore = self.datafile.load(file, password, lambda: dialog.PasswordOpen(None, os.path.basename(file)).run())
+			if self.dialog_password != None:
+				self.dialog_password.present()
+				return
+
+			self.dialog_password = dialog.PasswordOpen(None, os.path.basename(file))
+			self.dialog_password.connect("destroy", lambda w: setattr(self, "dialog_password", None))
+
+
+			entrystore = self.datafile.load(file, password, lambda: self.dialog_password.run())
 
 			self.entrystore.clear()
 			self.entrystore.import_entry(entrystore, None)
@@ -645,6 +677,20 @@ class RevelationApplet(object):
 		"Launches Revelation"
 
 		util.execute_child("revelation")
+
+
+	def prefs(self):
+		"Displays the preference dialog"
+
+		if self.dialog_prefs != None:
+			self.dialog_prefs.present()
+
+		else:
+			self.dialog_prefs = Preferences(None, self.config)
+			self.dialog_prefs.connect("destroy", lambda w: setattr(self, "dialog_prefs", None))
+
+			self.dialog_prefs.run()
+
 
 
 

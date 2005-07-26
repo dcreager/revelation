@@ -2,6 +2,12 @@ Revelation changelog
 
 ---------------[ xxxx-xx-xx : 0.4.4 ]---------------
 
+2005-07-26  Erik Grinaker <erikg@codepoet.no>
+
+	* avoid showing duplicates of non-modal dialogs
+
+	* applet display popups now has name of entry as title
+
 2005-07-12  Erik Grinaker <erikg@codepoet.no>
 
 	* implemented initial applet searching

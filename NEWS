@@ -2,9 +2,10 @@
 ============================
 
 Bugfixes:
+- don't crash on missing revelation logo icon
 - new "Add folder" item, instead of adding folders through "Add entry"
 - removed "New file" item from toolbar
-- don't crash on missing revelation logo icon
+- avoid showing duplicates of non-modal dialogs
 
 Code changes:
 - removed unit tests
