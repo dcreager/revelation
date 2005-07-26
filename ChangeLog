@@ -8,6 +8,8 @@ Revelation changelog
 
 	* applet display popups now has name of entry as title
 
+	* don't crash when removing applet from panel
+
 2005-07-12  Erik Grinaker <erikg@codepoet.no>
 
 	* implemented initial applet searching

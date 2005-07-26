@@ -8,8 +8,6 @@
 - string cleanups
 - gnome panel applet
   - make library modules more independent, so only a few are imported
-  - fix crash on panel remove, ConfigError exception
-- run unit tests on built libraries instead of installed ones
 
 0.5.x:
 - ensure complete UTF-8 support
