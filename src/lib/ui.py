@@ -1,5 +1,5 @@
 #
-# Revelation 0.4.7 - a password manager for GNOME 2
+# Revelation 0.4.8 - a password manager for GNOME 2
 # http://oss.codepoet.no/revelation/
 # $Id$
 #
@@ -91,7 +91,7 @@ STOCK_ICONS			= (
 	( STOCK_ENTRY_DATABASE,		"stock_data-sources",		( ICON_SIZE_DATAVIEW, ICON_SIZE_DROPDOWN, ICON_SIZE_ENTRY, ICON_SIZE_TREEVIEW )),
 	( STOCK_ENTRY_DOOR,		"stock_exit",			( ICON_SIZE_DATAVIEW, ICON_SIZE_DROPDOWN, ICON_SIZE_ENTRY, ICON_SIZE_TREEVIEW )),
 	( STOCK_ENTRY_EMAIL,		"stock_mail",			( ICON_SIZE_DATAVIEW, ICON_SIZE_DROPDOWN, ICON_SIZE_ENTRY, ICON_SIZE_TREEVIEW )),
-	( STOCK_ENTRY_FTP,		"gnome-ftp",			( ICON_SIZE_DATAVIEW, ICON_SIZE_DROPDOWN, ICON_SIZE_ENTRY, ICON_SIZE_TREEVIEW )),
+	( STOCK_ENTRY_FTP,		"system-file-manager",		( ICON_SIZE_DATAVIEW, ICON_SIZE_DROPDOWN, ICON_SIZE_ENTRY, ICON_SIZE_TREEVIEW )),
 	( STOCK_ENTRY_GENERIC,		"stock_lock",			( ICON_SIZE_DATAVIEW, ICON_SIZE_DROPDOWN, ICON_SIZE_ENTRY, ICON_SIZE_TREEVIEW )),
 	( STOCK_ENTRY_PHONE,		"stock_cell-phone",		( ICON_SIZE_DATAVIEW, ICON_SIZE_DROPDOWN, ICON_SIZE_ENTRY, ICON_SIZE_TREEVIEW )),
 	( STOCK_ENTRY_SHELL,		"gnome-terminal",		( ICON_SIZE_DATAVIEW, ICON_SIZE_DROPDOWN, ICON_SIZE_ENTRY, ICON_SIZE_TREEVIEW )),
@@ -1318,7 +1318,9 @@ class TreeView(gtk.TreeView):
 		if data.button == 1 and data.type == gtk.gdk._2BUTTON_PRESS and path != None:
 			iter = self.model.get_iter(path[0])
 			self.toggle_expanded(iter)
-			self.emit("doubleclick", iter)
+
+			if iter != None:
+				self.emit("doubleclick", iter)
 
 		# display popup on right-click
 		elif data.button == 3:
