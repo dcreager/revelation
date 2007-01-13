@@ -1,0 +1,89 @@
+#
+# Revelation - a password manager for GNOME 2
+# http://oss.codepoet.no/revelation/
+# $Id$
+#
+# data/SConscript - build configuration for SCons
+#
+# Copyright (c) 2003-2006 Erik Grinaker
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+#
+
+Import("env")
+
+# handle bonobo files
+bonobo = env.Substitute([
+	"bonobo/GNOME_RevelationApplet.server.in",
+])
+
+env.Install("$libdir/bonobo/servers", bonobo)
+
+# handle cracklib dictionary
+cracklibdict = env.CracklibDict("cracklib/pwdict")
+
+env.InstallCracklibDict(env, "$datadir/$package", cracklibdict)
+
+# handle gconf files
+env.InstallGConfSchema(env, "$gconf_schemadir", [
+	"gconf/revelation-applet.schemas",
+	"gconf/revelation.schemas",
+])
+
+# handle icons
+env.Install("$datadir/icons/hicolor/16x16/apps", [
+	"icons/16x16/revelation.png",
+])
+
+env.Install("$datadir/icons/hicolor/24x24/apps", [
+	"icons/24x24/revelation.png",
+	"icons/24x24/revelation-locked.png",
+])
+
+env.Install("$datadir/icons/hicolor/32x32/apps", [
+	"icons/32x32/revelation.png",
+	"icons/32x32/revelation-locked.png",
+])
+
+env.Install("$datadir/icons/hicolor/48x48/apps", [
+	"icons/48x48/revelation.png",
+	"icons/48x48/revelation-locked.png",
+])
+
+env.Install("$datadir/icons/hicolor/48x48/mimetypes", [
+	"icons/48x48/gnome-mime-application-x-revelation.png",
+])
+
+# handle mime data
+desktop = env.Substitute([
+	"mime/revelation.desktop.in",
+])
+
+env.InstallFDODesktop(env, "$datadir/applications", desktop)
+
+mime = [
+	"mime/revelation.xml"
+]
+
+env.InstallFDOMime(env, "$datadir/mime/packages", mime)
+
+
+# handle ui data
+env.Install("$datadir/$package/ui", [
+	"ui/menubar.xml",
+	"ui/popup-tree.xml",
+	"ui/toolbar.xml",
+])
+

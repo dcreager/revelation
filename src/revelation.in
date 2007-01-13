@@ -24,8 +24,8 @@
 
 import gettext, gnome, gobject, gtk, gtk.gdk, os, pwd, sys
 
-if "@pyexecdir@" not in sys.path:
-	sys.path.insert(0, "@pyexecdir@")
+if "$python_libdir$" not in sys.path:
+	sys.path.insert(0, "$python_libdir$")
 
 from revelation import config, data, datahandler, dialog, entry, io, ui, util
 

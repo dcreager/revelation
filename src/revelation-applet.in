@@ -27,8 +27,8 @@
 
 import gettext, gnome, gnomeapplet, gobject, gtk, os, sys
 
-if "@pyexecdir@" not in sys.path:
-	sys.path.insert(0, "@pyexecdir@")
+if "$python_libdir$" not in sys.path:
+	sys.path.insert(0, "$python_libdir$")
 
 from revelation import config, data, datahandler, dialog, entry, io, mman, ui, util
 
@@ -170,7 +170,7 @@ class RevelationApplet(object):
 			( "file-reload",	lambda w,d=None: self.file_reload() ),
 			( "file-unlock",	lambda w,d=None: self.file_open(self.config.get("file")) ),
 			( "prefs",		lambda w,d=None: self.prefs() ),
-			( "revelation",		lambda w,d=None: util.execute_child("@bindir@/revelation") ),
+			( "revelation",		lambda w,d=None: util.execute_child("$bindir$/revelation") ),
 		), None)
 
 		# set up ui items

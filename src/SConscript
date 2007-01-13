@@ -1,0 +1,91 @@
+#
+# Revelation - a password manager for GNOME 2
+# http://oss.codepoet.no/revelation/
+# $Id$
+#
+# data/SConscript - build configuration for SCons
+#
+# Copyright (c) 2003-2006 Erik Grinaker
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+#
+
+Import("env")
+
+# handle scripts
+scripts = env.Substitute([
+	"revelation.in",
+])
+
+env.InstallScript(env, "$bindir", scripts)
+
+applet_scripts = env.Substitute([
+	"revelation-applet.in",
+])
+
+env.InstallScript(env, "$libexecdir", applet_scripts)
+
+# handle bundle
+source_bundle = [
+	"bundle/AfSplitter.py",
+	"bundle/PBKDFv2.py",
+	"bundle/__init__.py",
+	"bundle/luks.py",
+]
+
+bundle = env.PythonCompile(source_bundle)
+
+env.Install("$python_libdir/$package/bundle", source_bundle + bundle)
+
+
+# handle library
+source_lib = env.Substitute("lib/config.py.in") + [
+	"lib/__init__.py",
+	"lib/data.py",
+	"lib/dialog.py",
+	"lib/entry.py",
+	"lib/io.py",
+	"lib/ui.py",
+	"lib/util.py",
+]
+
+lib = env.PythonCompile(source_lib)
+
+env.Install("$python_libdir/$package", source_lib + lib)
+
+# handle datahandler
+source_datahandler = [
+	"lib/datahandler/__init__.py",
+	"lib/datahandler/base.py",
+	"lib/datahandler/fpm.py",
+	"lib/datahandler/gpass.py",
+	"lib/datahandler/netrc.py",
+	"lib/datahandler/pwsafe.py",
+	"lib/datahandler/rvl.py",
+	"lib/datahandler/splashid.py",
+	"lib/datahandler/text.py",
+	"lib/datahandler/xhtml.py",
+]
+
+datahandler = env.PythonCompile(source_datahandler)
+
+env.Install("$python_libdir/$package/datahandler", source_datahandler + datahandler)
+
+
+# handle crack module
+crack = env.SharedLibrary("wrap/crack/crack", env.Substitute("wrap/crack/crack.c.in"), OBJPREFIX = "")
+
+env.InstallAs("$python_libdir/$package/crack.so", crack)
+
