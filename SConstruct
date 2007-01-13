@@ -49,7 +49,7 @@ REQ_PYTHON_MODULES	= [
 ]
 
 # set up sconsent
-sconsent.LoadTool("cracklib", "fdo", "gconf", "pkgconfig", "python")
+sconsent.LoadTool("cracklib", "fdo", "gconf", "intltool", "pkgconfig", "python")
 
 # set up environment
 options = sconsent.option.Options(args = ARGUMENTS)
@@ -70,6 +70,7 @@ try:
 	conf.CheckFDO()
 	conf.CheckCracklib()
 	conf.CheckGConf()
+	conf.CheckIntlTool()
 
 	env = conf.Finish()
 
@@ -82,5 +83,6 @@ except sconsent.configure.ConfigureError, reason:
 
 # load sconscript files
 env.SConscript("data/SConscript", exports = "env", build_dir = "build/data")
+env.SConscript("po/SConscript", exports = "env", build_dir = "build/po")
 env.SConscript("src/SConscript", exports = "env", build_dir = "build/src")
 
