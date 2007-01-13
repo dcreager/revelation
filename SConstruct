@@ -49,7 +49,7 @@ REQ_PYTHON_MODULES	= [
 ]
 
 # set up sconsent
-sconsent.LoadTool("cracklib", "gconf", "pkgconfig", "python")
+sconsent.LoadTool("cracklib", "fdo", "gconf", "pkgconfig", "python")
 
 # set up environment
 options = sconsent.option.Options(args = ARGUMENTS)
@@ -61,16 +61,13 @@ env = sconsent.InitEnv(
 	releasename = RELEASENAME
 )
 
-# set up sconscript files
-env.SConscript("data/SConscript", exports = "env", build_dir = "build/data")
-env.SConscript("src/SConscript", exports = "env", build_dir = "build/src")
-
 # run configuration checks
 try:
 	conf = env.Configure()
 
 	conf.CheckPKGConfig(REQ_PKGCONFIG_PACKAGES)
 	conf.CheckPython(REQ_PYTHON_VERSION, REQ_PYTHON_MODULES)
+	conf.CheckFDO()
 	conf.CheckCracklib()
 	conf.CheckGConf()
 
@@ -81,4 +78,9 @@ except sconsent.configure.ConfigureDisabledError:
 
 except sconsent.configure.ConfigureError, reason:
 	env.Error(reason)
+
+
+# load sconscript files
+env.SConscript("data/SConscript", exports = "env", build_dir = "build/data")
+env.SConscript("src/SConscript", exports = "env", build_dir = "build/src")
 

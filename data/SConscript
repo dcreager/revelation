@@ -29,45 +29,59 @@ bonobo = env.Substitute([
 	"bonobo/GNOME_RevelationApplet.server.in",
 ])
 
+env.Install("$libdir/bonobo/servers", bonobo)
+
 # handle cracklib dictionary
-crackdict = env.CracklibDict("cracklib/pwdict")
+cracklibdict = env.CracklibDict("cracklib/pwdict")
+
+env.InstallCracklibDict(env, "$datadir/$package", cracklibdict)
 
 # handle gconf files
-gconf = env.File([
+env.InstallGConfSchema(env, "$gconf_schemadir", [
 	"gconf/revelation-applet.schemas",
 	"gconf/revelation.schemas",
 ])
 
 # handle icons
-icons_16 = env.File([
+env.Install("$datadir/icons/hicolor/16x16/apps", [
 	"icons/16x16/revelation.png",
 ])
 
-icons_24 = env.File([
+env.Install("$datadir/icons/hicolor/24x24/apps", [
 	"icons/24x24/revelation.png",
 	"icons/24x24/revelation-locked.png",
 ])
 
-icons_32 = env.File([
+env.Install("$datadir/icons/hicolor/32x32/apps", [
 	"icons/32x32/revelation.png",
 	"icons/32x32/revelation-locked.png",
 ])
 
-icons_48 = env.File([
-	"icons/48x48/gnome-mime-application-x-revelation.png",
+env.Install("$datadir/icons/hicolor/48x48/apps", [
 	"icons/48x48/revelation.png",
 	"icons/48x48/revelation-locked.png",
 ])
 
+env.Install("$datadir/icons/hicolor/48x48/mimetypes", [
+	"icons/48x48/gnome-mime-application-x-revelation.png",
+])
+
 # handle mime data
-mime = env.Substitute([
+desktop = env.Substitute([
 	"mime/revelation.desktop.in",
 ])
 
-mime += "mime/revelation.xml"
+env.InstallFDODesktop(env, "$datadir/applications", desktop)
+
+mime = [
+	"mime/revelation.xml"
+]
+
+env.InstallFDOMime(env, "$datadir/mime/packages", mime)
+
 
 # handle ui data
-ui = env.File([
+env.Install("$datadir/$package/ui", [
 	"ui/menubar.xml",
 	"ui/popup-tree.xml",
 	"ui/toolbar.xml",

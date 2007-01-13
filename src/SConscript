@@ -29,13 +29,13 @@ scripts = env.Substitute([
 	"revelation.in",
 ])
 
-env.InstallScript("$bindir", scripts)
+env.InstallScript(env, "$bindir", scripts)
 
 applet_scripts = env.Substitute([
 	"revelation-applet.in",
 ])
 
-env.InstallScript("$libexecdir", applet_scripts)
+env.InstallScript(env, "$libexecdir", applet_scripts)
 
 # handle bundle
 source_bundle = [
