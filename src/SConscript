@@ -65,3 +65,27 @@ lib = env.PythonCompile(source_lib)
 
 env.Install("$python_libdir/$package", source_lib + lib)
 
+# handle datahandler
+source_datahandler = [
+	"lib/datahandler/__init__.py",
+	"lib/datahandler/base.py",
+	"lib/datahandler/fpm.py",
+	"lib/datahandler/gpass.py",
+	"lib/datahandler/netrc.py",
+	"lib/datahandler/pwsafe.py",
+	"lib/datahandler/rvl.py",
+	"lib/datahandler/splashid.py",
+	"lib/datahandler/text.py",
+	"lib/datahandler/xhtml.py",
+]
+
+datahandler = env.PythonCompile(source_datahandler)
+
+env.Install("$python_libdir/$package/datahandler", source_datahandler + datahandler)
+
+
+# handle crack module
+crack = env.SharedLibrary("wrap/crack/crack", env.Substitute("wrap/crack/crack.c.in"), OBJPREFIX = "")
+
+env.InstallAs("$python_libdir/$package/crack.so", crack)
+
