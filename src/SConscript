@@ -33,11 +33,20 @@ applet_scripts = env.Substitute([
 	"revelation-applet.in",
 ])
 
+# handle bundle
+bundle = env.PythonCompile([
+	"bundle/AfSplitter.py",
+	"bundle/PBKDFv2.py",
+	"bundle/__init__.py",
+	"bundle/luks.py",
+])
+
 # handle config
 config = env.Substitute([
 	"lib/config.py.in",
 ])
 
+# handle library
 lib = env.PythonCompile(config + [
 	"lib/datahandler/__init__.py",
 	"lib/datahandler/base.py",
