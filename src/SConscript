@@ -29,35 +29,29 @@ scripts = env.Substitute([
 	"revelation.in",
 ])
 
+env.InstallScript("$bindir", scripts)
+
 applet_scripts = env.Substitute([
 	"revelation-applet.in",
 ])
 
+env.InstallScript("$libexecdir", applet_scripts)
+
 # handle bundle
-bundle = env.PythonCompile([
+source_bundle = [
 	"bundle/AfSplitter.py",
 	"bundle/PBKDFv2.py",
 	"bundle/__init__.py",
 	"bundle/luks.py",
-])
+]
 
-# handle config
-config = env.Substitute([
-	"lib/config.py.in",
-])
+bundle = env.PythonCompile(source_bundle)
+
+env.Install("$python_libdir/$package/bundle", source_bundle + bundle)
+
 
 # handle library
-lib = env.PythonCompile(config + [
-	"lib/datahandler/__init__.py",
-	"lib/datahandler/base.py",
-	"lib/datahandler/fpm.py",
-	"lib/datahandler/gpass.py",
-	"lib/datahandler/netrc.py",
-	"lib/datahandler/pwsafe.py",
-	"lib/datahandler/rvl.py",
-	"lib/datahandler/splashid.py",
-	"lib/datahandler/text.py",
-	"lib/datahandler/xhtml.py",
+source_lib = env.Substitute("lib/config.py.in") + [
 	"lib/__init__.py",
 	"lib/data.py",
 	"lib/dialog.py",
@@ -65,5 +59,9 @@ lib = env.PythonCompile(config + [
 	"lib/io.py",
 	"lib/ui.py",
 	"lib/util.py",
-])
+]
+
+lib = env.PythonCompile(source_lib)
+
+env.Install("$python_libdir/$package", source_lib + lib)
 

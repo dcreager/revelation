@@ -62,7 +62,7 @@ env.SConscript("src/SConscript", exports = "env", build_dir = "build/src")
 
 # run configuration checks
 try:
-	conf = env.Configure(env)
+	conf = env.Configure()
 
 	conf.CheckPKGConfig(REQ_PKGCONFIG_PACKAGES)
 	conf.CheckPython(REQ_PYTHON_VERSION, REQ_PYTHON_MODULES)
