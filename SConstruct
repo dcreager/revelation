@@ -54,7 +54,12 @@ sconsent.LoadTool("cracklib", "gconf", "pkgconfig", "python")
 # set up environment
 options = sconsent.option.Options(args = ARGUMENTS)
 
-env = sconsent.InitEnv(Environment(options = options), PACKAGE, VERSION, options = options)
+env = sconsent.InitEnv(
+	Environment(options = options),
+	PACKAGE, VERSION,
+	options = options,
+	releasename = RELEASENAME
+)
 
 # set up sconscript files
 env.SConscript("data/SConscript", exports = "env", build_dir = "build/data")
