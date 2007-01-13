@@ -57,9 +57,8 @@ options = sconsent.option.Options(args = ARGUMENTS)
 env = sconsent.InitEnv(Environment(options = options), PACKAGE, VERSION, options = options)
 
 # set up sconscript files
-env.SConscript([
-	"data/SConscript",
-], exports = "env", build_dir = "build/data")
+env.SConscript("data/SConscript", exports = "env", build_dir = "build/data")
+env.SConscript("src/SConscript", exports = "env", build_dir = "build/src")
 
 # run configuration checks
 try:

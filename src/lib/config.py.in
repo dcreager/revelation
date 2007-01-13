@@ -29,16 +29,16 @@ import gconf, gettext, os
 
 _ = gettext.gettext
 
-DIR_GCONFSCHEMAS= "@pkgschemadir@"
-DIR_ICONS	= "@datadir@/icons"
-DIR_LOCALE	= "@datadir@/locale"
-DIR_UI		= "@pkgdatadir@/ui"
+DIR_GCONFSCHEMAS= "$gconf_schemadir$"
+DIR_ICONS	= "$datadir$/icons"
+DIR_LOCALE	= "$datadir$/locale"
+DIR_UI		= "$datadir$/$package$/ui"
 
-FILE_GCONFTOOL	= "@GCONFTOOL@"
+FILE_GCONFTOOL	= "$cmd_gconftool2$"
 
 APPNAME		= "Revelation"
-PACKAGE		= "@PACKAGE@"
-VERSION		= "@VERSION@"
+PACKAGE		= "$package$"
+VERSION		= "$version$"
 DATAVERSION	= 1
 RELNAME		= "One toke? You poor fool!"
 URL		= "http://oss.codepoet.no/revelation/"
