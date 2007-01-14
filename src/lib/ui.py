@@ -425,6 +425,7 @@ class PasswordLabel(EventBox):
 ##### TEXT ENTRIES #####
 
 Entry		= smoothgtk.ui.Entry
+IconEntry	= smoothgtk.ui.IconEntry
 SpinButton	= smoothgtk.ui.SpinButton
 
 
@@ -540,192 +541,6 @@ class FileEntry(HBox):
 
 gobject.type_register(FileEntry)
 gobject.signal_new("changed", FileEntry, gobject.SIGNAL_ACTION, gobject.TYPE_BOOLEAN, ())
-
-
-
-class IconEntry(Alignment):
-	"An entry with an icon in it"
-
-	def __init__(self, text = None):
-		Alignment.__init__(self)
-
-		self.tooltips	= gtk.Tooltips()
-		self.icon	= None
-		self.icontip	= None
-
-		# set up ui
-		self.hbox = HBox()
-		self.add(self.hbox)
-
-		self.entry = Entry(text)
-		self.entry.set_has_frame(False)
-		self.hbox.pack_start(self.entry)
-
-		self.iconebox	= EventBox()
-		self.iconebox.set_visible_window(False)
-
-		self.iconalign	= Alignment(self.iconebox, 1.0, 0.5, 0, 0)
-		self.iconalign.set_padding(1, 1, 0, 2)
-
-		# connect signals
-		self.connect("expose-event", self.__cb_expose)
-		self.connect("size-allocate", self.__cb_size_allocate)
-		self.connect("size-request", self.__cb_size_request)
-
-		self.entry.connect_after("focus-in-event", lambda w,d: self.queue_draw())
-		self.entry.connect_after("focus-out-event", lambda w,d: self.queue_draw())
-
-		self.entry.connect("changed", lambda w: self.emit("changed"))
-		self.entry.connect("populate-popup", lambda w,m: self.emit("populate-popup", m))
-
-
-	def __cb_expose(self, widget, data):
-		"Draws the widget borders on expose"
-
-		allocation	= self.get_allocation()
-		style		= self.entry.get_style()
-		intfocus	= self.entry.style_get_property("interior-focus")
-		focuswidth	= self.entry.style_get_property("focus-line-width")
-
-		x		= allocation.x
-		y		= allocation.y
-		width		= allocation.width
-		height		= allocation.height
-
-		if self.entry.flags() & gtk.HAS_FOCUS == gtk.HAS_FOCUS and intfocus == False:
-			x	+= focuswidth
-			y	+= focuswidth
-			width	-= 2 * focuswidth
-			height	-= 2 * focuswidth
-
-		style.paint_flat_box(self.window, self.entry.state, gtk.SHADOW_NONE, None, self.entry, "entry_bg", x, y, width, height)
-		style.paint_shadow(self.window, gtk.STATE_NORMAL, gtk.SHADOW_IN, None, self.entry, "entry", x, y, width, height)
-
-		if self.entry.flags() & gtk.HAS_FOCUS == gtk.HAS_FOCUS and intfocus == False:
-			x	-= focuswidth
-			y	-= focuswidth
-			width	+= 2 * focuswidth
-			height	+= 2 * focuswidth
-
-			style.paint_focus(self.window, self.entry.state, None, self.entry, "entry", x, y, width, height)
-
-
-	def __cb_size_allocate(self, widget, allocation):
-		"Modifies the widget size allocation"
-
-		child_allocation	= gtk.gdk.Rectangle()
-		xborder, yborder	= self.__entry_get_borders()
-
-		child_allocation.x	= allocation.x + self.border_width + xborder
-		child_allocation.y	= allocation.y + self.border_width + yborder
-		child_allocation.width	= max(allocation.width - (self.border_width + xborder) * 2, 0)
-		child_allocation.height	= max(allocation.height - (self.border_width + yborder) * 2, 0)
-
-		self.hbox.size_allocate(child_allocation)
-		self.queue_draw()
-
-
-	def __cb_size_request(self, widget, requisition):
-		"Modifies the widget size request"
-
-		requisition.width	= self.border_width * 2
-		requisition.height	= self.border_width * 2
-		xborder, yborder	= self.__entry_get_borders()
-
-		entrywidth, entryheight	= self.entry.size_request()
-		requisition.height	+= entryheight >= 18 and entryheight or 18
-
-		requisition.width	+= 2 * xborder
-		requisition.height	+= 2 * yborder
-
-
-	def __entry_get_borders(self):
-		"Returns the border sizes of an entry"
-
-		style		= self.entry.get_style()
-		intfocus	= self.entry.style_get_property("interior-focus")
-		focuswidth	= self.entry.style_get_property("focus-line-width")
-
-		xborder		= style.xthickness
-		yborder		= style.ythickness
-
-		if intfocus == False:
-			xborder	+= focuswidth
-			yborder	+= focuswidth
-
-		return xborder, yborder
-
-
-	def get_text(self):
-		"Wrapper for the entry"
-
-		return self.entry.get_text()
-
-
-	def grab_focus(self):
-		"Wrapper for gtk.Entry.grab_focus()"
-
-		return self.entry.grab_focus()
-
-
-	def remove_icon(self):
-		"Removes the icon from the entry"
-
-		self.set_icon(None, "")
-
-
-	def set_editable(self, editable):
-		"Wrapper for gtk.Entry.set_editable()"
-
-		self.entry.set_editable(editable)
-
-
-	def set_icon(self, stock, tooltip = ""):
-		"Sets the icon for the entry"
-
-		if tooltip != self.icontip:
-			self.tooltips.set_tip(self.iconebox, tooltip)
-			self.icontip = tooltip
-
-		if self.icon != None and self.icon.get_stock()[0] == stock:
-			return
-
-		if self.iconalign in self.hbox.get_children():
-			self.hbox.remove(self.iconalign)
-			self.iconebox.remove(self.icon)
-			self.icon.destroy()
-			self.icon = None
-
-		if stock == None:
-			return
-
-		self.icon = Image(stock, ICON_SIZE_ENTRY)
-		self.iconebox.add(self.icon)
-		self.hbox.pack_start(self.iconalign, False, False)
-		self.hbox.show_all()
-
-
-	def set_text(self, text):
-		"Wrapper for the entry"
-
-		self.entry.set_text(text)
-
-
-	def set_width_chars(self, width):
-		"Wrapper for gtk.Entry.set_width_chars"
-
-		self.entry.set_width_chars(width)
-
-
-	def set_visibility(self, visibility):
-		"Wrapper for the entry"
-
-		self.entry.set_visibility(visibility)
-
-
-gobject.type_register(IconEntry)
-gobject.signal_new("changed", IconEntry, gobject.SIGNAL_ACTION, gobject.TYPE_BOOLEAN, ())
-gobject.signal_new("populate-popup", IconEntry, gobject.SIGNAL_ACTION, gobject.TYPE_BOOLEAN, (gobject.TYPE_PYOBJECT, ))
 
 
 
@@ -983,37 +798,8 @@ class LinkButton(gnome.ui.HRef):
 
 ##### MENUS AND MENU ITEMS #####
 
-class ImageMenuItem(gtk.ImageMenuItem):
-	"A menuitem with a stock icon"
-
-	def __init__(self, stock, text = None):
-		gtk.ImageMenuItem.__init__(self, stock)
-
-		self.label = self.get_children()[0]
-		self.image = self.get_children()[1]
-
-		if text is not None:
-			self.set_text(text)
-
-
-	def set_stock(self, stock):
-		"Set the stock item to use as icon"
-
-		self.image.set_from_stock(stock, gtk.ICON_SIZE_MENU)
-
-
-	def set_text(self, text):
-		"Set the item text"
-
-		self.label.set_text(text)
-
-
-
-class Menu(gtk.Menu):
-	"A menu"
-
-	def __init__(self):
-		gtk.Menu.__init__(self)
+ImageMenuItem	= smoothgtk.ui.ImageMenuItem
+Menu		= smoothgtk.ui.Menu
 
 
 
@@ -1228,90 +1014,10 @@ class ItemFactory(gtk.IconFactory):
 
 ##### ACTION HANDLING #####
 
-class Action(gtk.Action):
-	"UI Manager Action"
-
-	def __init__(self, name, label = None, tooltip = None, stock = "", important = False):
-		gtk.Action.__init__(self, name, label, tooltip, stock)
-
-		if important == True:
-			self.set_property("is-important", True)
-
-
-
-class ActionGroup(gtk.ActionGroup):
-	"UI Manager Actiongroup"
-
-	def add_action(self, action, accel = None):
-		"Adds an action to the actiongroup"
-
-		if accel == None:
-			gtk.ActionGroup.add_action(self, action)
-
-		else:
-			self.add_action_with_accel(action, accel)
-
-
-
-class ToggleAction(gtk.ToggleAction):
-	"A toggle action item"
-
-	def __init__(self, name, label, tooltip = None, stock = None):
-		gtk.ToggleAction.__init__(self, name, label, tooltip, stock)
-
-
-
-class UIManager(gtk.UIManager):
-	"UI item manager"
-
-	def __init__(self):
-		gtk.UIManager.__init__(self)
-
-		self.connect("connect-proxy", self.__cb_connect_proxy)
-
-
-	def __cb_connect_proxy(self, uimanager, action, widget):
-		"Callback for connecting proxies to an action"
-
-		if type(widget) in ( gtk.MenuItem, gtk.ImageMenuItem, gtk.CheckMenuItem ):
-			widget.tooltip = action.get_property("tooltip")
-
-		else:
-			widget.set_property("label", widget.get_property("label").replace("...", ""))
-
-
-	def add_ui_from_file(self, file):
-		"Loads ui from a file"
-
-		try:
-			gtk.UIManager.add_ui_from_file(self, file)
-
-		except gobject.GError:
-			raise IOError
-
-
-	def append_action_group(self, actiongroup):
-		"Appends an action group"
-
-		gtk.UIManager.insert_action_group(self, actiongroup, len(self.get_action_groups()))
-
-
-	def get_action(self, name):
-		"Looks up an action in the managers actiongroups"
-
-		for actiongroup in self.get_action_groups():
-			action = actiongroup.get_action(name)
-
-			if action is not None:
-				return action
-
-
-	def get_action_group(self, name):
-		"Returns the named action group"
-
-		for actiongroup in self.get_action_groups():
-			if actiongroup.get_name() == name:
-				return actiongroup
+Action		= smoothgtk.ui.Action
+ActionGroup	= smoothgtk.ui.ActionGroup
+ToggleAction	= smoothgtk.ui.ToggleAction
+UIManager	= smoothgtk.ui.UIManager
 
 
 
