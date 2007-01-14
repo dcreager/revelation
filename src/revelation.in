@@ -251,7 +251,7 @@ class Revelation(ui.App):
 		"Sets up various facilities"
 
 		self.clipboard		= data.Clipboard()
-		self.config		= config.Config()
+		self.config		= config.Config("/apps/revelation")
 		self.datafile		= io.DataFile(datahandler.Revelation)
 		self.entryclipboard	= data.EntryClipboard()
 		self.entrystore		= data.EntryStore()
@@ -270,15 +270,13 @@ class Revelation(ui.App):
 		self.undoqueue.connect("changed", lambda w: self.__state_undo(self.undoqueue.get_undo_action(), self.undoqueue.get_redo_action()))
 
 		# check if configuration is updated, install schema if not
-		if self.__check_config() == False:
-
-			if config.install_schema("%s/revelation.schemas" % config.DIR_GCONFSCHEMAS) == False:
-				raise config.ConfigError
-
-			self.config.client.clear_cache()
-
-			if self.__check_config() == False:
-				raise config.ConfigError
+		self.config.schema_ensure([
+			"launcher/website",
+			"view/searchbar",
+			"clipboard/chain_username",
+			"behavior/doubleclick",
+			"view/toolbar_style",
+		], "%s/revelation.schemas" % config.DIR_GCONFSCHEMAS)
 
 		self.config.monitor("file/autolock_timeout",	lambda k,v,d: self.locktimer.start(v * 60))
 
@@ -312,7 +310,7 @@ class Revelation(ui.App):
 		}
 
 		for key, path in bind.items():
-			ui.config_bind(self.config, key, self.uimanager.get_widget(path))
+			self.config.bind_widget(key, self.uimanager.get_widget(path))
 
 		self.show_all()
 
@@ -933,22 +931,6 @@ class Revelation(ui.App):
 
 
 	##### PRIVATE METHODS #####
-
-	def __check_config(self):
-		"Checks if the configuration is correct"
-
-		try:
-			self.config.get("launcher/website")
-			self.config.get("view/searchbar")
-			self.config.get("clipboard/chain_username")
-			self.config.get("behavior/doubleclick")
-			self.config.get("view/toolbar_style")
-
-			return True
-
-		except config.ConfigError:
-			return False
-
 
 	def __entry_find(self, parent, string, entrytype, direction = data.SEARCH_NEXT):
 		"Searches for an entry"
@@ -1624,21 +1606,21 @@ class Preferences(dialog.Utility):
 
 		# radio-button for go to
 		self.radio_doubleclick_goto = ui.RadioButton(None, _('Go to account, if possible'))
-		ui.config_bind(self.config, "behavior/doubleclick", self.radio_doubleclick_goto, "goto")
+		self.config.bind_widget("behavior/doubleclick", self.radio_doubleclick_goto, "goto")
 
 		self.tooltips.set_tip(self.radio_doubleclick_goto, _('Go to the account (open in external application) on doubleclick, if required data is filled in'))
 		self.section_doubleclick.append_widget(None, self.radio_doubleclick_goto)
 
 		# radio-button for edit
 		self.radio_doubleclick_edit = ui.RadioButton(self.radio_doubleclick_goto, _('Edit account'))
-		ui.config_bind(self.config, "behavior/doubleclick", self.radio_doubleclick_edit, "edit")
+		self.config.bind_widget("behavior/doubleclick", self.radio_doubleclick_edit, "edit")
 
 		self.tooltips.set_tip(self.radio_doubleclick_edit, _('Edit the account on doubleclick'))
 		self.section_doubleclick.append_widget(None, self.radio_doubleclick_edit)
 
 		# radio-button for copy
 		self.radio_doubleclick_copy = ui.RadioButton(self.radio_doubleclick_goto, _('Copy password to clipboard'))
-		ui.config_bind(self.config, "behavior/doubleclick", self.radio_doubleclick_copy, "copy")
+		self.config.bind_widget("behavior/doubleclick", self.radio_doubleclick_copy, "copy")
 
 		self.tooltips.set_tip(self.radio_doubleclick_copy, _('Copy the account password to clipboard on doubleclick'))
 		self.section_doubleclick.append_widget(None, self.radio_doubleclick_copy)
@@ -1651,13 +1633,13 @@ class Preferences(dialog.Utility):
 
 		# checkbutton and file button for autoloading a file
 		self.check_autoload = ui.CheckButton(_('Open file on startup:'))
-		ui.config_bind(self.config, "file/autoload", self.check_autoload)
+		self.config.bind_widget("file/autoload", self.check_autoload)
 
 		self.check_autoload.connect("toggled", lambda w: self.button_autoload_file.set_sensitive(w.get_active()))
 		self.tooltips.set_tip(self.check_autoload, _('When enabled, this file will be opened when the program is started'))
 
 		self.button_autoload_file = ui.FileButton(_('Select File to Automatically Open'))
-		ui.config_bind(self.config, "file/autoload_file", self.button_autoload_file)
+		self.config.bind_widget("file/autoload_file", self.button_autoload_file)
 		self.button_autoload_file.set_sensitive(self.check_autoload.get_active())
 
 		eventbox = ui.EventBox(self.button_autoload_file)
@@ -1670,21 +1652,21 @@ class Preferences(dialog.Utility):
 
 		# check-button for autosave
 		self.check_autosave = ui.CheckButton(_('Automatically save data when changed'))
-		ui.config_bind(self.config, "file/autosave", self.check_autosave)
+		self.config.bind_widget("file/autosave", self.check_autosave)
 
 		self.tooltips.set_tip(self.check_autosave, _('Automatically save the data file when an entry is added, modified or removed'))
 		self.section_files.append_widget(None, self.check_autosave)
 
 		# autolock file
 		self.check_autolock = ui.CheckButton(_('Lock file when inactive for'))
-		ui.config_bind(self.config, "file/autolock", self.check_autolock)
+		self.config.bind_widget("file/autolock", self.check_autolock)
 		self.check_autolock.connect("toggled", lambda w: self.spin_autolock_timeout.set_sensitive(w.get_active()))
 		self.tooltips.set_tip(self.check_autolock, _('Automatically lock the data file after a period of inactivity'))
 
 		self.spin_autolock_timeout = ui.SpinEntry()
 		self.spin_autolock_timeout.set_range(1, 120)
 		self.spin_autolock_timeout.set_sensitive(self.check_autolock.get_active())
-		ui.config_bind(self.config, "file/autolock_timeout", self.spin_autolock_timeout)
+		self.config.bind_widget("file/autolock_timeout", self.spin_autolock_timeout)
 		self.tooltips.set_tip(self.spin_autolock_timeout, _('The period of inactivity before locking the file, in minutes'))
 
 		hbox = ui.HBox()
@@ -1707,7 +1689,7 @@ class Preferences(dialog.Utility):
 			e = entrytype()
 
 			widget = ui.Entry()
-			ui.config_bind(self.config, "launcher/%s" % e.id, widget)
+			self.config.bind_widget("launcher/%s" % e.id, widget)
 
 			tooltip = _('Goto command for %s accounts. The following expansion variables can be used:') % e.typename + "\n\n"
 
@@ -1730,14 +1712,14 @@ class Preferences(dialog.Utility):
 
 		# show passwords checkbutton
 		self.check_show_passwords = ui.CheckButton(_('Display passwords and other secrets'))
-		ui.config_bind(self.config, "view/passwords", self.check_show_passwords)
+		self.config.bind_widget("view/passwords", self.check_show_passwords)
 
 		self.tooltips.set_tip(self.check_show_passwords, _('Display passwords and other secrets, such as PIN codes (otherwise, hide with ******)'))
 		self.section_password.append_widget(None, self.check_show_passwords)
 
 		# chain username checkbutton
 		self.check_chain_username = ui.CheckButton(_('Also copy username when copying password'))
-		ui.config_bind(self.config, "clipboard/chain_username", self.check_chain_username)
+		self.config.bind_widget("clipboard/chain_username", self.check_chain_username)
 
 		self.tooltips.set_tip(self.check_chain_username, _('When the password is copied to clipboard, put the username before the password as a clipboard "chain"'))
 		self.section_password.append_widget(None, self.check_chain_username)
@@ -1745,7 +1727,7 @@ class Preferences(dialog.Utility):
 		# password length spinbutton
 		self.spin_pwlen = ui.SpinEntry()
 		self.spin_pwlen.set_range(4, 32)
-		ui.config_bind(self.config, "passwordgen/length", self.spin_pwlen)
+		self.config.bind_widget("passwordgen/length", self.spin_pwlen)
 
 		self.tooltips.set_tip(self.spin_pwlen, _('The number of characters in generated passwords - 8 or more are recommended'))
 		self.section_password.append_widget(_('Length of generated passwords'), self.spin_pwlen)
@@ -1758,35 +1740,35 @@ class Preferences(dialog.Utility):
 
 		# radio-button for desktop default
 		self.radio_toolbar_desktop = ui.RadioButton(None, _('Use desktop default'))
-		ui.config_bind(self.config, "view/toolbar_style", self.radio_toolbar_desktop, "desktop")
+		self.config.bind_widget("view/toolbar_style", self.radio_toolbar_desktop, "desktop")
 
 		self.tooltips.set_tip(self.radio_toolbar_desktop, _('Show toolbar items with default style'))
 		self.section_toolbar.append_widget(None, self.radio_toolbar_desktop)
 
 		# radio-button for icons and text
 		self.radio_toolbar_both = ui.RadioButton(self.radio_toolbar_desktop, _('Show icons and text'))
-		ui.config_bind(self.config, "view/toolbar_style", self.radio_toolbar_both, "both")
+		self.config.bind_widget("view/toolbar_style", self.radio_toolbar_both, "both")
 
 		self.tooltips.set_tip(self.radio_toolbar_both, _('Show toolbar items with both icons and text'))
 		self.section_toolbar.append_widget(None, self.radio_toolbar_both)
 
 		# radio-button for icons and important text
 		self.radio_toolbar_bothhoriz = ui.RadioButton(self.radio_toolbar_desktop, _('Show icons and important text'))
-		ui.config_bind(self.config, "view/toolbar_style", self.radio_toolbar_bothhoriz, "both-horiz")
+		self.config.bind_widget("view/toolbar_style", self.radio_toolbar_bothhoriz, "both-horiz")
 
 		self.tooltips.set_tip(self.radio_toolbar_bothhoriz, _('Show toolbar items with text beside important icons'))
 		self.section_toolbar.append_widget(None, self.radio_toolbar_bothhoriz)
 
 		# radio-button for icons only
 		self.radio_toolbar_icons = ui.RadioButton(self.radio_toolbar_desktop, _('Show icons only'))
-		ui.config_bind(self.config, "view/toolbar_style", self.radio_toolbar_icons, "icons")
+		self.config.bind_widget("view/toolbar_style", self.radio_toolbar_icons, "icons")
 
 		self.tooltips.set_tip(self.radio_toolbar_icons, _('Show toolbar items with icons only'))
 		self.section_toolbar.append_widget(None, self.radio_toolbar_icons)
 
 		# radio-button for text only
 		self.radio_toolbar_text = ui.RadioButton(self.radio_toolbar_desktop, _('Show text only'))
-		ui.config_bind(self.config, "view/toolbar_style", self.radio_toolbar_text, "text")
+		self.config.bind_widget("view/toolbar_style", self.radio_toolbar_text, "text")
 
 		self.tooltips.set_tip(self.radio_toolbar_text, _('Show toolbar items with text only'))
 		self.section_toolbar.append_widget(None, self.radio_toolbar_text)
