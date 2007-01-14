@@ -778,7 +778,7 @@ class Preferences(dialog.Utility):
 		self.tooltips.set_tip(self.check_autolock, _('Automatically lock the file after a period of inactivity'))
 
 		# spin-entry for autolock-timeout
-		self.spin_autolock_timeout = ui.SpinEntry()
+		self.spin_autolock_timeout = ui.SpinButton()
 		self.spin_autolock_timeout.set_range(1, 120)
 		self.spin_autolock_timeout.set_sensitive(self.check_autolock.get_active())
 		ui.config_bind(self.config, "autolock_timeout", self.spin_autolock_timeout)

@@ -1585,15 +1585,18 @@ class Preferences(dialog.Utility):
 		self.notebook = ui.Notebook()
 		self.vbox.pack_start(self.notebook)
 
-		self.page_general = self.notebook.create_page(_('General'))
+		self.page_general = ui.NotebookPage()
+		self.notebook.append_page(self.page_general, _('General'))
 		self.__init_section_files(self.page_general)
 		self.__init_section_password(self.page_general)
 
-		self.page_interface = self.notebook.create_page(_('Interface'))
+		self.page_interface = ui.NotebookPage()
+		self.notebook.append_page(self.page_interface, _('Interface'))
 		self.__init_section_doubleclick(self.page_interface)
 		self.__init_section_toolbar(self.page_interface)
 
-		self.page_gotocmd = self.notebook.create_page(_('Goto Commands'))
+		self.page_gotocmd = ui.NotebookPage()
+		self.notebook.append_page(self.page_gotocmd, _('Goto Commands'))
 		self.__init_section_gotocmd(self.page_gotocmd)
 
 		self.connect("response", lambda w,d: self.destroy())
@@ -1663,7 +1666,7 @@ class Preferences(dialog.Utility):
 		self.check_autolock.connect("toggled", lambda w: self.spin_autolock_timeout.set_sensitive(w.get_active()))
 		self.tooltips.set_tip(self.check_autolock, _('Automatically lock the data file after a period of inactivity'))
 
-		self.spin_autolock_timeout = ui.SpinEntry()
+		self.spin_autolock_timeout = ui.SpinButton()
 		self.spin_autolock_timeout.set_range(1, 120)
 		self.spin_autolock_timeout.set_sensitive(self.check_autolock.get_active())
 		self.config.bind_widget("file/autolock_timeout", self.spin_autolock_timeout)
@@ -1725,7 +1728,7 @@ class Preferences(dialog.Utility):
 		self.section_password.append_widget(None, self.check_chain_username)
 
 		# password length spinbutton
-		self.spin_pwlen = ui.SpinEntry()
+		self.spin_pwlen = ui.SpinButton()
 		self.spin_pwlen.set_range(4, 32)
 		self.config.bind_widget("passwordgen/length", self.spin_pwlen)
 

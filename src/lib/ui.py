@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 
-import config, data, dialog, entry, io, util
+import config, data, dialog, entry, io, smoothgtk.ui, util
 
 import bonobo.ui, gettext, gobject, gtk, gtk.gdk, gnome.ui, os, pango, pwd, time
 
@@ -184,89 +184,15 @@ def generate_field_edit_widget(field, cfg = None, userdata = None):
 
 ##### CONTAINERS #####
 
-class Alignment(gtk.Alignment):
-	"A container bin"
-
-	def __init__(self, widget = None, xalign = 0, yalign = 0, xscale = 0, yscale = 0):
-		gtk.Alignment.__init__(self, xalign, yalign, xscale, yscale)
-
-		if widget != None:
-			self.add(widget)
-
-
-
-class HBox(gtk.HBox):
-	"A horizontal container"
-
-	def __init__(self, *args):
-		gtk.HBox.__init__(self)
-
-		self.set_spacing(6)
-		self.set_border_width(0)
-
-		for widget in args:
-			self.pack_start(widget)
-
-
-
-class HButtonBox(gtk.HButtonBox):
-	"A horizontal button box"
-
-	def __init__(self, *args):
-		gtk.HButtonBox.__init__(self)
-
-		self.set_layout(gtk.BUTTONBOX_SPREAD)
-		self.set_spacing(12)
-
-		for button in args:
-			self.pack_start(button)
-
-
-
-class VBox(gtk.VBox):
-	"A vertical container"
-
-	def __init__(self, *args):
-		gtk.VBox.__init__(self)
-
-		self.set_spacing(6)
-		self.set_border_width(0)
-
-		for widget in args:
-			self.pack_start(widget)
-
-
-
-class HPaned(gtk.HPaned):
-	"A horizontal pane"
-
-	def __init__(self, left = None, right = None):
-		gtk.HPaned.__init__(self)
-		self.set_border_width(6)
-
-		if left is not None:
-			self.pack1(left, True, True)
-
-		if right is not None:
-			self.pack2(right, True, True)
-
-
-
-class Notebook(gtk.Notebook):
-	"A notebook (tabbed view)"
-
-	def __init__(self):
-		gtk.Notebook.__init__(self)
-
-
-	def create_page(self, title):
-		"Creates a notebook page"
-
-		page = NotebookPage()
-		self.append_page(page, Label(title))
-
-		return page
-
+Alignment	= smoothgtk.ui.Alignment
+EventBox	= smoothgtk.ui.EventBox
+HBox		= smoothgtk.ui.HBox
+HButtonBox	= smoothgtk.ui.HButtonBox
+HPaned		= smoothgtk.ui.HPaned
+Notebook	= smoothgtk.ui.Notebook
+ScrolledWindow	= smoothgtk.ui.ScrolledWindow
+Table		= smoothgtk.ui.Table
+VBox		= smoothgtk.ui.VBox
 
 
 class NotebookPage(VBox):
@@ -287,36 +213,6 @@ class NotebookPage(VBox):
 		self.pack_start(section, False, False)
 
 		return section
-
-
-
-class ScrolledWindow(gtk.ScrolledWindow):
-	"A scrolled window for partially displaying a child widget"
-
-	def __init__(self, contents = None):
-		gtk.ScrolledWindow.__init__(self)
-
-		self.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-
-		if contents is not None:
-			self.add(contents)
-
-
-
-class Table(gtk.Table):
-	"A table"
-
-	def __init__(self, rows = 1, cols = 1, homogenous = False):
-		gtk.Table.__init__(self, rows, cols, homogenous)
-
-		self.set_row_spacings(3)
-		self.set_col_spacings(6)
-
-
-	def attach(self, widget, x, y, colspan = 1, rowspan = 1, xoptions = gtk.FILL, yoptions = 0):
-		"Attaches a widget to the table"
-
-		gtk.Table.attach(self, widget, x, x + colspan, y, y + colspan, xoptions, yoptions)
 
 
 
@@ -402,29 +298,9 @@ class InputSection(VBox):
 
 ##### DISPLAY WIDGETS #####
 
-class EventBox(gtk.EventBox):
-	"A container which handles events for a widget (for tooltips etc)"
-
-	def __init__(self, widget = None):
-		gtk.EventBox.__init__(self)
-
-		self.widget = widget
-
-		if widget is not None:
-			self.add(self.widget)
-
-
-
-class Image(gtk.Image):
-	"A widget for displaying an image"
-
-	def __init__(self, stock = None, size = None):
-		gtk.Image.__init__(self)
-
-		if stock is not None:
-			self.set_from_stock(stock, size)
-
-
+Image		= smoothgtk.ui.Image
+Label		= smoothgtk.ui.Label
+TextView	= smoothgtk.ui.TextView
 
 class ImageLabel(HBox):
 	"A label with an image"
@@ -461,38 +337,6 @@ class ImageLabel(HBox):
 		"Sets the label text"
 
 		self.label.set_text(text)
-
-
-
-class Label(gtk.Label):
-	"A text label"
-
-	def __init__(self, text = None, justify = gtk.JUSTIFY_LEFT):
-		gtk.Label.__init__(self)
-
-		self.set_text(text)
-		self.set_justify(justify)
-		self.set_use_markup(True)
-		self.set_line_wrap(True)
-
-		if justify == gtk.JUSTIFY_LEFT:
-			self.set_alignment(0, 0.5)
-
-		elif justify == gtk.JUSTIFY_CENTER:
-			self.set_alignment(0.5, 0.5)
-
-		elif justify == gtk.JUSTIFY_RIGHT:
-			self.set_alignment(1, 0.5)
-
-
-	def set_text(self, text):
-		"Sets the text of the label"
-
-		if text is None:
-			gtk.Label.set_text(self, "")
-
-		else:
-			gtk.Label.set_markup(self, text)
 
 
 
@@ -578,42 +422,10 @@ class PasswordLabel(EventBox):
 
 
 
-class TextView(gtk.TextView):
-	"A text view"
-
-	def __init__(self, buffer = None, text = None):
-		gtk.TextView.__init__(self, buffer)
-
-		self.set_editable(False)
-		self.set_wrap_mode(gtk.WRAP_NONE)
-		self.set_cursor_visible(False)
-		self.modify_font(pango.FontDescription("Monospace"))
-
-		if text is not None:
-			self.get_buffer().set_text(text)
-
-
-
 ##### TEXT ENTRIES #####
 
-class Entry(gtk.Entry):
-	"A normal text entry"
-
-	def __init__(self, text = None):
-		gtk.Entry.__init__(self)
-
-		self.set_activates_default(True)
-		self.set_text(text)
-
-
-	def set_text(self, text):
-		"Sets the entry contents"
-
-		if text is None:
-			text = ""
-
-		gtk.Entry.set_text(self, text)
-
+Entry		= smoothgtk.ui.Entry
+SpinButton	= smoothgtk.ui.SpinButton
 
 
 class ComboBoxEntry(gtk.ComboBoxEntry):
@@ -1012,39 +824,11 @@ class PasswordEntryGenerate(HBox):
 
 
 
-class SpinEntry(gtk.SpinButton):
-	"An entry for numbers"
-
-	def __init__(self, adjustment = None, climb_rate = 0.0, digits = 0):
-		gtk.SpinButton.__init__(self, adjustment, climb_rate, digits)
-
-		self.set_increments(1, 5)
-		self.set_range(0, 100000)
-		self.set_numeric(True)
-
-
-
 ##### BUTTONS #####
 
-class Button(gtk.Button):
-	"A normal button"
-
-	def __init__(self, label, callback = None):
-		gtk.Button.__init__(self, label)
-
-		self.set_use_stock(True)
-
-		if callback is not None:
-			self.connect("clicked", callback)
-
-
-
-class CheckButton(gtk.CheckButton):
-	"A checkbutton"
-
-	def __init__(self, label = None):
-		gtk.CheckButton.__init__(self, label)
-
+Button		= smoothgtk.ui.Button
+CheckButton	= smoothgtk.ui.CheckButton
+RadioButton	= smoothgtk.ui.RadioButton
 
 
 class DropDown(gtk.ComboBox):
@@ -1196,13 +980,6 @@ class LinkButton(gnome.ui.HRef):
 		self.label.set_justify(justify)
 
 
-class RadioButton(gtk.RadioButton):
-	"A radio button"
-
-	def __init__(self, group, label):
-		gtk.RadioButton.__init__(self, group, label)
-
-
 
 ##### MENUS AND MENU ITEMS #####
 
@@ -1242,187 +1019,7 @@ class Menu(gtk.Menu):
 
 ##### MISCELLANEOUS WIDGETS #####
 
-class TreeView(gtk.TreeView):
-	"A tree display"
-
-	def __init__(self, model):
-		gtk.TreeView.__init__(self, model)
-		self.set_headers_visible(False)
-		self.model = model
-
-		self.__cbid_drag_motion	= None
-		self.__cbid_drag_end	= None
-
-		self.selection = self.get_selection()
-		self.selection.set_mode(gtk.SELECTION_MULTIPLE)
-
-		self.connect("button_press_event", self.__cb_buttonpress)
-		self.connect("key_press_event", self.__cb_keypress)
-
-
-	def __cb_buttonpress(self, widget, data):
-		"Callback for handling mouse clicks"
-
-		path = self.get_path_at_pos(int(data.x), int(data.y))
-
-		# handle click outside entry
-		if path is None:
-			self.unselect_all()
-
-		# handle doubleclick
-		if data.button == 1 and data.type == gtk.gdk._2BUTTON_PRESS and path != None:
-			iter = self.model.get_iter(path[0])
-			self.toggle_expanded(iter)
-
-			if iter != None:
-				self.emit("doubleclick", iter)
-
-		# display popup on right-click
-		elif data.button == 3:
-			if path != None and self.selection.iter_is_selected(self.model.get_iter(path[0])) == False:
-				self.set_cursor(path[0], path[1], False)
-
-			self.emit("popup", data)
-
-			return True
-
-		# handle drag-and-drop of multiple rows
-		elif self.__cbid_drag_motion == None and data.button in ( 1, 2 ) and data.type == gtk.gdk.BUTTON_PRESS and path != None and self.selection.iter_is_selected(self.model.get_iter(path[0])) == True and len(self.get_selected()) > 1:
-			self.__cbid_drag_motion = self.connect("motion_notify_event", self.__cb_drag_motion, data.copy() )
-			self.__cbid_drag_end = self.connect("button_release_event", self.__cb_button_release, data.copy() )
-
-			return True
-
-
-	def __cb_button_release(self, widget, data, userdata = None):
-		"Ends a drag"
-
-		self.emit("button_press_event", userdata)
-		self.__drag_check_end()
-
-
-	def __cb_drag_motion(self, widget, data, userdata = None):
-		"Monitors drag motion"
-
-		if self.drag_check_threshold(int(userdata.x), int(userdata.y), int(data.x), int(data.y)) == True:
-			self.__drag_check_end()
-			self.drag_begin( (( "revelation/treerow", gtk.TARGET_SAME_APP | gtk.TARGET_SAME_WIDGET, 0), ), gtk.gdk.ACTION_MOVE, userdata.button, userdata)
-
-
-	def __cb_keypress(self, widget, data = None):
-		"Callback for handling key presses"
-
-		# expand/collapse node on space
-		if data.keyval == 32:
-			self.toggle_expanded(self.get_active())
-
-
-	def __drag_check_end(self):
-		"Ends a drag check"
-
-		self.disconnect(self.__cbid_drag_motion)
-		self.disconnect(self.__cbid_drag_end)
-
-		self.__cbid_drag_motion = None
-		self.__cbid_drag_end = None
-
-
-	def collapse_row(self, iter):
-		"Collapse a tree row"
-
-		gtk.TreeView.collapse_row(self, self.model.get_path(iter))
-
-
-	def expand_row(self, iter):
-		"Expand a tree row"
-
-		if iter is not None and self.model.iter_n_children(iter) > 0:
-			gtk.TreeView.expand_row(self, self.model.get_path(iter), False)
-
-
-	def expand_to_iter(self, iter):
-		"Expand all items up to and including a given iter"
-
-		path = self.model.get_path(iter)
-
-		for i in range(len(path)):
-			iter = self.model.get_iter(path[0:i])
-			self.expand_row(iter)
-
-
-	def get_active(self):
-		"Get the currently active row"
-
-		if self.model == None:
-			return None
-
-		iter = self.model.get_iter(self.get_cursor()[0])
-
-		if iter is None or self.selection.iter_is_selected(iter) == False:
-			return None
-
-		return iter
-
-	def get_selected(self):
-		"Get a list of currently selected rows"
-
-		list = []
-		self.selection.selected_foreach(lambda model, path, iter: list.append(iter))
-
-		return list
-
-
-	def select(self, iter):
-		"Select a particular row"
-
-		if iter == None:
-			self.unselect_all()
-
-		else:
-			self.expand_to_iter(iter)
-			self.set_cursor(self.model.get_path(iter))
-
-
-	def select_all(self):
-		"Select all rows in the tree"
-
-		self.selection.select_all()
-		self.selection.emit("changed")
-		self.emit("cursor_changed")
-
-
-	def set_model(self, model):
-		"Change the tree model which is being displayed"
-
-		gtk.TreeView.set_model(self, model)
-		self.model = model
-
-
-	def toggle_expanded(self, iter):
-		"Toggle the expanded state of a row"
-
-		if iter is None:
-			return
-
-		elif self.row_expanded(self.model.get_path(iter)):
-			self.collapse_row(iter)
-
-		else:
-			self.expand_row(iter)
-
-
-	def unselect_all(self):
-		"Unselect all rows in the tree"
-
-		self.selection.unselect_all()
-		self.selection.emit("changed")
-		self.emit("cursor_changed")
-		self.emit("unselect_all")
-
-
-gobject.signal_new("doubleclick", TreeView, gobject.SIGNAL_ACTION, gobject.TYPE_BOOLEAN, (gobject.TYPE_PYOBJECT, ))
-gobject.signal_new("popup", TreeView, gobject.SIGNAL_ACTION, gobject.TYPE_BOOLEAN, (gobject.TYPE_PYOBJECT, ))
-
+TreeView	= smoothgtk.ui.TreeView
 
 
 class EntryTree(TreeView):
