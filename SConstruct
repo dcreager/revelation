@@ -86,3 +86,6 @@ env.SConscript("data/SConscript", exports = "env", build_dir = "build/data")
 env.SConscript("po/SConscript", exports = "env", build_dir = "build/po")
 env.SConscript("src/SConscript", exports = "env", build_dir = "build/src")
 
+env.Replace(smoothgtk_libdir = env.subst("$python_libdir/$package/smoothgtk"))
+env.SConscript("src/smoothgtk/SConscript", exports = "env", build_dir = "build/src/smoothgtk")
+
