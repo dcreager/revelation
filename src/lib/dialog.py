@@ -24,6 +24,7 @@
 #
 
 import config, datahandler, entry, io, ui, util
+import smoothgtk.ui
 
 import gettext, gnome.ui, gobject, gtk, urllib
 
@@ -32,16 +33,6 @@ _ = gettext.gettext
 
 EVENT_FILTER		= None
 UNIQUE_DIALOGS		= {}
-
-
-gtk.rc_parse_string("""
-	style "hig" {
-		GtkDialog::content-area-border	= 0
-		GtkDialog::action-area-border	= 0
-	}
-
-	class "GtkDialog" style "hig"
-""")
 
 
 ##### EXCEPTIONS #####
@@ -54,72 +45,12 @@ class CancelError(Exception):
 
 ##### BASE DIALOGS #####
 
-class Dialog(gtk.Dialog):
-	"Base class for dialogs"
-
-	def __init__(self, parent, title, buttons = (), default = None):
-		gtk.Dialog.__init__(
-			self, title, parent,
-			gtk.DIALOG_DESTROY_WITH_PARENT | gtk.DIALOG_NO_SEPARATOR
-		)
-
-		self.set_border_width(12)
-		self.vbox.set_spacing(12)
-		self.set_resizable(False)
-		self.set_modal(True)
-
-		self.connect("key_press_event", self.__cb_keypress)
-		self.connect("realize", self.__cb_realize)
-
-		for stock, response in buttons:
-			self.add_button(stock, response)
-
-		if default != None:
-			self.set_default_response(default)
-
-		elif len(buttons) > 0:
-			self.set_default_response(buttons[-1][1])
-
-
-	def __cb_keypress(self, widget, data):
-		"Callback for handling key presses"
-
-		# close the dialog on escape
-		if data.keyval == 65307:
-			self.response(gtk.RESPONSE_CLOSE)
-
-
-	def __cb_realize(self, widget, data = None):
-		"Callback for widget realization"
-
-		self.action_area.set_spacing(6)
-
-
-	def get_button(self, index):
-		"Get one of the dialog buttons"
-
-		buttons = self.action_area.get_children()
-
-		if index < len(buttons):
-			return buttons[index]
-
-
-	def run(self):
-		"Runs the dialog"
-
-		self.show_all()
-
-		if EVENT_FILTER != None:
-			self.window.add_filter(EVENT_FILTER)
-
-		while 1:
-			response = gtk.Dialog.run(self)
-
-			if response == gtk.RESPONSE_NONE:
-				continue
-
-			return response
-
+Dialog 		= smoothgtk.ui.Dialog
+Message		= smoothgtk.ui.MessageDialog
+Error		= smoothgtk.ui.ErrorMessageDialog
+Info		= smoothgtk.ui.InfoMessageDialog
+Question	= smoothgtk.ui.QuestionMessageDialog
+Warning		= smoothgtk.ui.WarningMessageDialog
 
 
 class Popup(gtk.Window):
@@ -202,78 +133,6 @@ class Utility(Dialog):
 		self.vbox.pack_start(section)
 
 		return section
-
-
-
-class Message(Dialog):
-	"A message dialog"
-
-	def __init__(self, parent, title, text, stockimage, buttons = (), default = None):
-		Dialog.__init__(self, parent, "", buttons, default)
-
-		# hbox with image and contents
-		hbox = ui.HBox()
-		hbox.set_spacing(12)
-		self.vbox.pack_start(hbox)
-		self.vbox.set_spacing(24)
-
-		# set up image
-		if stockimage != None:
-			image = ui.Image(stockimage, gtk.ICON_SIZE_DIALOG)
-			image.set_alignment(0.5, 0)
-			hbox.pack_start(image, False, False)
-
-		# set up message
-		self.contents = ui.VBox()
-		self.contents.set_spacing(10)
-		hbox.pack_start(self.contents)
-
-		label = ui.Label("<span size=\"larger\" weight=\"bold\">%s</span>\n\n%s" % ( util.escape_markup(title), text))
-		label.set_alignment(0, 0)
-		label.set_selectable(True)
-		self.contents.pack_start(label)
-
-
-	def run(self):
-		"Displays the dialog"
-
-		self.show_all()
-		response = Dialog.run(self)
-		self.destroy()
-
-		return response
-
-
-
-class Error(Message):
-	"Displays an error message"
-
-	def __init__(self, parent, title, text, buttons = ( ( gtk.STOCK_OK, gtk.RESPONSE_OK), ), default = None):
-		Message.__init__(self, parent, title, text, gtk.STOCK_DIALOG_ERROR, buttons, default)
-
-
-
-class Info(Message):
-	"Displays an info message"
-
-	def __init__(self, parent, title, text, buttons = ( ( gtk.STOCK_OK, gtk.RESPONSE_OK ), ), default = None):
-		Message.__init__(self, parent, title, text, gtk.STOCK_DIALOG_INFO, buttons, default)
-
-
-
-class Question(Message):
-	"Displays a question"
-
-	def __init__(self, parent, title, text, buttons = ( ( gtk.STOCK_OK, gtk.RESPONSE_OK ), ), default = None):
-		Message.__init__(self, parent, title, text, gtk.STOCK_DIALOG_QUESTION, buttons, default)
-
-
-
-class Warning(Message):
-	"Displays a warning message"
-
-	def __init__(self, parent, title, text, buttons = ( ( gtk.STOCK_OK, gtk.RESPONSE_OK ), ), default = None):
-		Message.__init__(self, parent, title, text, ui.STOCK_WARNING, buttons, default)
 
 
 
@@ -620,7 +479,7 @@ class Password(Message):
 		self.entries = []
 
 		self.sect_passwords = ui.InputSection()
-		self.contents.pack_start(self.sect_passwords)
+		self.add(self.sect_passwords)
 
 
 	def add_entry(self, name, entry = None):
@@ -713,7 +572,7 @@ class PasswordLock(Password):
 			ui.STOCK_UNLOCK
 		)
 
-		self.get_button(1).set_label(gtk.STOCK_QUIT)
+		self.get_response_widget(gtk.RESPONSE_CANCEL).set_label(gtk.STOCK_QUIT)
 
 		self.password = password
 		self.entry_password = self.add_entry(_('Password'))
@@ -739,7 +598,7 @@ class PasswordLock(Password):
 					Error(self, _('Incorrect password'), _('The password you entered was not correct, please try again.')).run()
 
 			except CancelError:
-				if self.get_button(1).get_property("sensitive") == True:
+				if self.get_response_widget(gtk.RESPONSE_CANCEL).get_property("sensitive") == True:
 					self.destroy()
 					raise
 
@@ -1078,14 +937,11 @@ class FolderEdit(Utility):
 
 ##### MISCELLANEOUS DIALOGS #####
 
-class About(gtk.AboutDialog):
+class About(smoothgtk.ui.AboutDialog):
 	"About dialog"
 
 	def __init__(self, parent):
-		gtk.AboutDialog.__init__(self)
-
-		if isinstance(parent, gtk.Window):
-			self.set_transient_for(parent)
+		smoothgtk.ui.AboutDialog.__init__(self, parent)
 
 		self.set_name(config.APPNAME)
 		self.set_version(config.VERSION)
@@ -1096,15 +952,6 @@ class About(gtk.AboutDialog):
 		self.set_authors(config.AUTHORS)
 		self.set_artists(config.ARTISTS)
 		self.set_logo(parent.render_icon(ui.STOCK_REVELATION, gtk.ICON_SIZE_DIALOG))
-
-
-	def run(self):
-		"Displays the dialog"
-
-		self.show_all()
-		gtk.AboutDialog.run(self)
-
-		self.destroy()
 
 
 
@@ -1122,7 +969,7 @@ class Exception(Error):
 		scrolledwindow = ui.ScrolledWindow(textview)
 		scrolledwindow.set_size_request(-1, 120)
 
-		self.contents.pack_start(scrolledwindow)
+		self.add(scrolledwindow)
 
 
 	def run(self):
@@ -1200,7 +1047,7 @@ class PasswordChecker(Utility):
 
 		# for some reason, gtk crashes on close-by-escape
 		# if we don't do this
-		self.get_button(0).grab_focus()
+		self.get_response_widget(gtk.RESPONSE_CLOSE).grab_focus()
 		self.entry.grab_focus()
 
 
@@ -1248,7 +1095,7 @@ class PasswordGenerator(Utility):
 		"Displays the dialog"
 
 		self.show_all()
-		self.get_button(0).grab_focus()
+		self.get_response_widget(gtk.RESPONSE_CLOSE).grab_focus()
 
 		if EVENT_FILTER != None:
 			self.window.add_filter(EVENT_FILTER)

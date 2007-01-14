@@ -1397,7 +1397,7 @@ class Revelation(ui.App):
 			if self.entrystore.changed == True:
 				l = ui.ImageLabel(_('Quit disabled due to unsaved changes'), ui.STOCK_WARNING)
 				d.contents.pack_start(l)
-				d.get_button(1).set_sensitive(False)
+				d.get_response_widget(gtk.RESPONSE_CANCEL).set_sensitive(False)
 
 			d.run()
 
@@ -1783,7 +1783,7 @@ class Preferences(dialog.Utility):
 			self.window.add_filter(dialog.EVENT_FILTER)
 
 		# for some reason, gtk crashes on close-by-escape unless we do this
-		self.get_button(0).grab_focus()
+		self.get_response_widget(gtk.RESPONSE_CLOSE).grab_focus()
 		self.notebook.grab_focus()
 
 
