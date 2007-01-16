@@ -129,14 +129,6 @@ STOCK_ITEMS = (
 
 
 
-##### EXCEPTIONS #####
-
-class DataError(Exception):
-	"Exception for invalid data"
-	pass
-
-
-
 ##### FUNCTIONS #####
 
 def generate_field_display_widget(field, cfg = None, userdata = None):
