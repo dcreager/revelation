@@ -67,10 +67,6 @@ class Revelation(ui.App):
 			dialog.Error(self, _('Missing configuration data'), _('Revelation could not find its configuration data, please reinstall Revelation.')).run()
 			sys.exit(1)
 
-		except ui.DataError:
-			dialog.Error(self, _('Invalid data files'), _('Some of Revelations system files contain invalid data, please reinstall Revelation.')).run()
-			sys.exit(1)
-
 
 	def __init_actions(self):
 		"Sets up actions"
