@@ -45,7 +45,7 @@ source_bundle = [
 	"bundle/luks.py",
 ]
 
-bundle = env.PythonCompile(source_bundle)
+bundle = env.PythonBytecode(source_bundle)
 
 env.Install("$python_libdir/$package/bundle", source_bundle + bundle)
 
@@ -61,7 +61,7 @@ source_lib = env.Substitute("lib/config.py.in") + [
 	"lib/util.py",
 ]
 
-lib = env.PythonCompile(source_lib)
+lib = env.PythonBytecode(source_lib)
 
 env.Install("$python_libdir/$package", source_lib + lib)
 
@@ -79,7 +79,7 @@ source_datahandler = [
 	"lib/datahandler/xhtml.py",
 ]
 
-datahandler = env.PythonCompile(source_datahandler)
+datahandler = env.PythonBytecode(source_datahandler)
 
 env.Install("$python_libdir/$package/datahandler", source_datahandler + datahandler)
 
