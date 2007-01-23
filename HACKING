@@ -1,6 +1,9 @@
 RELEASE
 =======
 
+- update translations
+  - http://ner.dy.fi/gnome.fi/revelation-0.4.11.po
+
 - update version number in configure.ac
 - set release name in src/lib/config.py.in
 - set release date in NEWS

@@ -25,6 +25,6 @@
 Import("env")
 
 # compile po files
-for locale in ( "cs", "de", "fr", "sv", "zh" ):
+for locale in ( "cs", "de", "fi", "fr", "sv", "zh" ):
 	env.InstallAs("$datadir/locale/%s/LC_MESSAGES/${package}.mo" % locale, env.IntlToolPO("%s.po" % locale))
 

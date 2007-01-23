@@ -2,8 +2,10 @@ xxxx-xx-xx: Revelation 0.5.0
 ============================
 
 New features:
-
 - use SCons to build
+
+Translations:
+- added finnish translation [Ilkka Tuohela]
 
 
 2007-01-11: Revelation 0.4.9
