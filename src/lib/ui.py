@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 
-import config, data, dialog, entry, io, smoothgtk.ui, util
+import config, data, dialog, entry, io, shinygnome.ui, util
 
 import bonobo.ui, gettext, gobject, gtk, gtk.gdk, gnome.ui, os, pango, pwd, time
 
@@ -176,15 +176,15 @@ def generate_field_edit_widget(field, cfg = None, userdata = None):
 
 ##### CONTAINERS #####
 
-Alignment	= smoothgtk.ui.Alignment
-EventBox	= smoothgtk.ui.EventBox
-HBox		= smoothgtk.ui.HBox
-HButtonBox	= smoothgtk.ui.HButtonBox
-HPaned		= smoothgtk.ui.HPaned
-Notebook	= smoothgtk.ui.Notebook
-ScrolledWindow	= smoothgtk.ui.ScrolledWindow
-Table		= smoothgtk.ui.Table
-VBox		= smoothgtk.ui.VBox
+Alignment	= shinygnome.ui.Alignment
+EventBox	= shinygnome.ui.EventBox
+HBox		= shinygnome.ui.HBox
+HButtonBox	= shinygnome.ui.HButtonBox
+HPaned		= shinygnome.ui.HPaned
+Notebook	= shinygnome.ui.Notebook
+ScrolledWindow	= shinygnome.ui.ScrolledWindow
+Table		= shinygnome.ui.Table
+VBox		= shinygnome.ui.VBox
 
 
 class NotebookPage(VBox):
@@ -290,9 +290,9 @@ class InputSection(VBox):
 
 ##### DISPLAY WIDGETS #####
 
-Image		= smoothgtk.ui.Image
-Label		= smoothgtk.ui.Label
-TextView	= smoothgtk.ui.TextView
+Image		= shinygnome.ui.Image
+Label		= shinygnome.ui.Label
+TextView	= shinygnome.ui.TextView
 
 class ImageLabel(HBox):
 	"A label with an image"
@@ -416,9 +416,9 @@ class PasswordLabel(EventBox):
 
 ##### TEXT ENTRIES #####
 
-Entry		= smoothgtk.ui.Entry
-IconEntry	= smoothgtk.ui.IconEntry
-SpinButton	= smoothgtk.ui.SpinButton
+Entry		= shinygnome.ui.Entry
+IconEntry	= shinygnome.ui.IconEntry
+SpinButton	= shinygnome.ui.SpinButton
 
 
 class ComboBoxEntry(gtk.ComboBoxEntry):
@@ -633,9 +633,9 @@ class PasswordEntryGenerate(HBox):
 
 ##### BUTTONS #####
 
-Button		= smoothgtk.ui.Button
-CheckButton	= smoothgtk.ui.CheckButton
-RadioButton	= smoothgtk.ui.RadioButton
+Button		= shinygnome.ui.Button
+CheckButton	= shinygnome.ui.CheckButton
+RadioButton	= shinygnome.ui.RadioButton
 
 
 class DropDown(gtk.ComboBox):
@@ -790,14 +790,14 @@ class LinkButton(gnome.ui.HRef):
 
 ##### MENUS AND MENU ITEMS #####
 
-ImageMenuItem	= smoothgtk.ui.ImageMenuItem
-Menu		= smoothgtk.ui.Menu
+ImageMenuItem	= shinygnome.ui.ImageMenuItem
+Menu		= shinygnome.ui.Menu
 
 
 
 ##### MISCELLANEOUS WIDGETS #####
 
-TreeView	= smoothgtk.ui.TreeView
+TreeView	= shinygnome.ui.TreeView
 
 
 class EntryTree(TreeView):
@@ -1006,10 +1006,10 @@ class ItemFactory(gtk.IconFactory):
 
 ##### ACTION HANDLING #####
 
-Action		= smoothgtk.ui.Action
-ActionGroup	= smoothgtk.ui.ActionGroup
-ToggleAction	= smoothgtk.ui.ToggleAction
-UIManager	= smoothgtk.ui.UIManager
+Action		= shinygnome.ui.Action
+ActionGroup	= shinygnome.ui.ActionGroup
+ToggleAction	= shinygnome.ui.ToggleAction
+UIManager	= shinygnome.ui.UIManager
 
 
 

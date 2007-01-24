@@ -24,7 +24,7 @@
 #
 
 import config, datahandler, entry, io, ui, util
-import smoothgtk.ui
+import shinygnome.ui
 
 import gettext, gnome.ui, gobject, gtk, urllib
 
@@ -45,12 +45,12 @@ class CancelError(Exception):
 
 ##### BASE DIALOGS #####
 
-Dialog 		= smoothgtk.ui.Dialog
-Message		= smoothgtk.ui.MessageDialog
-Error		= smoothgtk.ui.ErrorMessageDialog
-Info		= smoothgtk.ui.InfoMessageDialog
-Question	= smoothgtk.ui.QuestionMessageDialog
-Warning		= smoothgtk.ui.WarningMessageDialog
+Dialog 		= shinygnome.ui.Dialog
+Message		= shinygnome.ui.MessageDialog
+Error		= shinygnome.ui.ErrorMessageDialog
+Info		= shinygnome.ui.InfoMessageDialog
+Question	= shinygnome.ui.QuestionMessageDialog
+Warning		= shinygnome.ui.WarningMessageDialog
 
 
 class Popup(gtk.Window):
@@ -937,11 +937,11 @@ class FolderEdit(Utility):
 
 ##### MISCELLANEOUS DIALOGS #####
 
-class About(smoothgtk.ui.AboutDialog):
+class About(shinygnome.ui.AboutDialog):
 	"About dialog"
 
 	def __init__(self, parent):
-		smoothgtk.ui.AboutDialog.__init__(self, parent)
+		shinygnome.ui.AboutDialog.__init__(self, parent)
 
 		self.set_name(config.APPNAME)
 		self.set_version(config.VERSION)
