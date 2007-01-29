@@ -208,37 +208,6 @@ class NotebookPage(VBox):
 
 
 
-class Toolbar(gtk.Toolbar):
-	"A Toolbar subclass"
-
-	def __init__(self):
-		gtk.Toolbar.__init__(self)
-
-		self.tooltips	= gtk.Tooltips()
-
-
-	def append_space(self):
-		"Appends a space to the toolbar"
-
-		space = gtk.SeparatorToolItem()
-		space.set_draw(False)
-
-		self.insert(space, -1)
-
-
-	def append_widget(self, widget, tooltip = None):
-		"Appends a widget to the toolbar"
-
-		toolitem = gtk.ToolItem()
-		toolitem.add(widget)
-
-		if tooltip != None:
-			toolitem.set_tooltip(self.tooltips, tooltip)
-
-		self.insert(toolitem, -1)
-
-
-
 class InputSection(VBox):
 	"A section of input fields"
 
@@ -285,6 +254,75 @@ class InputSection(VBox):
 		for child in self.get_children():
 			if child not in ( self.title, self.desc ):
 				child.destroy()
+
+
+
+##### TOOLBARS #####
+SeparatorToolItem	= shinygnome.ui.SeparatorToolItem
+Toolbar			= shinygnome.ui.Toolbar
+ToolButton		= shinygnome.ui.ToolButton
+ToolItem		= shinygnome.ui.ToolItem
+
+
+
+class Searchbar(Toolbar):
+	"A toolbar for easy searching"
+
+	def __init__(self):
+		Toolbar.__init__(self)
+
+		self.label		= Label("  " + _('  Find:') + " ")
+		self.entry		= Entry()
+		self.dropdown		= EntryDropDown()
+		self.dropdown.insert_item(0, _('Any type'), "gnome-stock-about")
+		self.button_next	= ToolButton(STOCK_NEXT, important = True)
+		self.button_prev	= ToolButton(STOCK_PREVIOUS, important = True)
+
+		self.append(ToolItem(self.label))
+		self.append(ToolItem(self.entry), _('Text to search for'))
+		self.append(ToolItem(EventBox(self.dropdown)), _('The type of account to search for'))
+		self.append(SeparatorToolItem())
+		self.append(self.button_next, _('Find the next match'))
+		self.append(self.button_prev, _('Find the previous match'))
+
+		self.connect("show", self.__cb_show)
+
+		self.entry.connect("changed", self.__cb_entry_changed)
+		self.entry.connect("key-press-event", self.__cb_key_press)
+
+		self.button_next.set_sensitive(False)
+		self.button_prev.set_sensitive(False)
+
+
+	def __cb_entry_changed(self, widget, data = None):
+		"Callback for entry changes"
+
+		s = self.entry.get_text() != ""
+
+		self.button_next.set_sensitive(s)
+		self.button_prev.set_sensitive(s)
+
+
+	def __cb_key_press(self, widget, data = None):
+		"Callback for key presses"
+
+		# return
+		if data.keyval == 65293 and widget.get_text() != "":
+			if data.state & gtk.gdk.SHIFT_MASK == gtk.gdk.SHIFT_MASK:
+				self.button_prev.activate()
+
+			else:
+				self.button_next.activate()
+
+			return True
+
+
+	def __cb_show(self, widget, data = None):
+		"Callback for widget display"
+
+		self.set_style(gtk.TOOLBAR_BOTH_HORIZ)
+		self.entry.select_region(0, -1)
+		self.entry.grab_focus()
 
 
 
@@ -1192,64 +1230,4 @@ class EntryView(VBox):
 
 		alignment = Alignment(widget, 0.5, 0.5, 0, 0)
 		VBox.pack_start(self, alignment, False, False)
-
-
-
-class Searchbar(Toolbar):
-	"A toolbar for easy searching"
-
-	def __init__(self):
-		Toolbar.__init__(self)
-
-		self.label		= Label("  " + _('  Find:') + " ")
-		self.entry		= Entry()
-		self.dropdown		= EntryDropDown()
-		self.dropdown.insert_item(0, _('Any type'), "gnome-stock-about")
-		self.button_next	= Button(STOCK_NEXT)
-		self.button_prev	= Button(STOCK_PREVIOUS)
-
-		self.append_widget(self.label)
-		self.append_widget(self.entry, _('Text to search for'))
-		self.append_widget(EventBox(self.dropdown), _('The type of account to search for'))
-		self.append_space()
-		self.append_widget(self.button_next, _('Find the next match'))
-		self.append_widget(self.button_prev, _('Find the previous match'))
-
-		self.connect("show", self.__cb_show)
-
-		self.entry.connect("changed", self.__cb_entry_changed)
-		self.entry.connect("key-press-event", self.__cb_key_press)
-
-		self.button_next.set_sensitive(False)
-		self.button_prev.set_sensitive(False)
-
-
-	def __cb_entry_changed(self, widget, data = None):
-		"Callback for entry changes"
-
-		s = self.entry.get_text() != ""
-
-		self.button_next.set_sensitive(s)
-		self.button_prev.set_sensitive(s)
-
-
-	def __cb_key_press(self, widget, data = None):
-		"Callback for key presses"
-
-		# return
-		if data.keyval == 65293 and widget.get_text() != "":
-			if data.state & gtk.gdk.SHIFT_MASK == gtk.gdk.SHIFT_MASK:
-				self.button_prev.activate()
-
-			else:
-				self.button_next.activate()
-
-			return True
-
-
-	def __cb_show(self, widget, data = None):
-		"Callback for widget display"
-
-		self.entry.select_region(0, -1)
-		self.entry.grab_focus()
 
