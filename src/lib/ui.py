@@ -25,7 +25,7 @@
 
 import config, data, dialog, entry, io, stock, shinygnome.ui, util
 
-import bonobo.ui, gettext, gobject, gtk, gtk.gdk, gnome.ui, os, pango, pwd, time
+import bonobo.ui, gettext, gobject, gtk, gtk.gdk, gnome.ui, time
 
 _ = gettext.gettext
 
@@ -228,6 +228,7 @@ class Searchbar(Toolbar):
 
 Image		= shinygnome.ui.Image
 Label		= shinygnome.ui.Label
+Statusbar	= shinygnome.ui.Statusbar
 TextView	= shinygnome.ui.TextView
 
 class ImageLabel(HBox):
@@ -732,25 +733,6 @@ class EntryTree(TreeView):
 
 
 
-class Statusbar(gtk.Statusbar):
-	"An application statusbar"
-
-	def __init__(self):
-		gtk.Statusbar.__init__(self)
-		self.contextid = self.get_context_id("statusbar")
-
-
-	def clear(self):
-		"Clears the statusbar"
-
-		self.pop(self.contextid)
-
-
-	def set_status(self, text):
-		"Displays a text in the statusbar"
-
-		self.clear()
-		self.push(self.contextid, text)
 
 
 ##### ACTION HANDLING #####
@@ -790,7 +772,7 @@ class App(gnome.ui.App):
 		"Displays menu descriptions in the statusbar"
 
 		if show == True:
-			self.statusbar.set_status(item.tooltip)
+			self.statusbar.set(item.tooltip)
 
 		else:
 			self.statusbar.clear()

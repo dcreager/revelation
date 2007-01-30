@@ -592,7 +592,7 @@ class Revelation(ui.App):
 				self.file_open(self.datafile.get_file(), self.datafile.get_password())
 
 		except dialog.CancelError:
-			self.statusbar.set_status(_('Open cancelled'))
+			self.statusbar.set(_('Open cancelled'))
 
 
 	def __cb_file_autolock(self, widget, data = None):
@@ -935,10 +935,10 @@ class Revelation(ui.App):
 
 		if match != None:
 			self.tree.select(match)
-			self.statusbar.set_status(_('Match found for \'%s\'') % string)
+			self.statusbar.set(_('Match found for \'%s\'') % string)
 
 		else:
-			self.statusbar.set_status(_('No match found for \'%s\'') % string)
+			self.statusbar.set(_('No match found for \'%s\'') % string)
 			dialog.Error(parent, _('No match found'), _('The string \'%s\' does not match any entries. Try searching for a different phrase.') % string).run()
 
 
@@ -974,23 +974,23 @@ class Revelation(ui.App):
 					dialog.Error(self, _('Incorrect password'), _('The password you entered for the file \'%s\' was not correct.') % file).run()
 
 		except datahandler.FormatError:
-			self.statusbar.set_status(_('Open failed'))
+			self.statusbar.set(_('Open failed'))
 			dialog.Error(self, _('Invalid file format'), _('The file \'%s\' contains invalid data.') % file).run()
 
 		except ( datahandler.DataError, entry.EntryTypeError, entry.EntryFieldError ):
-			self.statusbar.set_status(_('Open failed'))
+			self.statusbar.set(_('Open failed'))
 			dialog.Error(self, _('Unknown data'), _('The file \'%s\' contains unknown data. It may have been created by a newer version of Revelation.') % file).run()
 
 		except datahandler.VersionError:
-			self.statusbar.set_status(_('Open failed'))
+			self.statusbar.set(_('Open failed'))
 			dialog.Error(self, _('Unknown data version'), _('The file \'%s\' has a future version number, please upgrade Revelation to open it.') % file).run()
 
 		except datahandler.DetectError:
-			self.statusbar.set_status(_('Open failed'))
+			self.statusbar.set(_('Open failed'))
 			dialog.Error(self, _('Unable to detect filetype'), _('The file type of the file \'%s\' could not be automatically detected. Try specifying the file type manually.')% file).run()
 
 		except IOError:
-			self.statusbar.set_status(_('Open failed'))
+			self.statusbar.set(_('Open failed'))
 			dialog.Error(self, _('Unable to open file'), _('The file \'%s\' could not be opened. Make sure that the file exists, and that you have permissions to open it.') % file).run()
 
 
@@ -1032,18 +1032,18 @@ class Revelation(ui.App):
 			secrets.insert(0, e[entry.UsernameField])
 
 		if len(secrets) == 0:
-			self.statusbar.set_status(_('Entry has no password to copy'))
+			self.statusbar.set(_('Entry has no password to copy'))
 
 		else:
 			self.clipboard.set(secrets, True)
-			self.statusbar.set_status(_('Password copied to clipboard'))
+			self.statusbar.set(_('Password copied to clipboard'))
 
 
 	def clip_copy(self, iters):
 		"Copies entries to the clipboard"
 
 		self.entryclipboard.set(self.entrystore, iters)
-		self.statusbar.set_status(_('Entries copied'))
+		self.statusbar.set(_('Entries copied'))
 
 
 	def clip_cut(self, iters):
@@ -1072,7 +1072,7 @@ class Revelation(ui.App):
 		self.__file_autosave()
 
 		self.tree.unselect_all()
-		self.statusbar.set_status(_('Entries cut'))
+		self.statusbar.set(_('Entries cut'))
 
 
 	def clip_paste(self, entrystore, parent):
@@ -1094,7 +1094,7 @@ class Revelation(ui.App):
 		if len(iters) > 0:
 			self.tree.select(iters[0])
 
-		self.statusbar.set_status(_('Entries pasted'))
+		self.statusbar.set(_('Entries pasted'))
 
 
 	def entry_add(self, e = None, parent = None, sibling = None):
@@ -1115,10 +1115,10 @@ class Revelation(ui.App):
 
 			self.__file_autosave()
 			self.tree.select(iter)
-			self.statusbar.set_status(_('Entry added'))
+			self.statusbar.set(_('Entry added'))
 
 		except dialog.CancelError:
-			self.statusbar.set_status(_('Add entry cancelled'))
+			self.statusbar.set(_('Add entry cancelled'))
 
 
 	def entry_edit(self, iter):
@@ -1148,10 +1148,10 @@ class Revelation(ui.App):
 			)
 
 			self.__file_autosave()
-			self.statusbar.set_status(_('Entry updated'))
+			self.statusbar.set(_('Entry updated'))
 
 		except dialog.CancelError:
-			self.statusbar.set_status(_('Edit entry cancelled'))
+			self.statusbar.set(_('Edit entry cancelled'))
 
 
 	def entry_find(self):
@@ -1178,10 +1178,10 @@ class Revelation(ui.App):
 
 			self.__file_autosave()
 			self.tree.select(iter)
-			self.statusbar.set_status(_('Folder added'))
+			self.statusbar.set(_('Folder added'))
 
 		except dialog.CancelError:
-			self.statusbar.set_status(_('Add folder cancelled'))
+			self.statusbar.set(_('Add folder cancelled'))
 
 
 	def entry_goto(self, iters):
@@ -1195,7 +1195,7 @@ class Revelation(ui.App):
 				command = self.config.get("launcher/%s" % e.id)
 
 				if command in ( "", None ):
-					self.statusbar.set_status(_('No goto command found for %s entries') % e.typename)
+					self.statusbar.set(_('No goto command found for %s entries') % e.typename)
 					return
 
 				subst = {}
@@ -1218,7 +1218,7 @@ class Revelation(ui.App):
 				command = util.parse_subst(command, subst)
 				util.execute_child(command)
 
-				self.statusbar.set_status(_('Entry opened'))
+				self.statusbar.set(_('Entry opened'))
 
 			except ( util.SubstFormatError, config.ConfigError ):
 				dialog.Error(self, _('Invalid goto command format'), _('The goto command for \'%s\' entries is invalid, please correct it in the preferences.') % e.typename).run()
@@ -1253,7 +1253,7 @@ class Revelation(ui.App):
 			self.tree.select(newiters[0])
 
 		self.__file_autosave()
-		self.statusbar.set_status(_('Entries moved'))
+		self.statusbar.set(_('Entries moved'))
 
 
 	def entry_remove(self, iters):
@@ -1286,10 +1286,10 @@ class Revelation(ui.App):
 
 			self.tree.unselect_all()
 			self.__file_autosave()
-			self.statusbar.set_status(_('Entries removed'))
+			self.statusbar.set(_('Entries removed'))
 
 		except dialog.CancelError:
-			self.statusbar.set_status(_('Entry removal cancelled'))
+			self.statusbar.set(_('Entry removal cancelled'))
 
 
 	def file_change_password(self, password = None):
@@ -1303,10 +1303,10 @@ class Revelation(ui.App):
 			self.entrystore.changed = True
 
 			self.__file_autosave()
-			self.statusbar.set_status(_('Password changed'))
+			self.statusbar.set(_('Password changed'))
 
 		except dialog.CancelError:
-			self.statusbar.set_status(_('Password change cancelled'))
+			self.statusbar.set(_('Password change cancelled'))
 
 
 	def file_export(self):
@@ -1324,14 +1324,14 @@ class Revelation(ui.App):
 				password = None
 
 			datafile.save(self.entrystore, file, password)
-			self.statusbar.set_status(_('Data exported to %s') % datafile.get_file())
+			self.statusbar.set(_('Data exported to %s') % datafile.get_file())
 
 		except dialog.CancelError:
-			self.statusbar.set_status(_('Export cancelled'))
+			self.statusbar.set(_('Export cancelled'))
 
 		except IOError:
 			dialog.Error(self, _('Unable to write to file'), _('The file \'%s\' could not be opened for writing. Make sure that you have the proper permissions to write to it.') % file).run()
-			self.statusbar.set_status(_('Export failed'))
+			self.statusbar.set(_('Export failed'))
 
 
 	def file_import(self):
@@ -1351,12 +1351,12 @@ class Revelation(ui.App):
 					( paths, entrystore )
 				)
 
-				self.statusbar.set_status(_('Data imported from %s') % datafile.get_file())
+				self.statusbar.set(_('Data imported from %s') % datafile.get_file())
 
 			self.__file_autosave()
 
 		except dialog.CancelError:
-			self.statusbar.set_status(_('Import cancelled'))
+			self.statusbar.set(_('Import cancelled'))
 
 
 	def file_lock(self):
@@ -1380,7 +1380,7 @@ class Revelation(ui.App):
 		self.tree.set_model(None)
 		self.entryview.clear()
 		self.set_title('[' + _('Locked') + ']')
-		self.statusbar.set_status(_('File locked'))
+		self.statusbar.set(_('File locked'))
 
 		# hide any dialogs
 		for window in transients:
@@ -1404,7 +1404,7 @@ class Revelation(ui.App):
 		self.tree.set_model(self.entrystore)
 		self.tree.select(activeiter)
 		self.set_title(oldtitle)
-		self.statusbar.set_status(_('File unlocked'))
+		self.statusbar.set(_('File unlocked'))
 
 		for window in transients:
 			window.show()
@@ -1423,10 +1423,10 @@ class Revelation(ui.App):
 			self.entrystore.clear()
 			self.datafile.close()
 			self.undoqueue.clear()
-			self.statusbar.set_status(_('New file created'))
+			self.statusbar.set(_('New file created'))
 
 		except dialog.CancelError:
-			self.statusbar.set_status(_('New file cancelled'))
+			self.statusbar.set(_('New file cancelled'))
 
 
 	def file_open(self, file = None, password = None):
@@ -1450,10 +1450,10 @@ class Revelation(ui.App):
 			self.entrystore.changed = False
 			self.undoqueue.clear()
 
-			self.statusbar.set_status(_('Opened file %s') % self.datafile.get_file())
+			self.statusbar.set(_('Opened file %s') % self.datafile.get_file())
 
 		except dialog.CancelError:
-			self.statusbar.set_status(_('Open cancelled'))
+			self.statusbar.set(_('Open cancelled'))
 
 
 	def file_save(self, file = None, password = None):
@@ -1468,17 +1468,17 @@ class Revelation(ui.App):
 
 			self.datafile.save(self.entrystore, file, password)
 			self.entrystore.changed = False
-			self.statusbar.set_status(_('Data saved to file %s') % file)
+			self.statusbar.set(_('Data saved to file %s') % file)
 
 			return True
 
 		except dialog.CancelError:
-			self.statusbar.set_status(_('Save cancelled'))
+			self.statusbar.set(_('Save cancelled'))
 			return False
 
 		except IOError:
 			dialog.Error(self, _('Unable to save file'), _('The file \'%s\' could not be opened for writing. Make sure that you have the proper permissions to write to it.') % file).run()
-			self.statusbar.set_status(_('Save failed'))
+			self.statusbar.set(_('Save failed'))
 			return False
 
 
@@ -1518,7 +1518,7 @@ class Revelation(ui.App):
 			return True
 
 		except dialog.CancelError:
-			self.statusbar.set_status(_('Quit cancelled'))
+			self.statusbar.set(_('Quit cancelled'))
 			return False
 
 
@@ -1531,7 +1531,7 @@ class Revelation(ui.App):
 			return
 
 		self.undoqueue.redo()
-		self.statusbar.set_status(_('%s redone') % action[1])
+		self.statusbar.set(_('%s redone') % action[1])
 		self.__file_autosave()
 
 
@@ -1565,7 +1565,7 @@ class Revelation(ui.App):
 			return
 
 		self.undoqueue.undo()
-		self.statusbar.set_status(_('%s undone') % action[1])
+		self.statusbar.set(_('%s undone') % action[1])
 		self.__file_autosave()
 
 
