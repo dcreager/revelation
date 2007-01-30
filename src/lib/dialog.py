@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 
-import config, datahandler, entry, io, ui, util
+import config, datahandler, entry, io, stock, ui, util
 import shinygnome.ui
 
 import gettext, gnome.ui, gobject, gtk, urllib
@@ -144,7 +144,7 @@ class FileChanged(Warning):
 	def __init__(self, parent, filename):
 		Warning.__init__(
 			self, parent, _('File has changed'), _('The current file \'%s\' has changed. Do you want to reload it?') % filename,
-			( ( gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL ), ( ui.STOCK_RELOAD, gtk.RESPONSE_OK ) )
+			( ( gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL ), ( stock.STOCK_RELOAD, gtk.RESPONSE_OK ) )
 		)
 
 
@@ -164,7 +164,7 @@ class FileChanges(Warning):
 	def __init__(self, parent, title, text):
 		Warning.__init__(
 			self, parent, title, text,
-			( ( ui.STOCK_DISCARD, gtk.RESPONSE_ACCEPT ), ( gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL ), ( gtk.STOCK_SAVE, gtk.RESPONSE_OK ) )
+			( ( stock.STOCK_DISCARD, gtk.RESPONSE_ACCEPT ), ( gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL ), ( gtk.STOCK_SAVE, gtk.RESPONSE_OK ) )
 		)
 
 
@@ -224,7 +224,7 @@ class FileReplace(Warning):
 		Warning.__init__(
 			self, parent, _('Replace existing file?'),
 			_('The file \'%s\' already exists - do you wish to replace this file?') % file,
-			( ( gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL ), ( ui.STOCK_REPLACE, gtk.RESPONSE_OK ) ),
+			( ( gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL ), ( stock.STOCK_REPLACE, gtk.RESPONSE_OK ) ),
 			gtk.RESPONSE_CANCEL
 		)
 
@@ -335,7 +335,7 @@ class ExportFileSelector(FileSelector):
 	def __init__(self, parent):
 		FileSelector.__init__(
 			self, parent, _('Select File to Export to'),
-			gtk.FILE_CHOOSER_ACTION_SAVE, ui.STOCK_EXPORT
+			gtk.FILE_CHOOSER_ACTION_SAVE, stock.STOCK_EXPORT
 		)
 
 		# set up filetype dropdown
@@ -375,7 +375,7 @@ class ImportFileSelector(FileSelector):
 	def __init__(self, parent):
 		FileSelector.__init__(
 			self, parent, _('Select File to Import'),
-			gtk.FILE_CHOOSER_ACTION_OPEN, ui.STOCK_IMPORT
+			gtk.FILE_CHOOSER_ACTION_OPEN, stock.STOCK_IMPORT
 		)
 
 		# set up filetype dropdown
@@ -514,7 +514,7 @@ class PasswordChange(Password):
 		Password.__init__(
 			self, parent, _('Enter new password'),
 			_('Enter a new password for the current data file. The file must be saved before the new password is applied.'),
-			ui.STOCK_PASSWORD_CHANGE
+			stock.STOCK_PASSWORD_CHANGE
 		)
 
 		self.password = password
@@ -569,7 +569,7 @@ class PasswordLock(Password):
 		Password.__init__(
 			self, parent, _('Enter password to unlock file'),
 			_('The current file has been locked, please enter the file password to unlock it.'),
-			ui.STOCK_UNLOCK
+			stock.STOCK_UNLOCK
 		)
 
 		self.get_response_widget(gtk.RESPONSE_CANCEL).set_label(gtk.STOCK_QUIT)
@@ -697,7 +697,7 @@ class EntryEdit(Utility):
 			self, parent, title,
 			(
 				( gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL ),
-				( e is None and ui.STOCK_NEW_ENTRY or ui.STOCK_UPDATE, gtk.RESPONSE_OK )
+				( e is None and stock.STOCK_NEW_ENTRY or stock.STOCK_UPDATE, gtk.RESPONSE_OK )
 			)
 		)
 
@@ -849,7 +849,7 @@ class EntryRemove(Warning):
 
 		Warning.__init__(
 			self, parent, title, text,
-			( ( gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL ), ( ui.STOCK_REMOVE, gtk.RESPONSE_OK ) ),
+			( ( gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL ), ( stock.STOCK_REMOVE, gtk.RESPONSE_OK ) ),
 			0
 		)
 
@@ -873,7 +873,7 @@ class FolderEdit(Utility):
 			self, parent, title,
 			(
 				( gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL ),
-				( e == None and ui.STOCK_NEW_FOLDER or ui.STOCK_UPDATE, gtk.RESPONSE_OK )
+				( e == None and stock.STOCK_NEW_FOLDER or stock.STOCK_UPDATE, gtk.RESPONSE_OK )
 			)
 		)
 
@@ -951,7 +951,7 @@ class About(shinygnome.ui.AboutDialog):
 		self.set_website(config.URL)
 		self.set_authors(config.AUTHORS)
 		self.set_artists(config.ARTISTS)
-		self.set_logo(parent.render_icon(ui.STOCK_REVELATION, gtk.ICON_SIZE_DIALOG))
+		self.set_logo(parent.render_icon(stock.STOCK_REVELATION, gtk.ICON_SIZE_DIALOG))
 
 
 
@@ -962,7 +962,7 @@ class Exception(Error):
 		Error.__init__(
 			self, parent, _('Unknown error'),
 			_('An unknown error occured. Please report the text below to the Revelation developers, along with what you were doing that may have caused the error. You may attempt to continue running Revelation, but it may behave unexpectedly.'),
-			( ( gtk.STOCK_QUIT, gtk.RESPONSE_CANCEL ), ( ui.STOCK_CONTINUE, gtk.RESPONSE_OK ) )
+			( ( gtk.STOCK_QUIT, gtk.RESPONSE_CANCEL ), ( stock.STOCK_CONTINUE, gtk.RESPONSE_OK ) )
 		)
 
 		textview = ui.TextView(None, traceback)
@@ -1001,7 +1001,7 @@ class PasswordChecker(Utility):
 		self.tooltips.set_tip(self.entry, _('Enter a password to check'))
 		self.section.append_widget(_('Password'), self.entry)
 
-		self.result = ui.ImageLabel(_('Enter a password to check'), ui.STOCK_UNKNOWN, ui.ICON_SIZE_HEADLINE)
+		self.result = ui.ImageLabel(_('Enter a password to check'), stock.STOCK_UNKNOWN, ui.ICON_SIZE_HEADLINE)
 		self.tooltips.set_tip(self.result, _('The result of the check'))
 		self.section.append_widget(None, self.result)
 
@@ -1015,16 +1015,16 @@ class PasswordChecker(Utility):
 
 		try:
 			if len(password) == 0:
-				icon	= ui.STOCK_UNKNOWN
+				icon	= stock.STOCK_UNKNOWN
 				result	= _('Enter a password to check')
 
 			else:
 				util.check_password(password)
-				icon	= ui.STOCK_PASSWORD_STRONG
+				icon	= stock.STOCK_PASSWORD_STRONG
 				result	= _('The password seems good')
 
 		except ValueError, result:
-			icon	= ui.STOCK_PASSWORD_WEAK
+			icon	= stock.STOCK_PASSWORD_WEAK
 			result = _('The password %s') % str(result)
 
 		self.result.set_text(result)
@@ -1058,7 +1058,7 @@ class PasswordGenerator(Utility):
 	def __init__(self, parent, cfg, clipboard = None):
 		Utility.__init__(
 			self, parent, _('Password Generator'),
-			( ( gtk.STOCK_CLOSE, gtk.RESPONSE_CLOSE ), ( ui.STOCK_GENERATE, gtk.RESPONSE_OK ) )
+			( ( gtk.STOCK_CLOSE, gtk.RESPONSE_CLOSE ), ( stock.STOCK_GENERATE, gtk.RESPONSE_OK ) )
 		)
 
 		self.config = cfg

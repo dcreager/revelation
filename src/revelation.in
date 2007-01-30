@@ -27,7 +27,7 @@ import gettext, gnome, gobject, gtk, gtk.gdk, os, pwd, sys
 if "$python_libdir$" not in sys.path:
 	sys.path.insert(0, "$python_libdir$")
 
-from revelation import config, data, datahandler, dialog, entry, io, ui, util
+from revelation import config, data, datahandler, dialog, entry, io, stock, ui, util
 
 _ = gettext.gettext
 
@@ -252,7 +252,7 @@ class Revelation(ui.App):
 		self.entryclipboard	= data.EntryClipboard()
 		self.entrystore		= data.EntryStore()
 		self.entrysearch	= data.EntrySearch(self.entrystore)
-		self.items		= ui.ItemFactory(self)
+		self.items		= stock.StockFactory(self, config.DIR_ICONS)
 		self.locktimer		= data.Timer()
 		self.sessionclient	= gnome.ui.master_client()
 		self.undoqueue		= data.UndoQueue()
@@ -1391,7 +1391,7 @@ class Revelation(ui.App):
 			d = dialog.PasswordLock(self, password)
 
 			if self.entrystore.changed == True:
-				l = ui.ImageLabel(_('Quit disabled due to unsaved changes'), ui.STOCK_WARNING)
+				l = ui.ImageLabel(_('Quit disabled due to unsaved changes'), stock.STOCK_WARNING)
 				d.contents.pack_start(l)
 				d.get_response_widget(gtk.RESPONSE_CANCEL).set_sensitive(False)
 

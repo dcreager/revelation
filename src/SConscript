@@ -57,6 +57,7 @@ source_lib = env.Substitute("lib/config.py.in") + [
 	"lib/dialog.py",
 	"lib/entry.py",
 	"lib/io.py",
+	"lib/stock.py",
 	"lib/ui.py",
 	"lib/util.py",
 ]

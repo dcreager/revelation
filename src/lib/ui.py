@@ -23,110 +23,11 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 
-import config, data, dialog, entry, io, shinygnome.ui, util
+import config, data, dialog, entry, io, stock, shinygnome.ui, util
 
 import bonobo.ui, gettext, gobject, gtk, gtk.gdk, gnome.ui, os, pango, pwd, time
 
 _ = gettext.gettext
-
-
-STOCK_CONTINUE			= "revelation-continue"
-STOCK_DISCARD			= "revelation-discard"
-STOCK_EDIT			= "revelation-edit"
-STOCK_EXPORT			= "revelation-export"
-STOCK_FOLDER			= "revelation-folder"
-STOCK_GENERATE			= "revelation-generate"
-STOCK_IMPORT			= "revelation-import"
-STOCK_GOTO			= "revelation-goto"
-STOCK_LOCK			= "revelation-lock"
-STOCK_NEW_ENTRY			= "revelation-new-entry"
-STOCK_NEW_FOLDER		= "revelation-new-folder"
-STOCK_NEXT			= "revelation-next"
-STOCK_PASSWORD_CHANGE		= "revelation-password-change"
-STOCK_PASSWORD_CHECK		= "revelation-password-check"
-STOCK_PASSWORD_STRONG		= "revelation-password-strong"
-STOCK_PASSWORD_WEAK		= "revelation-password-weak"
-STOCK_PREVIOUS			= "revelation-previous"
-STOCK_RELOAD			= "revelation-reload"
-STOCK_REMOVE			= "revelation-remove"
-STOCK_REPLACE			= "revelation-replace"
-STOCK_UNKNOWN			= "revelation-unknown"
-STOCK_UNLOCK			= "revelation-unlock"
-STOCK_UPDATE			= "revelation-update"
-STOCK_WARNING			= "revelation-warning"
-
-
-STOCK_ENTRY_FOLDER		= "revelation-account-folder"
-STOCK_ENTRY_FOLDER_OPEN		= "revelation-account-folder-open"
-STOCK_ENTRY_CREDITCARD		= "revelation-account-creditcard"
-STOCK_ENTRY_CRYPTOKEY		= "revelation-account-cryptokey"
-STOCK_ENTRY_DATABASE		= "revelation-account-database"
-STOCK_ENTRY_DOOR		= "revelation-account-door"
-STOCK_ENTRY_EMAIL		= "revelation-account-email"
-STOCK_ENTRY_FTP			= "revelation-account-ftp"
-STOCK_ENTRY_GENERIC		= "revelation-account-generic"
-STOCK_ENTRY_PHONE		= "revelation-account-phone"
-STOCK_ENTRY_SHELL		= "revelation-account-shell"
-STOCK_ENTRY_WEBSITE		= "revelation-account-website"
-
-STOCK_REVELATION		= "revelation-revelation"
-STOCK_REVELATION_LOCKED		= "revelation-revelation-locked"
-
-
-ICON_SIZE_APPLET		= gtk.ICON_SIZE_LARGE_TOOLBAR
-ICON_SIZE_DATAVIEW		= gtk.ICON_SIZE_LARGE_TOOLBAR
-ICON_SIZE_DROPDOWN		= gtk.ICON_SIZE_SMALL_TOOLBAR
-ICON_SIZE_ENTRY			= gtk.ICON_SIZE_MENU
-ICON_SIZE_FALLBACK		= gtk.ICON_SIZE_LARGE_TOOLBAR
-ICON_SIZE_HEADLINE		= gtk.ICON_SIZE_LARGE_TOOLBAR
-ICON_SIZE_LABEL			= gtk.ICON_SIZE_MENU
-ICON_SIZE_LOGO			= gtk.ICON_SIZE_DND
-ICON_SIZE_TREEVIEW		= gtk.ICON_SIZE_MENU
-
-STOCK_ICONS			= (
-	( STOCK_REVELATION,		"revelation",			( ICON_SIZE_APPLET, ICON_SIZE_LOGO, gtk.ICON_SIZE_DIALOG, gtk.ICON_SIZE_MENU )),
-	( STOCK_REVELATION_LOCKED,	"revelation-locked",		( ICON_SIZE_APPLET, ICON_SIZE_LOGO, gtk.ICON_SIZE_DIALOG, gtk.ICON_SIZE_MENU )),
-	( STOCK_ENTRY_CREDITCARD,	"stock_creditcard",		( ICON_SIZE_DATAVIEW, ICON_SIZE_DROPDOWN, ICON_SIZE_ENTRY, ICON_SIZE_TREEVIEW )),
-	( STOCK_ENTRY_CRYPTOKEY,	"stock_keyring",		( ICON_SIZE_DATAVIEW, ICON_SIZE_DROPDOWN, ICON_SIZE_ENTRY, ICON_SIZE_TREEVIEW )),
-	( STOCK_ENTRY_DATABASE,		"stock_data-sources",		( ICON_SIZE_DATAVIEW, ICON_SIZE_DROPDOWN, ICON_SIZE_ENTRY, ICON_SIZE_TREEVIEW )),
-	( STOCK_ENTRY_DOOR,		"stock_exit",			( ICON_SIZE_DATAVIEW, ICON_SIZE_DROPDOWN, ICON_SIZE_ENTRY, ICON_SIZE_TREEVIEW )),
-	( STOCK_ENTRY_EMAIL,		"stock_mail",			( ICON_SIZE_DATAVIEW, ICON_SIZE_DROPDOWN, ICON_SIZE_ENTRY, ICON_SIZE_TREEVIEW )),
-	( STOCK_ENTRY_FTP,		"system-file-manager",		( ICON_SIZE_DATAVIEW, ICON_SIZE_DROPDOWN, ICON_SIZE_ENTRY, ICON_SIZE_TREEVIEW )),
-	( STOCK_ENTRY_GENERIC,		"stock_lock",			( ICON_SIZE_DATAVIEW, ICON_SIZE_DROPDOWN, ICON_SIZE_ENTRY, ICON_SIZE_TREEVIEW )),
-	( STOCK_ENTRY_PHONE,		"stock_cell-phone",		( ICON_SIZE_DATAVIEW, ICON_SIZE_DROPDOWN, ICON_SIZE_ENTRY, ICON_SIZE_TREEVIEW )),
-	( STOCK_ENTRY_SHELL,		"gnome-terminal",		( ICON_SIZE_DATAVIEW, ICON_SIZE_DROPDOWN, ICON_SIZE_ENTRY, ICON_SIZE_TREEVIEW )),
-	( STOCK_ENTRY_WEBSITE,		"stock_hyperlink-toolbar",	( ICON_SIZE_DATAVIEW, ICON_SIZE_DROPDOWN, ICON_SIZE_ENTRY, ICON_SIZE_TREEVIEW )),
-	( STOCK_ENTRY_FOLDER,		"stock_folder",			( ICON_SIZE_DATAVIEW, ICON_SIZE_DROPDOWN, ICON_SIZE_ENTRY, ICON_SIZE_TREEVIEW )),
-	( STOCK_ENTRY_FOLDER_OPEN,	"stock_folder",			( ICON_SIZE_DATAVIEW, ICON_SIZE_DROPDOWN, ICON_SIZE_ENTRY, ICON_SIZE_TREEVIEW )),
-)
-
-STOCK_ITEMS = (
-	( STOCK_CONTINUE,		_('_Continue'),			"stock_test-mode" ),
-	( STOCK_DISCARD,		_('_Discard'),			gtk.STOCK_DELETE ),
-	( STOCK_EDIT,			_('_Edit'),			"stock_edit" ),
-	( STOCK_EXPORT,			_('_Export'),			gtk.STOCK_EXECUTE ),
-	( STOCK_FOLDER,			'',				"stock_folder" ),
-	( STOCK_GENERATE,		_('_Generate'),			gtk.STOCK_EXECUTE ),
-	( STOCK_GOTO,			_('_Go to'),			gtk.STOCK_JUMP_TO ),
-	( STOCK_IMPORT,			_('_Import'),			gtk.STOCK_CONVERT ),
-	( STOCK_LOCK,			_('_Lock'),			"stock_lock" ),
-	( STOCK_NEW_ENTRY,		_('_Add Entry'),		gtk.STOCK_ADD ),
-	( STOCK_NEW_FOLDER,		_('_Add Folder'),		"stock_folder" ),
-	( STOCK_NEXT,			_('Next'),			gtk.STOCK_GO_DOWN ),
-	( STOCK_PASSWORD_CHANGE,	_('_Change'),			"stock_lock-ok" ),
-	( STOCK_PASSWORD_CHECK,		_('_Check'),			"stock_lock-ok" ),
-	( STOCK_PASSWORD_STRONG,	'',				"stock_lock-ok" ),
-	( STOCK_PASSWORD_WEAK,		'',				"stock_lock-broken" ),
-	( STOCK_PREVIOUS,		_('Previous'),			gtk.STOCK_GO_UP ),
-	( STOCK_RELOAD,			_('_Reload'),			gtk.STOCK_REFRESH ),
-	( STOCK_REMOVE,			_('Re_move'),			gtk.STOCK_DELETE ),
-	( STOCK_REPLACE,		_('_Replace'),			gtk.STOCK_SAVE_AS ),
-	( STOCK_UNKNOWN,		_('Unknown'),			gtk.STOCK_DIALOG_QUESTION ),
-	( STOCK_UNLOCK,			_('_Unlock'),			"stock_lock-open" ),
-	( STOCK_UPDATE,			_('_Update'),			"stock_edit" ),
-	( STOCK_WARNING,		'',				"stock_dialog-warning" ),
-)
-
 
 
 ##### FUNCTIONS #####
@@ -275,8 +176,8 @@ class Searchbar(Toolbar):
 		self.entry		= Entry()
 		self.dropdown		= EntryDropDown()
 		self.dropdown.insert_item(0, _('Any type'), "gnome-stock-about")
-		self.button_next	= ToolButton(STOCK_NEXT, important = True)
-		self.button_prev	= ToolButton(STOCK_PREVIOUS, important = True)
+		self.button_next	= ToolButton(stock.STOCK_NEXT, important = True)
+		self.button_prev	= ToolButton(stock.STOCK_PREVIOUS, important = True)
 
 		self.append(ToolItem(self.label))
 		self.append(ToolItem(self.entry), _('Text to search for'))
@@ -335,7 +236,7 @@ TextView	= shinygnome.ui.TextView
 class ImageLabel(HBox):
 	"A label with an image"
 
-	def __init__(self, text = None, stock = None, size = ICON_SIZE_LABEL):
+	def __init__(self, text = None, stock = None, size = gtk.ICON_SIZE_MENU):
 		HBox.__init__(self)
 
 		self.image = Image()
@@ -410,7 +311,7 @@ class PasswordLabel(EventBox):
 		elif data.button == 3:
 			menu = Menu()
 
-			menuitem = ImageMenuItem(gtk.STOCK_COPY, _('Copy password'))
+			menuitem = ImageMenuItem(gtk.stock.STOCK_COPY, _('Copy password'))
 			menuitem.connect("activate", lambda w: self.clipboard.set(self.password, True))
 			menu.append(menuitem)
 
@@ -618,7 +519,7 @@ class PasswordEntry(IconEntry):
 		"Populates the popup menu"
 
 		if self.clipboard != None:
-			menuitem = ImageMenuItem(gtk.STOCK_COPY, _('Copy password'))
+			menuitem = ImageMenuItem(gtk.stock.STOCK_COPY, _('Copy password'))
 			menuitem.connect("activate", lambda w: self.clipboard.set(self.get_text(), True))
 
 			menu.insert(menuitem, 2)
@@ -629,7 +530,7 @@ class PasswordEntry(IconEntry):
 	def set_password_strong(self, strong, reason = ""):
 		"Sets whether the password is strong or not"
 
-		self.set_icon(strong == True and STOCK_PASSWORD_STRONG or STOCK_PASSWORD_WEAK, reason)
+		self.set_icon(strong == True and stock.STOCK_PASSWORD_STRONG or stock.STOCK_PASSWORD_WEAK, reason)
 
 
 
@@ -687,7 +588,7 @@ class DropDown(gtk.ComboBox):
 
 		if icons == True:
 			cr = gtk.CellRendererPixbuf()
-			cr.set_fixed_size(gtk.icon_size_lookup(ICON_SIZE_DROPDOWN)[0] + 5, -1)
+			cr.set_fixed_size(gtk.icon_size_lookup(gtk.ICON_SIZE_SMALL_TOOLBAR)[0] + 5, -1)
 			self.pack_start(cr, False)
 			self.add_attribute(cr, "stock-id", 1)
 
@@ -850,7 +751,7 @@ class EntryTree(TreeView):
 		cr = gtk.CellRendererPixbuf()
 		column.pack_start(cr, False) 
 		column.add_attribute(cr, "stock-id", data.COLUMN_ICON)
-		cr.set_property("stock-size", ICON_SIZE_TREEVIEW)
+		cr.set_property("stock-size", gtk.ICON_SIZE_MENU)
 
 		cr = gtk.CellRendererText()
 		column.pack_start(cr, True)
@@ -919,127 +820,6 @@ class Statusbar(gtk.Statusbar):
 
 		self.clear()
 		self.push(self.contextid, text)
-
-
-
-##### FACTORIES AND MANAGERS #####
-
-class ItemFactory(gtk.IconFactory):
-	"A stock item factory"
-
-	def __init__(self, parent):
-		gtk.IconFactory.__init__(self)
-		self.add_default()
-
-		self.parent	= parent
-		self.theme	= gtk.icon_theme_get_default()
-
-		if config.DIR_ICONS not in self.theme.get_search_path():
-			self.theme.append_search_path(config.DIR_ICONS)
-
-		self.__init_icons()
-		self.__init_items()
-
-		self.theme.connect("changed", self.__cb_theme_changed)
-
-
-	def __init_icons(self):
-		"Loads stock icons"
-
-		for id, icon, sizes in STOCK_ICONS:
-			self.create_stock_icon(id, icon, sizes)
-
-
-	def __init_items(self):
-		"Creates stock items"
-
-		for id, name, icon in STOCK_ITEMS:
-			self.create_stock_item(id, name, icon)
-
-
-	def __cb_theme_changed(self, widget, data = None):
-		"Callback for changed theme"
-
-		self.__init_icons()
-		self.__init_items()
-
-
-	def create_stock_icon(self, id, icon, sizes):
-		"Creates a stock icon from a different stock icon"
-
-		iconset = gtk.IconSet()
-		self.add(id, iconset)
-
-		if self.theme.has_icon(icon) == False:
-			return
-
-		# load icons (the dict.fromkeys() thing is to remove duplicates)
-		for size in dict.fromkeys(sizes).keys():
-			source = self.get_iconsource(icon, size)
-
-			if source != None:
-				iconset.add_source(source)
-
-
-		# load fallback icon if none were found
-		if len(iconset.get_sizes()) == 0:
-			source = self.get_iconsource(icon, ICON_SIZE_FALLBACK, True)
-
-			if source != None:
-				iconset.add_source(source)
-
-
-	def create_stock_item(self, id, name, icon = None):
-		"Creates a stock item"
-
-		gtk.stock_add(((id, name, 0, 0, None), ))
-
-		if icon is None:
-			pass
-
-		elif gtk.stock_lookup(icon) is not None:
-			self.add(id, self.parent.get_style().lookup_icon_set(icon))
-
-		else:
-			self.create_stock_icon(id, icon, ( gtk.ICON_SIZE_SMALL_TOOLBAR, gtk.ICON_SIZE_LARGE_TOOLBAR, gtk.ICON_SIZE_MENU, gtk.ICON_SIZE_BUTTON, gtk.ICON_SIZE_DIALOG, ICON_SIZE_LABEL, ICON_SIZE_HEADLINE ))
-
-
-	def get_iconsource(self, id, size, wildcard = False):
-		"Loads an icon as an iconsource"
-
-		width, height	= gtk.icon_size_lookup(size)
-		pixbuf		= self.get_pixbuf(id, width)
-
-		if pixbuf == None:
-			return
-
-		# reject icons more than 4 pixels away from requested size if not wildcard
-		elif wildcard == False and not width - 4 <= pixbuf.get_property("width") <= width + 4:
-			return
-
-		elif wildcard == False and not height - 4 <= pixbuf.get_property("height") <= height + 4:
-			return
-
-		source = gtk.IconSource()
-		source.set_pixbuf(pixbuf)
-		source.set_size(size)
-		source.set_size_wildcarded(wildcard)
-
-		return source
-
-
-	def get_pixbuf(self, id, size):
-		"Loads an icon as a pixbuf"
-
-		if self.theme.has_icon(id) == False:
-			return None
-
-		try:
-			return self.theme.load_icon(id, size, 0)
-
-		except gobject.GError:
-			return None
-
 
 
 ##### ACTION HANDLING #####
@@ -1196,7 +976,7 @@ class EntryView(VBox):
 
 		label = ImageLabel(
 			"<span size=\"large\" weight=\"bold\">%s</span>" % util.escape_markup(e.name),
-			e.icon, ICON_SIZE_DATAVIEW
+			e.icon, gtk.ICON_SIZE_LARGE_TOOLBAR
 		)
 		metabox.pack_start(Alignment(label, 0.5, 0.5, 0, 0))
 
