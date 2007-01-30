@@ -227,46 +227,10 @@ class Searchbar(Toolbar):
 ##### DISPLAY WIDGETS #####
 
 Image		= shinygnome.ui.Image
+ImageLabel	= shinygnome.ui.ImageLabel
 Label		= shinygnome.ui.Label
 Statusbar	= shinygnome.ui.Statusbar
 TextView	= shinygnome.ui.TextView
-
-class ImageLabel(HBox):
-	"A label with an image"
-
-	def __init__(self, text = None, stock = None, size = gtk.ICON_SIZE_MENU):
-		HBox.__init__(self)
-
-		self.image = Image()
-		self.pack_start(self.image, False, True)
-
-		self.label = Label(text)
-		self.pack_start(self.label)
-
-		if text != None:
-			self.set_text(text)
-
-		if stock != None:
-			self.set_stock(stock, size)
-
-
-	def set_ellipsize(self, ellipsize):
-		"Sets label ellisization"
-
-		self.label.set_ellipsize(ellipsize)
-
-
-	def set_stock(self, stock, size):
-		"Sets the image"
-
-		self.image.set_from_stock(stock, size)
-
-
-	def set_text(self, text):
-		"Sets the label text"
-
-		self.label.set_text(text)
-
 
 
 class PasswordLabel(EventBox):
