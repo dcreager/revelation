@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 
-import config, data, dialog, entry, io, stock, shinygnome.ui, util
+import config, data, dialog, entry, io, stock, shinygnome.ui, shinygnome.util, util
 
 import gettext, gobject, gtk, gtk.gdk, gnome.ui, time
 
@@ -36,16 +36,16 @@ def generate_field_display_widget(field, cfg = None, userdata = None):
 	"Generates a widget for displaying a field value"
 
 	if field.datatype == entry.DATATYPE_EMAIL:
-		widget = LinkButton("mailto:%s" % field.value, util.escape_markup(field.value))
+		widget = LinkButton("mailto:%s" % field.value, shinygnome.util.text.escape_markup(field.value))
 
 	elif field.datatype == entry.DATATYPE_PASSWORD:
-		widget = PasswordLabel(util.escape_markup(field.value), cfg, userdata)
+		widget = PasswordLabel(shinygnome.util.text.escape_markup(field.value), cfg, userdata)
 
 	elif field.datatype == entry.DATATYPE_URL:
-		widget = LinkButton(field.value, util.escape_markup(field.value))
+		widget = LinkButton(field.value, shinygnome.util.text.escape_markup(field.value))
 
 	else:
-		widget = Label(util.escape_markup(field.value))
+		widget = Label(shinygnome.util.text.escape_markup(field.value))
 		widget.set_selectable(True)
 
 	return widget
@@ -117,11 +117,11 @@ class InputSection(VBox):
 		self.sizegroup	= sizegroup
 
 		if title is not None:
-			self.title = Label("<span weight=\"bold\">%s</span>" % util.escape_markup(title))
+			self.title = Label("<span weight=\"bold\">%s</span>" % shinygnome.util.text.escape_markup(title))
 			self.pack_start(self.title, False)
 
 		if description is not None:
-			self.desc = Label(util.escape_markup(description))
+			self.desc = Label(shinygnome.util.text.escape_markup(description))
 			self.pack_start(self.desc, False)
 
 		if sizegroup is None:
@@ -139,7 +139,7 @@ class InputSection(VBox):
 			row.pack_start(Label(""), False, False)
 
 		if title is not None:
-			label = Label("%s:" % util.escape_markup(title))
+			label = Label("%s:" % shinygnome.util.text.escape_markup(title))
 			self.sizegroup.add_widget(label)
 			row.pack_start(label, False, False)
 
@@ -243,7 +243,7 @@ class PasswordLabel(EventBox):
 		self.config	= cfg
 		self.clipboard	= clipboard
 
-		self.label = Label(util.escape_markup(self.password), justify)
+		self.label = Label(shinygnome.util.text.escape_markup(self.password), justify)
 		self.label.set_selectable(True)
 		self.add(self.label)
 
@@ -293,7 +293,7 @@ class PasswordLabel(EventBox):
 		"Sets whether to display the password"
 
 		if show == True:
-			self.label.set_text(util.escape_markup(self.password))
+			self.label.set_text(shinygnome.util.text.escape_markup(self.password))
 			self.label.set_selectable(True)
 			self.drag_source_unset()
 
@@ -727,12 +727,12 @@ class EntryView(VBox):
 		self.pack_start(metabox)
 
 		label = ImageLabel(
-			"<span size=\"large\" weight=\"bold\">%s</span>" % util.escape_markup(e.name),
+			"<span size=\"large\" weight=\"bold\">%s</span>" % shinygnome.util.text.escape_markup(e.name),
 			e.icon, gtk.ICON_SIZE_LARGE_TOOLBAR
 		)
 		metabox.pack_start(Alignment(label, 0.5, 0.5, 0, 0))
 
-		label = Label("<span weight=\"bold\">%s</span>%s" % ( e.typename + (e.description != "" and ": " or ""), util.escape_markup(e.description) ), gtk.JUSTIFY_CENTER)
+		label = Label("<span weight=\"bold\">%s</span>%s" % ( e.typename + (e.description != "" and ": " or ""), shinygnome.util.text.escape_markup(e.description) ), gtk.JUSTIFY_CENTER)
 		metabox.pack_start(label)
 
 		# set up field list
@@ -743,7 +743,7 @@ class EntryView(VBox):
 			self.pack_start(table)
 
 			for rowindex, field in zip(range(len(fields)), fields):
-				label = Label("<span weight=\"bold\">%s:</span>" % util.escape_markup(field.name))
+				label = Label("<span weight=\"bold\">%s:</span>" % shinygnome.util.text.escape_markup(field.name))
 				table.attach(label, 0, rowindex)
 
 				widget = generate_field_display_widget(field, self.config, self.clipboard)
