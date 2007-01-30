@@ -363,13 +363,3 @@ def trace_exception(type, value, tb):
 
 	return trace.getvalue()
 
-
-def unescape_markup(string):
-	"Unescapes a string to get literal values"
-
-	string = string.replace("&amp;", "&")
-	string = string.replace("&lt;", "<")
-	string = string.replace("&gt;", ">")
-
-	return string
-

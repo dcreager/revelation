@@ -27,7 +27,11 @@ import gettext, gnome, gobject, gtk, gtk.gdk, os, pwd, sys
 if "$python_libdir$" not in sys.path:
 	sys.path.insert(0, "$python_libdir$")
 
+if "$python_libdir$/$package$" not in sys.path:
+	sys.path.append("$python_libdir$/$package$")
+
 from revelation import config, data, datahandler, dialog, entry, io, stock, ui, util
+import shinygnome.util
 
 _ = gettext.gettext
 
@@ -1551,7 +1555,7 @@ class Revelation(ui.App):
 
 
 		if file != "":
-			self.file_open(io.file_normpath(file))
+			self.file_open(shinygnome.util.path.normalize(file))
 
 		gtk.main()
 
@@ -1637,7 +1641,7 @@ class Preferences(dialog.Utility):
 		self.check_autoload.connect("toggled", lambda w: self.button_autoload_file.set_sensitive(w.get_active()))
 		self.tooltips.set_tip(self.check_autoload, _('When enabled, this file will be opened when the program is started'))
 
-		self.button_autoload_file = ui.FileButton(_('Select File to Automatically Open'))
+		self.button_autoload_file = ui.FileChooserButton(_('Select File to Automatically Open'))
 		self.config.bind_widget("file/autoload_file", self.button_autoload_file)
 		self.button_autoload_file.set_sensitive(self.check_autoload.get_active())
 

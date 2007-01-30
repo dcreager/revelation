@@ -24,7 +24,7 @@
 #
 
 import config, datahandler, entry, io, stock, ui, util
-import shinygnome.ui
+import shinygnome.ui, shinygnome.util
 
 import gettext, gnome.ui, gobject, gtk, urllib
 
@@ -306,7 +306,7 @@ class FileSelector(gtk.FileChooserDialog):
 			return None
 
 		else:
-			return io.file_normpath(urllib.unquote(uri))
+			return shinygnome.util.path.normalize(urllib.unquote(uri))
 
 
 	def run(self):
@@ -455,7 +455,7 @@ class SaveFileSelector(FileSelector):
 		"Handles confirm-overwrite signals"
 
 		try:
-			FileReplace(self, io.file_normpath(self.get_uri())).run()
+			FileReplace(self, shinygnome.util.path.normalize(self.get_uri())).run()
 
 		except CancelError:
 			return gtk.FILE_CHOOSER_CONFIRMATION_SELECT_AGAIN

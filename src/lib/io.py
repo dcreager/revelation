@@ -26,6 +26,7 @@
 import datahandler
 
 import gnomevfs, gobject, os.path, re
+import shinygnome.util
 
 
 
@@ -99,7 +100,7 @@ class DataFile(gobject.GObject):
 	def load(self, file, password = None, pwgetter = None):
 		"Loads a file"
 
-		file = file_normpath(file)
+		file = shinygnome.util.path.normalize(file)
 		data = file_read(file)
 
 		if self.__handler == None:
@@ -134,7 +135,7 @@ class DataFile(gobject.GObject):
 	def set_file(self, file):
 		"Sets the current file"
 
-		uri = file is not None and gnomevfs.URI(file_normpath(file)) or None
+		uri = file is not None and gnomevfs.URI(shinygnome.util.path.normalize(file)) or None
 
 		if self.__uri != uri:
 			self.__uri = uri
@@ -185,7 +186,7 @@ def file_monitor(file, callback):
 	"Starts monitoring a file"
 
 	try:
-		return gnomevfs.monitor_add(file_normpath(file), gnomevfs.MONITOR_FILE, callback)
+		return gnomevfs.monitor_add(shinygnome.util.path.normalize(file), gnomevfs.MONITOR_FILE, callback)
 
 	except gnomevfs.NotSupportedError:
 		return None
@@ -195,21 +196,6 @@ def file_monitor_cancel(handle):
 	"Cancels file monitoring"
 
 	gnomevfs.monitor_cancel(handle)
-
-
-def file_normpath(file):
-	"Normalizes a file path"
-
-	if file in ( None, "" ):
-		return ""
-
-	file = re.sub("^file:/{,2}", "", file)
-	file = os.path.expanduser(file)
-
-	if not re.match("^[a-zA-Z]+://", file) and file[0] != "/":
-		file = os.path.abspath(file)
-
-	return re.sub("^file:/{,2}", "", str(gnomevfs.URI(file)))
 
 
 def file_read(file):

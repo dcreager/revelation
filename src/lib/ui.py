@@ -468,10 +468,11 @@ class PasswordEntryGenerate(HBox):
 
 ##### BUTTONS #####
 
-Button		= shinygnome.ui.Button
-CheckButton	= shinygnome.ui.CheckButton
-LinkButton	= shinygnome.ui.LinkButton
-RadioButton	= shinygnome.ui.RadioButton
+Button			= shinygnome.ui.Button
+CheckButton		= shinygnome.ui.CheckButton
+FileChooserButton	= shinygnome.ui.FileChooserButton
+LinkButton		= shinygnome.ui.LinkButton
+RadioButton		= shinygnome.ui.RadioButton
 
 
 class DropDown(gtk.ComboBox):
@@ -571,33 +572,6 @@ class EntryDropDown(DropDown):
 
 			if self.model.get_value(iter, 2) == entrytype:
 				self.set_active(i)
-
-
-class FileButton(gtk.FileChooserButton):
-	"A file chooser button"
-
-	def __init__(self, title = None, file = None, type = gtk.FILE_CHOOSER_ACTION_OPEN):
-		gtk.FileChooserButton.__init__(self, title)
-		self.set_action(type)
-		self.set_local_only(False)
-
-		if file != None:
-			self.set_filename(file)
-
-
-	def get_filename(self):
-		"Gets the filename"
-
-		return io.file_normpath(self.get_uri())
-
-
-	def set_filename(self, filename):
-		"Sets the filename"
-
-		filename = io.file_normpath(filename)
-
-		if filename != io.file_normpath(self.get_filename()):
-			gtk.FileChooserButton.set_filename(self, filename)
 
 
 
