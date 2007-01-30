@@ -60,9 +60,6 @@ def generate_field_edit_widget(field, cfg = None, userdata = None):
 	elif type(field) == entry.UsernameField:
 		widget = ComboBoxEntry(userdata)
 
-	elif field.datatype == entry.DATATYPE_FILE:
-		widget = FileEntry()
-
 	elif field.datatype == entry.DATATYPE_PASSWORD:
 		widget = PasswordEntry(None, cfg, userdata)
 
@@ -406,72 +403,6 @@ class ComboBoxEntry(gtk.ComboBoxEntry):
 
 		for item in list:
 			self.model.append((item,))
-
-
-
-class FileEntry(HBox):
-	"A file entry"
-
-	def __init__(self, title = None, file = None, type = gtk.FILE_CHOOSER_ACTION_OPEN):
-		HBox.__init__(self)
-
-		self.title = title is not None and title or _('Select File')
-		self.type = type
-
-		self.entry = Entry()
-		self.entry.connect("changed", lambda w: self.emit("changed"))
-		self.pack_start(self.entry)
-
-		self.button = Button(_('Browse...'), self.__cb_filesel)
-		self.pack_start(self.button, False, False)
-
-		if file is not None:
-			self.set_filename(file)
-
-
-	def __cb_filesel(self, widget, data = None):
-		"Displays a file selector when Browse is pressed"
-
-		try:
-			fsel = dialog.FileSelector(None, self.title, self.type)
-			file = self.get_filename()
-
-			if file != None:
-				fsel.set_filename(file)
-
-			self.set_filename(fsel.run())
-
-		except dialog.CancelError:
-			pass
-
-
-	def get_filename(self):
-		"Gets the current filename"
-
-		return io.file_normpath(self.entry.get_text())
-
-
-	def get_text(self):
-		"Wrapper to emulate Entry"
-
-		return self.entry.get_text()
-
-
-	def set_filename(self, filename):
-		"Sets the current filename"
-
-		self.entry.set_text(io.file_normpath(filename))
-		self.entry.set_position(-1)
-
-
-	def set_text(self, text):
-		"Wrapper to emulate Entry"
-
-		self.entry.set_text(text)
-
-
-gobject.type_register(FileEntry)
-gobject.signal_new("changed", FileEntry, gobject.SIGNAL_ACTION, gobject.TYPE_BOOLEAN, ())
 
 
 
