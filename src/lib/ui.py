@@ -25,7 +25,7 @@
 
 import config, data, dialog, entry, io, stock, shinygnome.ui, util
 
-import bonobo.ui, gettext, gobject, gtk, gtk.gdk, gnome.ui, time
+import gettext, gobject, gtk, gtk.gdk, gnome.ui, time
 
 _ = gettext.gettext
 
@@ -506,6 +506,7 @@ class PasswordEntryGenerate(HBox):
 
 Button		= shinygnome.ui.Button
 CheckButton	= shinygnome.ui.CheckButton
+LinkButton	= shinygnome.ui.LinkButton
 RadioButton	= shinygnome.ui.RadioButton
 
 
@@ -636,29 +637,6 @@ class FileButton(gtk.FileChooserButton):
 
 
 
-class LinkButton(gnome.ui.HRef):
-	"A link button"
-
-	def __init__(self, url, label):
-		gnome.ui.HRef.__init__(self, url, label)
-		self.set_alignment(0, 0.5)
-
-		self.label = self.get_children()[0]
-
-
-	def set_ellipsize(self, ellipsize):
-		"Sets ellipsize for label"
-
-		self.label.set_ellipsize(ellipsize)
-
-
-	def set_justify(self, justify):
-		"Sets justify for label"
-
-		self.label.set_justify(justify)
-
-
-
 ##### MENUS AND MENU ITEMS #####
 
 ImageMenuItem	= shinygnome.ui.ImageMenuItem
@@ -746,110 +724,7 @@ UIManager	= shinygnome.ui.UIManager
 
 ##### APPLICATION COMPONENTS #####
 
-class App(gnome.ui.App):
-	"An application window"
-
-	def __init__(self, appname):
-		gnome.ui.App.__init__(self, appname, appname)
-
-		self.statusbar = Statusbar()
-		self.set_statusbar(self.statusbar)
-
-		self.uimanager = UIManager()
-		self.add_accel_group(self.uimanager.get_accel_group())
-
-
-	def __connect_menu_statusbar(self, menu):
-		"Connects a menus items to the statusbar"
-
-		for item in menu.get_children():
-			if isinstance(item, gtk.MenuItem) == True:
-				item.connect("select", self.cb_menudesc, True)
-				item.connect("deselect", self.cb_menudesc, False)
-
-
-	def cb_menudesc(self, item, show):
-		"Displays menu descriptions in the statusbar"
-
-		if show == True:
-			self.statusbar.set(item.tooltip)
-
-		else:
-			self.statusbar.clear()
-
-
-	def __cb_toolbar_hide(self, widget, name):
-		"Hides the toolbar dock when the toolbar is hidden"
-
-		self.get_dock_item_by_name(name).hide()
-
-
-	def __cb_toolbar_show(self, widget, name):
-		"Shows the toolbar dock when the toolbar is shown"
-
-		self.get_dock_item_by_name(name).show()
-
-
-	def add_toolbar(self, toolbar, name, band, detachable):
-		"Adds a toolbar"
-
-		behavior = bonobo.ui.DOCK_ITEM_BEH_EXCLUSIVE
-
-		if detachable == False:
-			behavior |= bonobo.ui.DOCK_ITEM_BEH_LOCKED
-
-		gnome.ui.App.add_toolbar(self, toolbar, name, behavior, 0, band, 0, 0)
-
-		toolbar.connect("show", self.__cb_toolbar_show, name)
-		toolbar.connect("hide", self.__cb_toolbar_hide, name)
-
-		toolbar.show_all()
-
-
-	def get_title(self):
-		"Returns the app title"
-
-		title = gnome.ui.App.get_title(self)
-
-		return title.replace(" - " + config.APPNAME, "")
-
-
-	def popup(self, menu, button, time):
-		"Displays a popup menu"
-
-		self.__connect_menu_statusbar(menu)
-		menu.popup(None, None, None, button, time)
-
-
-	def run(self):
-		"Runs the application"
-
-		self.show_all()
-		gtk.main()
-
-
-	def set_menus(self, menubar):
-		"Sets the menubar for the application"
-
-		for item in menubar.get_children():
-			self.__connect_menu_statusbar(item.get_submenu())
-
-		gnome.ui.App.set_menus(self, menubar)
-
-
-	def set_title(self, title):
-		"Sets the window title"
-
-		gnome.ui.App.set_title(self, title + " - " + config.APPNAME)
-
-
-	def set_toolbar(self, toolbar):
-		"Sets the application toolbar"
-
-		gnome.ui.App.set_toolbar(self, toolbar)
-		toolbar.connect("show", self.__cb_toolbar_show, "Toolbar")
-		toolbar.connect("hide", self.__cb_toolbar_hide, "Toolbar")
-
+App = shinygnome.ui.App
 
 
 class EntryView(VBox):
