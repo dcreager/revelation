@@ -74,38 +74,18 @@ def generate_field_edit_widget(field, cfg = None, userdata = None):
 
 ##### CONTAINERS #####
 
-Alignment	= shinygnome.ui.Alignment
-EventBox	= shinygnome.ui.EventBox
-HBox		= shinygnome.ui.HBox
-HButtonBox	= shinygnome.ui.HButtonBox
-HPaned		= shinygnome.ui.HPaned
-InputBox	= shinygnome.ui.InputBox
-Notebook	= shinygnome.ui.Notebook
-ScrolledWindow	= shinygnome.ui.ScrolledWindow
-SizeGroup	= shinygnome.ui.SizeGroup
-Table		= shinygnome.ui.Table
-VBox		= shinygnome.ui.VBox
-
-
-class NotebookPage(VBox):
-	"A notebook page"
-
-	def __init__(self):
-		VBox.__init__(self)
-
-		self.sizegroup = SizeGroup()
-		self.set_border_width(12)
-		self.set_spacing(18)
-
-
-	def add_inputbox(self, title):
-		"Adds an input section to the notebook"
-
-		inputbox = InputBox(title, self.sizegroup)
-		self.pack_start(inputbox, False, False)
-
-		return inputbox
-
+Alignment		= shinygnome.ui.Alignment
+EventBox		= shinygnome.ui.EventBox
+HBox			= shinygnome.ui.HBox
+HButtonBox		= shinygnome.ui.HButtonBox
+HPaned			= shinygnome.ui.HPaned
+InputBox		= shinygnome.ui.InputBox
+Notebook		= shinygnome.ui.Notebook
+NotebookPage		= shinygnome.ui.NotebookPage
+ScrolledWindow		= shinygnome.ui.ScrolledWindow
+SizeGroup		= shinygnome.ui.SizeGroup
+Table			= shinygnome.ui.Table
+VBox			= shinygnome.ui.VBox
 
 
 ##### TOOLBARS #####
