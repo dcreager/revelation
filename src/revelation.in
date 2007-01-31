@@ -1587,52 +1587,52 @@ class Preferences(dialog.Utility):
 
 		self.page_general = ui.NotebookPage()
 		self.notebook.append_page(self.page_general, _('General'))
-		self.__init_section_files(self.page_general)
-		self.__init_section_password(self.page_general)
+		self.__init_inputbox_files(self.page_general)
+		self.__init_inputbox_password(self.page_general)
 
 		self.page_interface = ui.NotebookPage()
 		self.notebook.append_page(self.page_interface, _('Interface'))
-		self.__init_section_doubleclick(self.page_interface)
-		self.__init_section_toolbar(self.page_interface)
+		self.__init_inputbox_doubleclick(self.page_interface)
+		self.__init_inputbox_toolbar(self.page_interface)
 
 		self.page_gotocmd = ui.NotebookPage()
 		self.notebook.append_page(self.page_gotocmd, _('Goto Commands'))
-		self.__init_section_gotocmd(self.page_gotocmd)
+		self.__init_inputbox_gotocmd(self.page_gotocmd)
 
 		self.connect("response", lambda w,d: self.destroy())
 
 
-	def __init_section_doubleclick(self, page):
-		"Sets up the doubleclick section"
+	def __init_inputbox_doubleclick(self, page):
+		"Sets up the doubleclick inputbox"
 
-		self.section_doubleclick = page.add_section(_('Doubleclick Action'))
+		self.inputbox_doubleclick = page.add_inputbox(_('Doubleclick Action'))
 
 		# radio-button for go to
 		self.radio_doubleclick_goto = ui.RadioButton(None, _('Go to account, if possible'))
 		self.config.bind_widget("behavior/doubleclick", self.radio_doubleclick_goto, "goto")
 
 		self.tooltips.set_tip(self.radio_doubleclick_goto, _('Go to the account (open in external application) on doubleclick, if required data is filled in'))
-		self.section_doubleclick.append_widget(None, self.radio_doubleclick_goto)
+		self.inputbox_doubleclick.add(self.radio_doubleclick_goto)
 
 		# radio-button for edit
 		self.radio_doubleclick_edit = ui.RadioButton(self.radio_doubleclick_goto, _('Edit account'))
 		self.config.bind_widget("behavior/doubleclick", self.radio_doubleclick_edit, "edit")
 
 		self.tooltips.set_tip(self.radio_doubleclick_edit, _('Edit the account on doubleclick'))
-		self.section_doubleclick.append_widget(None, self.radio_doubleclick_edit)
+		self.inputbox_doubleclick.add(self.radio_doubleclick_edit)
 
 		# radio-button for copy
 		self.radio_doubleclick_copy = ui.RadioButton(self.radio_doubleclick_goto, _('Copy password to clipboard'))
 		self.config.bind_widget("behavior/doubleclick", self.radio_doubleclick_copy, "copy")
 
 		self.tooltips.set_tip(self.radio_doubleclick_copy, _('Copy the account password to clipboard on doubleclick'))
-		self.section_doubleclick.append_widget(None, self.radio_doubleclick_copy)
+		self.inputbox_doubleclick.add(self.radio_doubleclick_copy)
 
 
-	def __init_section_files(self, page):
-		"Sets up the files section"
+	def __init_inputbox_files(self, page):
+		"Sets up the files inputbox"
 
-		self.section_files = page.add_section(_('Files'))
+		self.inputbox_files = page.add_inputbox(_('Files'))
 
 		# checkbutton and file button for autoloading a file
 		self.check_autoload = ui.CheckButton(_('Open file on startup:'))
@@ -1651,14 +1651,14 @@ class Preferences(dialog.Utility):
 		hbox = ui.HBox()
 		hbox.pack_start(self.check_autoload, False, False)
 		hbox.pack_start(eventbox)
-		self.section_files.append_widget(None, hbox)
+		self.inputbox_files.add(hbox)
 
 		# check-button for autosave
 		self.check_autosave = ui.CheckButton(_('Automatically save data when changed'))
 		self.config.bind_widget("file/autosave", self.check_autosave)
 
 		self.tooltips.set_tip(self.check_autosave, _('Automatically save the data file when an entry is added, modified or removed'))
-		self.section_files.append_widget(None, self.check_autosave)
+		self.inputbox_files.add(self.check_autosave)
 
 		# autolock file
 		self.check_autolock = ui.CheckButton(_('Lock file when inactive for'))
@@ -1677,13 +1677,13 @@ class Preferences(dialog.Utility):
 		hbox.pack_start(self.check_autolock, False, False)
 		hbox.pack_start(self.spin_autolock_timeout, False, False)
 		hbox.pack_start(ui.Label(_('minutes')))
-		self.section_files.append_widget(None, hbox)
+		self.inputbox_files.add(hbox)
 
 
-	def __init_section_gotocmd(self, page):
-		"Sets up the goto command section"
+	def __init_inputbox_gotocmd(self, page):
+		"Sets up the goto command inputbox"
 
-		self.section_gotocmd = page.add_section(_('Goto Commands'))
+		self.inputbox_gotocmd = page.add_inputbox(_('Goto Commands'))
 
 		for entrytype in entry.ENTRYLIST:
 			if entrytype == entry.FolderEntry:
@@ -1705,27 +1705,27 @@ class Preferences(dialog.Utility):
 			tooltip += _('%(...%): optional substring expansion')
 
 			self.tooltips.set_tip(widget, tooltip)
-			self.section_gotocmd.append_widget(e.typename, widget)
+			self.inputbox_gotocmd.add(widget, e.typename)
 
 
-	def __init_section_password(self, page):
-		"Sets up the password section"
+	def __init_inputbox_password(self, page):
+		"Sets up the password inputbox"
 
-		self.section_password = page.add_section(_('Passwords'))
+		self.inputbox_password = page.add_inputbox(_('Passwords'))
 
 		# show passwords checkbutton
 		self.check_show_passwords = ui.CheckButton(_('Display passwords and other secrets'))
 		self.config.bind_widget("view/passwords", self.check_show_passwords)
 
 		self.tooltips.set_tip(self.check_show_passwords, _('Display passwords and other secrets, such as PIN codes (otherwise, hide with ******)'))
-		self.section_password.append_widget(None, self.check_show_passwords)
+		self.inputbox_password.add(self.check_show_passwords)
 
 		# chain username checkbutton
 		self.check_chain_username = ui.CheckButton(_('Also copy username when copying password'))
 		self.config.bind_widget("clipboard/chain_username", self.check_chain_username)
 
 		self.tooltips.set_tip(self.check_chain_username, _('When the password is copied to clipboard, put the username before the password as a clipboard "chain"'))
-		self.section_password.append_widget(None, self.check_chain_username)
+		self.inputbox_password.add(self.check_chain_username)
 
 		# password length spinbutton
 		self.spin_pwlen = ui.SpinButton()
@@ -1733,48 +1733,48 @@ class Preferences(dialog.Utility):
 		self.config.bind_widget("passwordgen/length", self.spin_pwlen)
 
 		self.tooltips.set_tip(self.spin_pwlen, _('The number of characters in generated passwords - 8 or more are recommended'))
-		self.section_password.append_widget(_('Length of generated passwords'), self.spin_pwlen)
+		self.inputbox_password.add(self.spin_pwlen, _('Length of generated passwords'))
 
 
-	def __init_section_toolbar(self, page):
-		"Sets up the toolbar section"
+	def __init_inputbox_toolbar(self, page):
+		"Sets up the toolbar inputbox"
 
-		self.section_toolbar = page.add_section(_('Toolbar Style'))
+		self.inputbox_toolbar = page.add_inputbox(_('Toolbar Style'))
 
 		# radio-button for desktop default
 		self.radio_toolbar_desktop = ui.RadioButton(None, _('Use desktop default'))
 		self.config.bind_widget("view/toolbar_style", self.radio_toolbar_desktop, "desktop")
 
 		self.tooltips.set_tip(self.radio_toolbar_desktop, _('Show toolbar items with default style'))
-		self.section_toolbar.append_widget(None, self.radio_toolbar_desktop)
+		self.inputbox_toolbar.add(self.radio_toolbar_desktop)
 
 		# radio-button for icons and text
 		self.radio_toolbar_both = ui.RadioButton(self.radio_toolbar_desktop, _('Show icons and text'))
 		self.config.bind_widget("view/toolbar_style", self.radio_toolbar_both, "both")
 
 		self.tooltips.set_tip(self.radio_toolbar_both, _('Show toolbar items with both icons and text'))
-		self.section_toolbar.append_widget(None, self.radio_toolbar_both)
+		self.inputbox_toolbar.add(self.radio_toolbar_both)
 
 		# radio-button for icons and important text
 		self.radio_toolbar_bothhoriz = ui.RadioButton(self.radio_toolbar_desktop, _('Show icons and important text'))
 		self.config.bind_widget("view/toolbar_style", self.radio_toolbar_bothhoriz, "both-horiz")
 
 		self.tooltips.set_tip(self.radio_toolbar_bothhoriz, _('Show toolbar items with text beside important icons'))
-		self.section_toolbar.append_widget(None, self.radio_toolbar_bothhoriz)
+		self.inputbox_toolbar.add(self.radio_toolbar_bothhoriz)
 
 		# radio-button for icons only
 		self.radio_toolbar_icons = ui.RadioButton(self.radio_toolbar_desktop, _('Show icons only'))
 		self.config.bind_widget("view/toolbar_style", self.radio_toolbar_icons, "icons")
 
 		self.tooltips.set_tip(self.radio_toolbar_icons, _('Show toolbar items with icons only'))
-		self.section_toolbar.append_widget(None, self.radio_toolbar_icons)
+		self.inputbox_toolbar.add(self.radio_toolbar_icons)
 
 		# radio-button for text only
 		self.radio_toolbar_text = ui.RadioButton(self.radio_toolbar_desktop, _('Show text only'))
 		self.config.bind_widget("view/toolbar_style", self.radio_toolbar_text, "text")
 
 		self.tooltips.set_tip(self.radio_toolbar_text, _('Show toolbar items with text only'))
-		self.section_toolbar.append_widget(None, self.radio_toolbar_text)
+		self.inputbox_toolbar.add(self.radio_toolbar_text)
 
 
 	def run(self):

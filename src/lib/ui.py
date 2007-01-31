@@ -79,8 +79,10 @@ EventBox	= shinygnome.ui.EventBox
 HBox		= shinygnome.ui.HBox
 HButtonBox	= shinygnome.ui.HButtonBox
 HPaned		= shinygnome.ui.HPaned
+InputBox	= shinygnome.ui.InputBox
 Notebook	= shinygnome.ui.Notebook
 ScrolledWindow	= shinygnome.ui.ScrolledWindow
+SizeGroup	= shinygnome.ui.SizeGroup
 Table		= shinygnome.ui.Table
 VBox		= shinygnome.ui.VBox
 
@@ -91,67 +93,18 @@ class NotebookPage(VBox):
 	def __init__(self):
 		VBox.__init__(self)
 
-		self.sizegroup = gtk.SizeGroup(gtk.SIZE_GROUP_HORIZONTAL)
+		self.sizegroup = SizeGroup()
 		self.set_border_width(12)
 		self.set_spacing(18)
 
 
-	def add_section(self, title, description = None):
+	def add_inputbox(self, title):
 		"Adds an input section to the notebook"
 
-		section = InputSection(title, description, self.sizegroup)
-		self.pack_start(section, False, False)
+		inputbox = InputBox(title, self.sizegroup)
+		self.pack_start(inputbox, False, False)
 
-		return section
-
-
-
-class InputSection(VBox):
-	"A section of input fields"
-
-	def __init__(self, title = None, description = None, sizegroup = None):
-		VBox.__init__(self)
-
-		self.title	= None
-		self.desc	= None
-		self.sizegroup	= sizegroup
-
-		if title is not None:
-			self.title = Label("<span weight=\"bold\">%s</span>" % shinygnome.util.text.escape_markup(title))
-			self.pack_start(self.title, False)
-
-		if description is not None:
-			self.desc = Label(shinygnome.util.text.escape_markup(description))
-			self.pack_start(self.desc, False)
-
-		if sizegroup is None:
-			self.sizegroup = gtk.SizeGroup(gtk.SIZE_GROUP_HORIZONTAL)
-
-
-	def append_widget(self, title, widget, indent = True):
-		"Adds a widget to the section"
-
-		row = HBox()
-		row.set_spacing(12)
-		self.pack_start(row, False, False)
-
-		if self.title is not None and indent == True:
-			row.pack_start(Label(""), False, False)
-
-		if title is not None:
-			label = Label("%s:" % shinygnome.util.text.escape_markup(title))
-			self.sizegroup.add_widget(label)
-			row.pack_start(label, False, False)
-
-		row.pack_start(widget)
-
-
-	def clear(self):
-		"Removes all widgets"
-
-		for child in self.get_children():
-			if child not in ( self.title, self.desc ):
-				child.destroy()
+		return inputbox
 
 
 

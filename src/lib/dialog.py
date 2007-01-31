@@ -122,17 +122,17 @@ class Utility(Dialog):
 		self.set_border_width(12)
 		self.vbox.set_spacing(18)
 
-		self.sizegroup	= gtk.SizeGroup(gtk.SIZE_GROUP_HORIZONTAL)
+		self.sizegroup	= ui.SizeGroup()
 		self.tooltips	= gtk.Tooltips()
 
 
-	def add_section(self, title, description = None):
-		"Adds an input section to the dialog"
+	def add_inputbox(self, title):
+		"Adds an inputbox to the dialog"
 
-		section = ui.InputSection(title, description, self.sizegroup)
-		self.vbox.pack_start(section)
+		inputbox = ui.InputBox(title, self.sizegroup)
+		self.vbox.pack_start(inputbox)
 
-		return section
+		return inputbox
 
 
 
@@ -284,17 +284,17 @@ class FileSelector(gtk.FileChooserDialog):
 		self.set_local_only(False)
 		self.set_default_response(gtk.RESPONSE_OK)
 
-		self.inputsection = None
+		self.inputbox = None
 
 
 	def add_widget(self, title, widget):
 		"Adds a widget to the file selection"
 
-		if self.inputsection == None:
-			self.inputsection = ui.InputSection()
-			self.set_extra_widget(self.inputsection)
+		if self.inputbox == None:
+			self.inputbox = ui.InputBox()
+			self.set_extra_widget(self.inputbox)
 
-		self.inputsection.append_widget(title, widget)
+		self.inputbox.add(widget, title)
 
 
 	def get_filename(self):
@@ -354,7 +354,7 @@ class ExportFileSelector(FileSelector):
 		"Displays the dialog"
 
 		self.show_all()
-		self.inputsection.show_all()
+		self.inputbox.show_all()
 
 		if gtk.FileSelection.run(self) == gtk.RESPONSE_OK:
 			filename = self.get_filename()
@@ -392,7 +392,7 @@ class ImportFileSelector(FileSelector):
 		"Displays the dialog"
 
 		self.show_all()
-		self.inputsection.show_all()
+		self.inputbox.show_all()
 
 		if gtk.FileSelection.run(self) == gtk.RESPONSE_OK:
 			filename = self.get_filename()
@@ -478,8 +478,8 @@ class Password(Message):
 
 		self.entries = []
 
-		self.sect_passwords = ui.InputSection()
-		self.add(self.sect_passwords)
+		self.inputbox_passwords = ui.InputBox()
+		self.add(self.inputbox_passwords)
 
 
 	def add_entry(self, name, entry = None):
@@ -489,7 +489,7 @@ class Password(Message):
 			entry = ui.Entry()
 			entry.set_visibility(False)
 
-		self.sect_passwords.append_widget(name, entry)
+		self.inputbox_passwords.add(entry, name)
 		self.entries.append(entry)
 
 		return entry
@@ -708,23 +708,23 @@ class EntryEdit(Utility):
 		self.widgetdata		= {}
 
 		# set up the ui
-		self.sect_meta		= self.add_section(title)
-		self.sect_fields	= self.add_section(_('Account Data'))
+		self.input_meta		= self.add_inputbox(title)
+		self.input_fields	= self.add_inputbox(_('Account Data'))
 
 		self.entry_name = ui.Entry()
 		self.entry_name.set_width_chars(50)
 		self.tooltips.set_tip(self.entry_name, _('The name of the entry'))
-		self.sect_meta.append_widget(_('Name'), self.entry_name)
+		self.input_meta.add(self.entry_name, _('Name'))
 
 		self.entry_desc = ui.Entry()
 		self.tooltips.set_tip(self.entry_desc, _('A description of the entry'))
-		self.sect_meta.append_widget(_('Description'), self.entry_desc)
+		self.input_meta.add(self.entry_desc, _('Description'))
 
 		self.dropdown = ui.EntryDropDown()
 		self.dropdown.connect("changed", lambda w: self.__setup_fieldsect(self.dropdown.get_active_type()().fields))
 		eventbox = ui.EventBox(self.dropdown)
 		self.tooltips.set_tip(eventbox, _('The type of entry'))
-		self.sect_meta.append_widget(_('Type'), eventbox)
+		self.input_meta.add(eventbox, _('Type'))
 
 		# populate the dialog with data
 		self.set_entry(e)
@@ -738,7 +738,7 @@ class EntryEdit(Utility):
 			self.fielddata[fieldtype] = fieldentry.get_text()
 
 		self.entry_field = {}
-		self.sect_fields.clear()
+		self.input_fields.clear()
 
 		# generate field entries
 		for field in fields:
@@ -764,11 +764,11 @@ class EntryEdit(Utility):
 			elif hasattr(fieldentry, "entry") == True:
 				self.tooltips.set_tip(fieldentry.entry, field.description)
 
-			self.sect_fields.append_widget(field.name, fieldentry)
+			self.input_fields.add(fieldentry, field.name)
 
 
 		# show widgets
-		self.sect_fields.show_all()
+		self.input_fields.show_all()
 
 
 	def get_entry(self):
@@ -878,16 +878,16 @@ class FolderEdit(Utility):
 		)
 
 		# set up the ui
-		self.sect_folder	= self.add_section(title)
+		self.inputbox_folder	= self.add_inputbox(title)
 
 		self.entry_name = ui.Entry()
 		self.entry_name.set_width_chars(25)
 		self.tooltips.set_tip(self.entry_name, _('The name of the folder'))
-		self.sect_folder.append_widget(_('Name'), self.entry_name)
+		self.inputbox_folder.add(self.entry_name, _('Name'))
 
 		self.entry_desc = ui.Entry()
 		self.tooltips.set_tip(self.entry_desc, _('A description of the folder'))
-		self.sect_folder.append_widget(_('Description'), self.entry_desc)
+		self.inputbox_folder.add(self.entry_desc, _('Description'))
 
 		# populate the dialog with data
 		self.set_entry(e)
@@ -992,18 +992,18 @@ class PasswordChecker(Utility):
 		self.set_modal(False)
 		self.set_size_request(300, -1)
 
-		self.section = self.add_section(_('Password Checker'))
+		self.inputbox = self.add_inputbox(_('Password Checker'))
 
 		self.entry = ui.PasswordEntry(None, cfg, clipboard)
 		self.entry.autocheck = False
 		self.entry.set_width_chars(40)
 		self.entry.connect("changed", self.__cb_changed)
 		self.tooltips.set_tip(self.entry, _('Enter a password to check'))
-		self.section.append_widget(_('Password'), self.entry)
+		self.inputbox.add(self.entry, _('Password'))
 
 		self.result = ui.ImageLabel(_('Enter a password to check'), stock.STOCK_UNKNOWN, ui.ICON_SIZE_HEADLINE)
 		self.tooltips.set_tip(self.result, _('The result of the check'))
-		self.section.append_widget(None, self.result)
+		self.inputbox.add(self.result)
 
 		self.connect("response", self.__cb_response)
 
@@ -1064,19 +1064,19 @@ class PasswordGenerator(Utility):
 		self.config = cfg
 		self.set_modal(False)
 
-		self.section = self.add_section(_('Password Generator'))
+		self.inputbox = self.add_inputbox(_('Password Generator'))
 
 		self.entry = ui.PasswordEntry(None, cfg, clipboard)
 		self.entry.autocheck = False
 		self.entry.set_editable(False)
 		self.tooltips.set_tip(self.entry, _('The generated password'))
-		self.section.append_widget(_('Password'), self.entry)
+		self.inputbox.add(self.entry, _('Password'))
 
 		self.spin_pwlen = ui.SpinButton()
 		self.spin_pwlen.set_range(4, 256)
 		self.spin_pwlen.set_value(self.config.get("passwordgen/length"))
 		self.tooltips.set_tip(self.spin_pwlen, ('The number of characters in generated passwords - 8 or more are recommended'))
-		self.section.append_widget(_('Length'), self.spin_pwlen)
+		self.inputbox.add(self.spin_pwlen, _('Length'))
 
 		self.connect("response", self.__cb_response)
 
