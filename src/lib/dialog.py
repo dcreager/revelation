@@ -345,7 +345,7 @@ class ExportFileSelector(FileSelector):
 		for handler in datahandler.get_export_handlers():
 			self.dropdown.append_item(handler.name, None, handler)
 
-		for index in range(self.dropdown.get_num_items()):
+		for index in range(self.dropdown.get_size()):
 			if self.dropdown.get_item(index)[2] == datahandler.RevelationXML:
 				self.dropdown.set_active(index)
 

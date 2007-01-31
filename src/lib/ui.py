@@ -403,19 +403,19 @@ class PasswordEntryGenerate(HBox):
 
 Button			= shinygnome.ui.Button
 CheckButton		= shinygnome.ui.CheckButton
+ComboBox		= shinygnome.ui.ComboBox
 FileChooserButton	= shinygnome.ui.FileChooserButton
 LinkButton		= shinygnome.ui.LinkButton
 RadioButton		= shinygnome.ui.RadioButton
 
 
-class DropDown(gtk.ComboBox):
+class DropDown(ComboBox):
 	"A dropdown button"
 
 	def __init__(self, icons = False):
-		gtk.ComboBox.__init__(self)
+		ComboBox.__init__(self)
 
-		self.model = gtk.ListStore(gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_PYOBJECT)
-		self.set_model(self.model)
+		self.set_model(gtk.ListStore(gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_PYOBJECT))
 
 		if icons == True:
 			cr = gtk.CellRendererPixbuf()
@@ -426,15 +426,6 @@ class DropDown(gtk.ComboBox):
 		cr = gtk.CellRendererText()
 		self.pack_start(cr, True)
 		self.add_attribute(cr, "text", 0)
-
-		self.connect("realize", self.__cb_show)
-
-
-	def __cb_show(self, widget, data = None):
-		"Callback for when widget is shown"
-
-		if self.get_active() == -1:
-			self.set_active(0)
 
 
 	def append_item(self, text, stock = None, data = None):
@@ -462,12 +453,6 @@ class DropDown(gtk.ComboBox):
 		"Returns data for an item"
 
 		return self.model.get(self.model.iter_nth_child(None, index), 0, 1, 2)
-
-
-	def get_num_items(self):
-		"Returns the number of items in the dropdown"
-
-		return self.model.iter_n_children(None)
 
 
 	def insert_item(self, index, text, stock = None, data = None):
