@@ -30,232 +30,53 @@ import gettext, gobject, gtk, gtk.gdk, gnome.ui, time
 _ = gettext.gettext
 
 
-##### FUNCTIONS #####
+##### SHINYGNOME WIDGETS #####
 
-def generate_field_display_widget(field, cfg = None, userdata = None):
-	"Generates a widget for displaying a field value"
-
-	if field.datatype == entry.DATATYPE_EMAIL:
-		widget = LinkButton("mailto:%s" % field.value, shinygnome.util.text.escape_markup(field.value))
-
-	elif field.datatype == entry.DATATYPE_PASSWORD:
-		widget = PasswordLabel(shinygnome.util.text.escape_markup(field.value), cfg, userdata)
-
-	elif field.datatype == entry.DATATYPE_URL:
-		widget = LinkButton(field.value, shinygnome.util.text.escape_markup(field.value))
-
-	else:
-		widget = Label(shinygnome.util.text.escape_markup(field.value))
-		widget.set_selectable(True)
-
-	return widget
-
-
-def generate_field_edit_widget(field, cfg = None, userdata = None):
-	"Generates a widget for editing a field"
-
-	if type(field) == entry.PasswordField:
-		widget = PasswordEntryGenerate(None, cfg, userdata)
-
-	elif type(field) == entry.UsernameField:
-		widget = SimpleComboBoxEntry(userdata)
-
-	elif field.datatype == entry.DATATYPE_PASSWORD:
-		widget = PasswordEntry(None, cfg, userdata)
-
-	else:
-		widget = Entry()
-
-	widget.set_text(field.value)
-
-	return widget
-
-
-
-##### CONTAINERS #####
-
+Action			= shinygnome.ui.Action
+ActionGroup		= shinygnome.ui.ActionGroup
 Alignment		= shinygnome.ui.Alignment
+App			= shinygnome.ui.App
+Button			= shinygnome.ui.Button
+CheckButton		= shinygnome.ui.CheckButton
+ComboBox		= shinygnome.ui.ComboBox
+ComboBoxEntry		= shinygnome.ui.ComboBoxEntry
+Entry			= shinygnome.ui.Entry
 EventBox		= shinygnome.ui.EventBox
+FileChooserButton	= shinygnome.ui.FileChooserButton
 HBox			= shinygnome.ui.HBox
 HButtonBox		= shinygnome.ui.HButtonBox
 HPaned			= shinygnome.ui.HPaned
+IconEntry		= shinygnome.ui.IconEntry
+Image			= shinygnome.ui.Image
+ImageLabel		= shinygnome.ui.ImageLabel
+ImageMenuItem		= shinygnome.ui.ImageMenuItem
 InputBox		= shinygnome.ui.InputBox
+Label			= shinygnome.ui.Label
+LinkButton		= shinygnome.ui.LinkButton
+Menu			= shinygnome.ui.Menu
 Notebook		= shinygnome.ui.Notebook
 NotebookPage		= shinygnome.ui.NotebookPage
+RadioButton		= shinygnome.ui.RadioButton
 ScrolledWindow		= shinygnome.ui.ScrolledWindow
-SizeGroup		= shinygnome.ui.SizeGroup
-Table			= shinygnome.ui.Table
-VBox			= shinygnome.ui.VBox
-
-
-##### TOOLBARS #####
 SeparatorToolItem	= shinygnome.ui.SeparatorToolItem
+SimpleComboBox		= shinygnome.ui.SimpleComboBox
+SimpleComboBoxEntry	= shinygnome.ui.SimpleComboBoxEntry
+SizeGroup		= shinygnome.ui.SizeGroup
+SpinButton		= shinygnome.ui.SpinButton
+Statusbar		= shinygnome.ui.Statusbar
+Table			= shinygnome.ui.Table
+TextView		= shinygnome.ui.TextView
+ToggleAction		= shinygnome.ui.ToggleAction
 Toolbar			= shinygnome.ui.Toolbar
 ToolButton		= shinygnome.ui.ToolButton
 ToolItem		= shinygnome.ui.ToolItem
+TreeView		= shinygnome.ui.TreeView
+UIManager		= shinygnome.ui.UIManager
+VBox			= shinygnome.ui.VBox
 
 
 
-class Searchbar(Toolbar):
-	"A toolbar for easy searching"
-
-	def __init__(self):
-		Toolbar.__init__(self)
-
-		self.label		= Label("  " + _('  Find:') + " ")
-		self.entry		= Entry()
-		self.dropdown		= EntryDropDown()
-		self.dropdown.insert_item(0, _('Any type'), "gnome-stock-about")
-		self.button_next	= ToolButton(stock.STOCK_NEXT, important = True)
-		self.button_prev	= ToolButton(stock.STOCK_PREVIOUS, important = True)
-
-		self.append(ToolItem(self.label))
-		self.append(ToolItem(self.entry), _('Text to search for'))
-		self.append(ToolItem(EventBox(self.dropdown)), _('The type of account to search for'))
-		self.append(SeparatorToolItem())
-		self.append(self.button_next, _('Find the next match'))
-		self.append(self.button_prev, _('Find the previous match'))
-
-		self.connect("show", self.__cb_show)
-
-		self.entry.connect("changed", self.__cb_entry_changed)
-		self.entry.connect("key-press-event", self.__cb_key_press)
-
-		self.button_next.set_sensitive(False)
-		self.button_prev.set_sensitive(False)
-
-
-	def __cb_entry_changed(self, widget, data = None):
-		"Callback for entry changes"
-
-		s = self.entry.get_text() != ""
-
-		self.button_next.set_sensitive(s)
-		self.button_prev.set_sensitive(s)
-
-
-	def __cb_key_press(self, widget, data = None):
-		"Callback for key presses"
-
-		# return
-		if data.keyval == 65293 and widget.get_text() != "":
-			if data.state & gtk.gdk.SHIFT_MASK == gtk.gdk.SHIFT_MASK:
-				self.button_prev.activate()
-
-			else:
-				self.button_next.activate()
-
-			return True
-
-
-	def __cb_show(self, widget, data = None):
-		"Callback for widget display"
-
-		self.set_style(gtk.TOOLBAR_BOTH_HORIZ)
-		self.entry.select_region(0, -1)
-		self.entry.grab_focus()
-
-
-
-##### DISPLAY WIDGETS #####
-
-Image		= shinygnome.ui.Image
-ImageLabel	= shinygnome.ui.ImageLabel
-Label		= shinygnome.ui.Label
-Statusbar	= shinygnome.ui.Statusbar
-TextView	= shinygnome.ui.TextView
-
-
-class PasswordLabel(EventBox):
-	"A label for displaying passwords"
-
-	def __init__(self, password = "", cfg = None, clipboard = None, justify = gtk.JUSTIFY_LEFT):
-		EventBox.__init__(self)
-
-		self.password	= util.unescape_markup(password)
-		self.config	= cfg
-		self.clipboard	= clipboard
-
-		self.label = Label(shinygnome.util.text.escape_markup(self.password), justify)
-		self.label.set_selectable(True)
-		self.add(self.label)
-
-		if self.config is not None:
-			try:
-				self.config.monitor("view/passwords", lambda k,v,d: self.show_password(v))
-
-			except config.ConfigError:
-				self.config.monitor("show_passwords", lambda k,v,d: self.show_password(v))
-
-		self.connect("button-press-event", self.__cb_button_press)
-		self.connect("drag-data-get", self.__cb_drag_data_get)
-
-
-	def __cb_drag_data_get(self, widget, context, selection, info, timestamp, data = None):
-		"Provides data for a drag operation"
-
-		selection.set_text(self.password, -1)
-
-
-	def __cb_button_press(self, widget, data = None):
-		"Populates the popup menu"
-
-		if self.label.get_selectable() == True:
-			return False
-
-		elif data.button == 3:
-			menu = Menu()
-
-			menuitem = ImageMenuItem(gtk.stock.STOCK_COPY, _('Copy password'))
-			menuitem.connect("activate", lambda w: self.clipboard.set(self.password, True))
-			menu.append(menuitem)
-
-			menu.show_all()
-			menu.popup(None, None, None, data.button, data.time)
-
-			return True
-
-
-	def set_ellipsize(self, ellipsize):
-		"Sets ellipsize for the label"
-
-		self.label.set_ellipsize(ellipsize)
-
-
-	def show_password(self, show = True):
-		"Sets whether to display the password"
-
-		if show == True:
-			self.label.set_text(shinygnome.util.text.escape_markup(self.password))
-			self.label.set_selectable(True)
-			self.drag_source_unset()
-
-		else:
-			self.label.set_text("******")
-			self.label.set_selectable(False)
-
-			self.drag_source_set(
-				gtk.gdk.BUTTON1_MASK,
-				(
-					("text/plain", 0, 0),
-					("TEXT", 0, 1),
-					("STRING", 0, 2),
-					("COMPOUND TEXT", 0, 3),
-					("UTF8_STRING", 0, 4),
-				),
-				gtk.gdk.ACTION_COPY
-			)
-
-
-
-##### TEXT ENTRIES #####
-
-ComboBoxEntry		= shinygnome.ui.ComboBoxEntry
-Entry			= shinygnome.ui.Entry
-IconEntry		= shinygnome.ui.IconEntry
-SimpleComboBoxEntry	= shinygnome.ui.SimpleComboBoxEntry
-SpinButton		= shinygnome.ui.SpinButton
-
+##### PASSWORD WIDGETS #####
 
 class PasswordEntry(IconEntry):
 	"An entry for editing a password (follows the 'show passwords' preference)"
@@ -352,16 +173,89 @@ class PasswordEntryGenerate(HBox):
 
 
 
-##### BUTTONS #####
+class PasswordLabel(EventBox):
+	"A label for displaying passwords"
 
-Button			= shinygnome.ui.Button
-CheckButton		= shinygnome.ui.CheckButton
-ComboBox		= shinygnome.ui.ComboBox
-SimpleComboBox		= shinygnome.ui.SimpleComboBox
-FileChooserButton	= shinygnome.ui.FileChooserButton
-LinkButton		= shinygnome.ui.LinkButton
-RadioButton		= shinygnome.ui.RadioButton
+	def __init__(self, password = "", cfg = None, clipboard = None, justify = gtk.JUSTIFY_LEFT):
+		EventBox.__init__(self)
 
+		self.password	= util.unescape_markup(password)
+		self.config	= cfg
+		self.clipboard	= clipboard
+
+		self.label = Label(shinygnome.util.text.escape_markup(self.password), justify)
+		self.label.set_selectable(True)
+		self.add(self.label)
+
+		if self.config is not None:
+			try:
+				self.config.monitor("view/passwords", lambda k,v,d: self.show_password(v))
+
+			except config.ConfigError:
+				self.config.monitor("show_passwords", lambda k,v,d: self.show_password(v))
+
+		self.connect("button-press-event", self.__cb_button_press)
+		self.connect("drag-data-get", self.__cb_drag_data_get)
+
+
+	def __cb_drag_data_get(self, widget, context, selection, info, timestamp, data = None):
+		"Provides data for a drag operation"
+
+		selection.set_text(self.password, -1)
+
+
+	def __cb_button_press(self, widget, data = None):
+		"Populates the popup menu"
+
+		if self.label.get_selectable() == True:
+			return False
+
+		elif data.button == 3:
+			menu = Menu()
+
+			menuitem = ImageMenuItem(gtk.stock.STOCK_COPY, _('Copy password'))
+			menuitem.connect("activate", lambda w: self.clipboard.set(self.password, True))
+			menu.append(menuitem)
+
+			menu.show_all()
+			menu.popup(None, None, None, data.button, data.time)
+
+			return True
+
+
+	def set_ellipsize(self, ellipsize):
+		"Sets ellipsize for the label"
+
+		self.label.set_ellipsize(ellipsize)
+
+
+	def show_password(self, show = True):
+		"Sets whether to display the password"
+
+		if show == True:
+			self.label.set_text(shinygnome.util.text.escape_markup(self.password))
+			self.label.set_selectable(True)
+			self.drag_source_unset()
+
+		else:
+			self.label.set_text("******")
+			self.label.set_selectable(False)
+
+			self.drag_source_set(
+				gtk.gdk.BUTTON1_MASK,
+				(
+					("text/plain", 0, 0),
+					("TEXT", 0, 1),
+					("STRING", 0, 2),
+					("COMPOUND TEXT", 0, 3),
+					("UTF8_STRING", 0, 4),
+				),
+				gtk.gdk.ACTION_COPY
+			)
+
+
+
+##### ENTRY WIDGETS #####
 
 class EntryDropDown(SimpleComboBox):
 	"An entry type dropdown"
@@ -392,18 +286,6 @@ class EntryDropDown(SimpleComboBox):
 			if self.model.get_value(iter, 2) == entrytype:
 				self.set_active(i)
 
-
-
-##### MENUS AND MENU ITEMS #####
-
-ImageMenuItem	= shinygnome.ui.ImageMenuItem
-Menu		= shinygnome.ui.Menu
-
-
-
-##### MISCELLANEOUS WIDGETS #####
-
-TreeView	= shinygnome.ui.TreeView
 
 
 class EntryTree(TreeView):
@@ -466,22 +348,6 @@ class EntryTree(TreeView):
 		for i in range(model.iter_n_children(None)):
 			model.folder_expanded(model.iter_nth_child(None, i), False)
 
-
-
-
-
-##### ACTION HANDLING #####
-
-Action		= shinygnome.ui.Action
-ActionGroup	= shinygnome.ui.ActionGroup
-ToggleAction	= shinygnome.ui.ToggleAction
-UIManager	= shinygnome.ui.UIManager
-
-
-
-##### APPLICATION COMPONENTS #####
-
-App = shinygnome.ui.App
 
 
 class EntryView(VBox):
@@ -555,4 +421,107 @@ class EntryView(VBox):
 
 		alignment = Alignment(widget, 0.5, 0.5, 0, 0)
 		VBox.pack_start(self, alignment, False, False)
+
+
+
+class Searchbar(Toolbar):
+	"A toolbar for easy searching"
+
+	def __init__(self):
+		Toolbar.__init__(self)
+
+		self.label		= Label("  " + _('  Find:') + " ")
+		self.entry		= Entry()
+		self.dropdown		= EntryDropDown()
+		self.dropdown.insert_item(0, _('Any type'), "gnome-stock-about")
+		self.button_next	= ToolButton(stock.STOCK_NEXT, important = True)
+		self.button_prev	= ToolButton(stock.STOCK_PREVIOUS, important = True)
+
+		self.append(ToolItem(self.label))
+		self.append(ToolItem(self.entry), _('Text to search for'))
+		self.append(ToolItem(EventBox(self.dropdown)), _('The type of account to search for'))
+		self.append(SeparatorToolItem())
+		self.append(self.button_next, _('Find the next match'))
+		self.append(self.button_prev, _('Find the previous match'))
+
+		self.connect("show", self.__cb_show)
+
+		self.entry.connect("changed", self.__cb_entry_changed)
+		self.entry.connect("key-press-event", self.__cb_key_press)
+
+		self.button_next.set_sensitive(False)
+		self.button_prev.set_sensitive(False)
+
+
+	def __cb_entry_changed(self, widget, data = None):
+		"Callback for entry changes"
+
+		s = self.entry.get_text() != ""
+
+		self.button_next.set_sensitive(s)
+		self.button_prev.set_sensitive(s)
+
+
+	def __cb_key_press(self, widget, data = None):
+		"Callback for key presses"
+
+		# return
+		if data.keyval == 65293 and widget.get_text() != "":
+			if data.state & gtk.gdk.SHIFT_MASK == gtk.gdk.SHIFT_MASK:
+				self.button_prev.activate()
+
+			else:
+				self.button_next.activate()
+
+			return True
+
+
+	def __cb_show(self, widget, data = None):
+		"Callback for widget display"
+
+		self.set_style(gtk.TOOLBAR_BOTH_HORIZ)
+		self.entry.select_region(0, -1)
+		self.entry.grab_focus()
+
+
+
+##### FUNCTIONS #####
+
+def generate_field_display_widget(field, cfg = None, userdata = None):
+	"Generates a widget for displaying a field value"
+
+	if field.datatype == entry.DATATYPE_EMAIL:
+		widget = LinkButton("mailto:%s" % field.value, shinygnome.util.text.escape_markup(field.value))
+
+	elif field.datatype == entry.DATATYPE_PASSWORD:
+		widget = PasswordLabel(shinygnome.util.text.escape_markup(field.value), cfg, userdata)
+
+	elif field.datatype == entry.DATATYPE_URL:
+		widget = LinkButton(field.value, shinygnome.util.text.escape_markup(field.value))
+
+	else:
+		widget = Label(shinygnome.util.text.escape_markup(field.value))
+		widget.set_selectable(True)
+
+	return widget
+
+
+def generate_field_edit_widget(field, cfg = None, userdata = None):
+	"Generates a widget for editing a field"
+
+	if type(field) == entry.PasswordField:
+		widget = PasswordEntryGenerate(None, cfg, userdata)
+
+	elif type(field) == entry.UsernameField:
+		widget = SimpleComboBoxEntry(userdata)
+
+	elif field.datatype == entry.DATATYPE_PASSWORD:
+		widget = PasswordEntry(None, cfg, userdata)
+
+	else:
+		widget = Entry()
+
+	widget.set_text(field.value)
+
+	return widget
 
