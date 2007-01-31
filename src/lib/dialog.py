@@ -339,7 +339,7 @@ class ExportFileSelector(FileSelector):
 		)
 
 		# set up filetype dropdown
-		self.dropdown = ui.DropDown()
+		self.dropdown = ui.SimpleComboBox()
 		self.add_widget(_('Filetype'), self.dropdown)
 
 		for handler in datahandler.get_export_handlers():
@@ -379,7 +379,7 @@ class ImportFileSelector(FileSelector):
 		)
 
 		# set up filetype dropdown
-		self.dropdown = ui.DropDown()
+		self.dropdown = ui.SimpleComboBox()
 		self.add_widget(_('Filetype'), self.dropdown)
 
 		self.dropdown.append_item(_('Automatically detect'))

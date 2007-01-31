@@ -404,69 +404,17 @@ class PasswordEntryGenerate(HBox):
 Button			= shinygnome.ui.Button
 CheckButton		= shinygnome.ui.CheckButton
 ComboBox		= shinygnome.ui.ComboBox
+SimpleComboBox		= shinygnome.ui.SimpleComboBox
 FileChooserButton	= shinygnome.ui.FileChooserButton
 LinkButton		= shinygnome.ui.LinkButton
 RadioButton		= shinygnome.ui.RadioButton
 
 
-class DropDown(ComboBox):
-	"A dropdown button"
-
-	def __init__(self, icons = False):
-		ComboBox.__init__(self)
-
-		self.set_model(gtk.ListStore(gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_PYOBJECT))
-
-		if icons == True:
-			cr = gtk.CellRendererPixbuf()
-			cr.set_fixed_size(gtk.icon_size_lookup(gtk.ICON_SIZE_SMALL_TOOLBAR)[0] + 5, -1)
-			self.pack_start(cr, False)
-			self.add_attribute(cr, "stock-id", 1)
-
-		cr = gtk.CellRendererText()
-		self.pack_start(cr, True)
-		self.add_attribute(cr, "text", 0)
-
-
-	def append_item(self, text, stock = None, data = None):
-		"Appends an item to the dropdown"
-
-		self.model.append( ( text, stock, data ) )
-
-
-	def delete_item(self, index):
-		"Removes an item from the dropdown"
-
-		if self.model.iter_n_children(None) > index:
-			iter = self.model.iter_nth_child(None, index)
-			self.model.remove(iter)
-
-
-	def get_active_item(self):
-		"Returns a tuple with data for the current item"
-
-		iter = self.model.iter_nth_child(None, self.get_active())
-		return self.model.get(iter, 0, 1, 2)
-
-
-	def get_item(self, index):
-		"Returns data for an item"
-
-		return self.model.get(self.model.iter_nth_child(None, index), 0, 1, 2)
-
-
-	def insert_item(self, index, text, stock = None, data = None):
-		"Inserts an item in the dropdown"
-
-		self.model.insert(index, ( text, stock, data ) )
-
-
-
-class EntryDropDown(DropDown):
+class EntryDropDown(SimpleComboBox):
 	"An entry type dropdown"
 
 	def __init__(self):
-		DropDown.__init__(self, True)
+		SimpleComboBox.__init__(self, True)
 
 		for e in entry.ENTRYLIST:
 			if e != entry.FolderEntry:
