@@ -58,7 +58,7 @@ def generate_field_edit_widget(field, cfg = None, userdata = None):
 		widget = PasswordEntryGenerate(None, cfg, userdata)
 
 	elif type(field) == entry.UsernameField:
-		widget = ComboBoxEntry(userdata)
+		widget = SimpleComboBoxEntry(userdata)
 
 	elif field.datatype == entry.DATATYPE_PASSWORD:
 		widget = PasswordEntry(None, cfg, userdata)
@@ -250,58 +250,11 @@ class PasswordLabel(EventBox):
 
 ##### TEXT ENTRIES #####
 
-Entry		= shinygnome.ui.Entry
-IconEntry	= shinygnome.ui.IconEntry
-SpinButton	= shinygnome.ui.SpinButton
-
-
-class ComboBoxEntry(gtk.ComboBoxEntry):
-	"An entry with a combo box list"
-
-	def __init__(self, list = []):
-		gtk.ComboBoxEntry.__init__(self)
-
-		self.entry = self.child
-		self.entry.set_activates_default(True)
-
-		self.model = gtk.ListStore(gobject.TYPE_STRING)
-		self.set_model(self.model)
-		self.set_text_column(0)
-
-		self.completion = gtk.EntryCompletion()
-		self.completion.set_model(self.model)
-		self.completion.set_text_column(0)
-		self.completion.set_minimum_key_length(1)
-		self.entry.set_completion(self.completion)
-
-		if list is not None:
-			self.set_values(list)
-
-
-	def get_text(self):
-		"Returns the text of the entry"
-
-		return self.entry.get_text()
-
-
-	def set_text(self, text):
-		"Sets the text of the entry"
-
-		if text is None:
-			self.entry.set_text("")
-
-		else:
-			self.entry.set_text(text)
-
-
-	def set_values(self, list):
-		"Sets the values for the dropdown"
-
-		self.model.clear()
-
-		for item in list:
-			self.model.append((item,))
-
+ComboBoxEntry		= shinygnome.ui.ComboBoxEntry
+Entry			= shinygnome.ui.Entry
+IconEntry		= shinygnome.ui.IconEntry
+SimpleComboBoxEntry	= shinygnome.ui.SimpleComboBoxEntry
+SpinButton		= shinygnome.ui.SpinButton
 
 
 class PasswordEntry(IconEntry):

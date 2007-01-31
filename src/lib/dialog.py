@@ -825,7 +825,7 @@ class EntryEdit(Utility):
 		self.widgetdata[fieldtype] = userdata
 
 		if fieldtype == entry.UsernameField and self.entry_field.has_key(entry.UsernameField):
-			self.entry_field[entry.UsernameField].set_values(userdata)
+			self.entry_field[entry.UsernameField].set_items(userdata)
 
 
 
