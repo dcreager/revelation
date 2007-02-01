@@ -45,12 +45,13 @@ class CancelError(Exception):
 
 ##### BASE DIALOGS #####
 
-Dialog 		= shinygnome.ui.Dialog
-Message		= shinygnome.ui.MessageDialog
-Error		= shinygnome.ui.ErrorMessageDialog
-Info		= shinygnome.ui.InfoMessageDialog
-Question	= shinygnome.ui.QuestionMessageDialog
-Warning		= shinygnome.ui.WarningMessageDialog
+Dialog 			= shinygnome.ui.Dialog
+FileChooserDialog	= shinygnome.ui.FileChooserDialog
+Message			= shinygnome.ui.MessageDialog
+Error			= shinygnome.ui.ErrorMessageDialog
+Info			= shinygnome.ui.InfoMessageDialog
+Question		= shinygnome.ui.QuestionMessageDialog
+Warning			= shinygnome.ui.WarningMessageDialog
 
 
 class Popup(gtk.Window):
@@ -264,11 +265,10 @@ class FileSaveInsecure(Warning):
 
 ##### FILE SELECTION DIALOGS #####
 
-class FileSelector(gtk.FileChooserDialog):
+class FileSelector(FileChooserDialog):
 	"A normal file selector"
 
 	def __init__(self, parent, title = None, action = gtk.FILE_CHOOSER_ACTION_OPEN, stockbutton = None):
-
 		if stockbutton is None:
 			if action == gtk.FILE_CHOOSER_ACTION_OPEN:
 				stockbutton = gtk.STOCK_OPEN
@@ -276,49 +276,19 @@ class FileSelector(gtk.FileChooserDialog):
 			elif action == gtk.FILE_CHOOSER_ACTION_SAVE:
 				stockbutton = gtk.STOCK_SAVE
 
-		gtk.FileChooserDialog.__init__(
+		FileChooserDialog.__init__(
 			self, title, parent, action,
 			( gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL, stockbutton, gtk.RESPONSE_OK )
 		)
 
-		self.set_local_only(False)
 		self.set_default_response(gtk.RESPONSE_OK)
-
-		self.inputbox = None
-
-
-	def add_widget(self, title, widget):
-		"Adds a widget to the file selection"
-
-		if self.inputbox == None:
-			self.inputbox = ui.InputBox()
-			self.set_extra_widget(self.inputbox)
-
-		self.inputbox.add(widget, title)
-
-
-	def get_filename(self):
-		"Returns the file URI"
-
-		uri = self.get_uri()
-
-		if uri == None:
-			return None
-
-		else:
-			return shinygnome.util.path.normalize(urllib.unquote(uri))
 
 
 	def run(self):
 		"Displays and runs the file selector, returns the filename"
 
-		self.show_all()
-
-		if EVENT_FILTER != None:
-			self.window.add_filter(EVENT_FILTER)
-
-		response = gtk.FileChooserDialog.run(self)
-		filename = self.get_filename()
+		response = FileChooserDialog.run(self)
+		filename = self.get_path()
 		self.destroy()
 
 		if response == gtk.RESPONSE_OK:
@@ -340,7 +310,7 @@ class ExportFileSelector(FileSelector):
 
 		# set up filetype dropdown
 		self.dropdown = ui.SimpleComboBox()
-		self.add_widget(_('Filetype'), self.dropdown)
+		self.add_widget(self.dropdown, _('Filetype'))
 
 		for handler in datahandler.get_export_handlers():
 			self.dropdown.append_item(handler.name, None, handler)
@@ -357,7 +327,7 @@ class ExportFileSelector(FileSelector):
 		self.inputbox.show_all()
 
 		if gtk.FileSelection.run(self) == gtk.RESPONSE_OK:
-			filename = self.get_filename()
+			filename = self.get_path()
 			handler = self.dropdown.get_active_item()[2]
 			self.destroy()
 
@@ -380,7 +350,7 @@ class ImportFileSelector(FileSelector):
 
 		# set up filetype dropdown
 		self.dropdown = ui.SimpleComboBox()
-		self.add_widget(_('Filetype'), self.dropdown)
+		self.add_widget(self.dropdown, _('Filetype'))
 
 		self.dropdown.append_item(_('Automatically detect'))
 
@@ -395,7 +365,7 @@ class ImportFileSelector(FileSelector):
 		self.inputbox.show_all()
 
 		if gtk.FileSelection.run(self) == gtk.RESPONSE_OK:
-			filename = self.get_filename()
+			filename = self.get_path()
 			handler = self.dropdown.get_active_item()[2]
 			self.destroy()
 
