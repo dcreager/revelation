@@ -1317,7 +1317,7 @@ class Revelation(ui.App):
 		"Exports data to a foreign file format"
 
 		try:
-			file, handler = dialog.ExportFileSelector(self).run()
+			file, handler = dialog.ExportFileChooser(self).run()
 			datafile = io.DataFile(handler)
 
 			if datafile.get_handler().encryption == True:
@@ -1342,7 +1342,7 @@ class Revelation(ui.App):
 		"Imports data from a foreign file"
 
 		try:
-			file, handler = dialog.ImportFileSelector(self).run()
+			file, handler = dialog.ImportFileChooser(self).run()
 			datafile = io.DataFile(handler)
 			entrystore = self.__file_load(file, None, datafile)
 
@@ -1442,7 +1442,7 @@ class Revelation(ui.App):
 					raise dialog.CancelError
 
 			if file is None:
-				file = dialog.OpenFileSelector(self).run()
+				file = dialog.OpenFileChooser(self).run()
 
 			entrystore = self.__file_load(file, password)
 
@@ -1465,7 +1465,7 @@ class Revelation(ui.App):
 
 		try:
 			if file is None:
-				file = dialog.SaveFileSelector(self).run()
+				file = dialog.SaveFileChooser(self).run()
 
 			if password == None:
 				password = dialog.PasswordSave(self, file).run()

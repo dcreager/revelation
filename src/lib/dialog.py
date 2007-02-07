@@ -37,19 +37,16 @@ UNIQUE_DIALOGS		= {}
 
 ##### EXCEPTIONS #####
 
-class CancelError(Exception):
-	"Exception for dialog cancellations"
-	pass
+CancelError		= shinygnome.ui.CancelError
 
 
 
 ##### BASE DIALOGS #####
 
 Dialog 			= shinygnome.ui.Dialog
-FileChooserDialog	= shinygnome.ui.FileChooserDialog
-Message			= shinygnome.ui.MessageDialog
 Error			= shinygnome.ui.ErrorMessageDialog
 Info			= shinygnome.ui.InfoMessageDialog
+Message			= shinygnome.ui.MessageDialog
 Question		= shinygnome.ui.QuestionMessageDialog
 Warning			= shinygnome.ui.WarningMessageDialog
 
@@ -218,29 +215,6 @@ class FileChangesQuit(FileChanges):
 
 
 
-class FileReplace(Warning):
-	"Asks for confirmation when replacing a file"
-
-	def __init__(self, parent, file):
-		Warning.__init__(
-			self, parent, _('Replace existing file?'),
-			_('The file \'%s\' already exists - do you wish to replace this file?') % file,
-			( ( gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL ), ( stock.STOCK_REPLACE, gtk.RESPONSE_OK ) ),
-			gtk.RESPONSE_CANCEL
-		)
-
-
-	def run(self):
-		"Displays the dialog"
-
-		if Warning.run(self) == gtk.RESPONSE_OK:
-			return True
-
-		else:
-			raise CancelError
-
-
-
 class FileSaveInsecure(Warning):
 	"Asks for confirmation when exporting to insecure file"
 
@@ -265,173 +239,79 @@ class FileSaveInsecure(Warning):
 
 ##### FILE SELECTION DIALOGS #####
 
-class FileSelector(FileChooserDialog):
-	"A normal file selector"
-
-	def __init__(self, parent, title = None, action = gtk.FILE_CHOOSER_ACTION_OPEN, stockbutton = None):
-		if stockbutton is None:
-			if action == gtk.FILE_CHOOSER_ACTION_OPEN:
-				stockbutton = gtk.STOCK_OPEN
-
-			elif action == gtk.FILE_CHOOSER_ACTION_SAVE:
-				stockbutton = gtk.STOCK_SAVE
-
-		FileChooserDialog.__init__(
-			self, title, parent, action,
-			( gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL, stockbutton, gtk.RESPONSE_OK )
-		)
-
-		self.set_default_response(gtk.RESPONSE_OK)
-
-
-	def run(self):
-		"Displays and runs the file selector, returns the filename"
-
-		response = FileChooserDialog.run(self)
-		filename = self.get_path()
-		self.destroy()
-
-		if response == gtk.RESPONSE_OK:
-			return filename
-
-		else:
-			raise CancelError
-
-
-
-class ExportFileSelector(FileSelector):
+class ExportFileChooser(shinygnome.ui.SaveFileChooserDialog):
 	"A file selector for exporting files"
 
 	def __init__(self, parent):
-		FileSelector.__init__(
-			self, parent, _('Select File to Export to'),
-			gtk.FILE_CHOOSER_ACTION_SAVE, stock.STOCK_EXPORT
-		)
+		shinygnome.ui.SaveFileChooserDialog.__init__(self, _('Select File to Export to'), parent, stock.STOCK_EXPORT)
 
 		# set up filetype dropdown
 		self.dropdown = ui.SimpleComboBox()
-		self.add_widget(self.dropdown, _('Filetype'))
+		self.dropdown.connect("changed", lambda w: setattr(self, "handler", self.dropdown.get_active_item()[-1]))
 
 		for handler in datahandler.get_export_handlers():
 			self.dropdown.append_item(handler.name, None, handler)
 
-		for index in range(self.dropdown.get_size()):
-			if self.dropdown.get_item(index)[2] == datahandler.RevelationXML:
-				self.dropdown.set_active(index)
+			if handler == datahandler.RevelationXML:
+				self.dropdown.set_active(self.dropdown.get_size() - 1)
+
+		self.add_widget(self.dropdown, _('Filetype'))
 
 
 	def run(self):
 		"Displays the dialog"
 
-		self.show_all()
-		self.inputbox.show_all()
-
-		if gtk.FileSelection.run(self) == gtk.RESPONSE_OK:
-			filename = self.get_path()
-			handler = self.dropdown.get_active_item()[2]
-			self.destroy()
-
-			return filename, handler
-
-		else:
-			self.destroy()
-			raise CancelError
+		return shinygnome.ui.SaveFileChooserDialog.run(self), getattr(self, "handler", None)
 
 
 
-class ImportFileSelector(FileSelector):
-	"A file selector for importing files"
+class ImportFileChooser(shinygnome.ui.OpenFileChooserDialog):
+	"A file chooser for importing files"
 
 	def __init__(self, parent):
-		FileSelector.__init__(
-			self, parent, _('Select File to Import'),
-			gtk.FILE_CHOOSER_ACTION_OPEN, stock.STOCK_IMPORT
-		)
+		shinygnome.ui.OpenFileChooserDialog.__init__(self, _('Select File to Import'), parent, stock.STOCK_IMPORT)
 
 		# set up filetype dropdown
 		self.dropdown = ui.SimpleComboBox()
-		self.add_widget(self.dropdown, _('Filetype'))
-
+		self.dropdown.connect("changed", lambda w: setattr(self, "handler", self.dropdown.get_active_item()[-1]))
 		self.dropdown.append_item(_('Automatically detect'))
 
 		for handler in datahandler.get_import_handlers():
 			self.dropdown.append_item(handler.name, None, handler)
 
+		self.add_widget(self.dropdown, _('Filetype'))
+
 
 	def run(self):
 		"Displays the dialog"
 
-		self.show_all()
-		self.inputbox.show_all()
-
-		if gtk.FileSelection.run(self) == gtk.RESPONSE_OK:
-			filename = self.get_path()
-			handler = self.dropdown.get_active_item()[2]
-			self.destroy()
-
-			return filename, handler
-
-		else:
-			self.destroy()
-			raise CancelError
+		return shinygnome.ui.OpenFileChooserDialog.run(self), getattr(self, "handler", None)
 
 
 
-class OpenFileSelector(FileSelector):
-	"A file selector for opening files"
+class OpenFileChooser(shinygnome.ui.OpenFileChooserDialog):
+	"A file chooser for opening files"
 
 	def __init__(self, parent):
-		FileSelector.__init__(
-			self, parent, _('Select File to Open'),
-			gtk.FILE_CHOOSER_ACTION_OPEN, gtk.STOCK_OPEN
-		)
+		shinygnome.ui.OpenFileChooserDialog.__init__(self, _('Select File to Open'), parent)
 
-		filter = gtk.FileFilter()
-		filter.set_name(_('Revelation files'))
-		filter.add_mime_type("application/x-revelation")
-		self.add_filter(filter)
-
-		filter = gtk.FileFilter()
-		filter.set_name(_('All files'))
-		filter.add_pattern("*")
-		self.add_filter(filter)
+		self.add_filter([
+			shinygnome.ui.FileFilter(_('Revelation files'), None, "application/x-revelation"),
+			shinygnome.ui.FileFilter(_('All files'), "*"),
+		])
 
 
 
-class SaveFileSelector(FileSelector):
+class SaveFileChooser(shinygnome.ui.SaveFileChooserDialog):
 	"A file selector for saving files"
 
 	def __init__(self, parent):
-		FileSelector.__init__(
-			self, parent, _('Select File to Save to'),
-			gtk.FILE_CHOOSER_ACTION_SAVE, gtk.STOCK_SAVE
-		)
+		shinygnome.ui.SaveFileChooserDialog.__init__(self, _('Select File to Save to'), parent)
 
-		filter = gtk.FileFilter()
-		filter.set_name(_('Revelation files'))
-		filter.add_mime_type("application/x-revelation")
-		self.add_filter(filter)
-
-		filter = gtk.FileFilter()
-		filter.set_name(_('All files'))
-		filter.add_pattern("*")
-		self.add_filter(filter)
-
-		self.set_do_overwrite_confirmation(True)
-		self.connect("confirm-overwrite", self.__cb_confirm_overwrite)
-
-
-	def __cb_confirm_overwrite(self, widget, data = None):
-		"Handles confirm-overwrite signals"
-
-		try:
-			FileReplace(self, shinygnome.util.path.normalize(self.get_uri())).run()
-
-		except CancelError:
-			return gtk.FILE_CHOOSER_CONFIRMATION_SELECT_AGAIN
-
-		else:
-			return gtk.FILE_CHOOSER_CONFIRMATION_ACCEPT_FILENAME
+		self.add_filter([
+			shinygnome.ui.FileFilter(_('Revelation files'), None, "application/x-revelation"),
+			shinygnome.ui.FileFilter(_('All files'), "*"),
+		])
 
 
 
