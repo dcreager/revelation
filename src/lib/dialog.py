@@ -47,90 +47,10 @@ Dialog 			= shinygnome.ui.Dialog
 Error			= shinygnome.ui.ErrorMessageDialog
 Info			= shinygnome.ui.InfoMessageDialog
 Message			= shinygnome.ui.MessageDialog
+Popup			= shinygnome.ui.Popup
 Question		= shinygnome.ui.QuestionMessageDialog
+Utility			= shinygnome.ui.UtilityDialog
 Warning			= shinygnome.ui.WarningMessageDialog
-
-
-class Popup(gtk.Window):
-	"Base class for popup (frameless) dialogs"
-
-	def __init__(self, widget = None):
-		gtk.Window.__init__(self)
-		self.set_decorated(False)
-
-		self.border = gtk.Frame()
-		self.border.set_shadow_type(gtk.SHADOW_OUT)
-		gtk.Window.add(self, self.border)
-
-		if widget != None:
-			self.add(widget)
-
-		self.connect("key-press-event", self.__cb_keypress)
-
-
-	def __cb_keypress(self, widget, data):
-		"Callback for key presses"
-
-		if data.keyval == 65307:
-			self.close()
-
-
-	def add(self, widget):
-		"Adds a widget to the window"
-
-		self.border.add(widget)
-
-
-	def close(self):
-		"Closes the dialog"
-
-		self.hide()
-		self.emit("closed")
-		self.destroy()
-
-
-	def realize(self):
-		"Realizes the popup and displays children"
-
-		gtk.Window.realize(self)
-
-		for child in self.get_children():
-			child.show_all()
-
-
-	def show(self, x = None, y = None):
-		"Show the dialog"
-
-		if x != None and y != None:
-			self.move(x, y)
-
-		self.show_all()
-
-
-gobject.signal_new("closed", Popup, gobject.SIGNAL_ACTION, gobject.TYPE_BOOLEAN, ())
-
-
-
-class Utility(Dialog):
-	"A utility dialog"
-
-	def __init__(self, parent, title, buttons = ( ( gtk.STOCK_CLOSE, gtk.RESPONSE_CLOSE ), ), default = None):
-		Dialog.__init__(self, parent, title, buttons, default)
-
-		self.set_border_width(12)
-		self.vbox.set_spacing(18)
-
-		self.sizegroup	= ui.SizeGroup()
-		self.tooltips	= gtk.Tooltips()
-
-
-	def add_inputbox(self, title):
-		"Adds an inputbox to the dialog"
-
-		inputbox = ui.InputBox(title, self.sizegroup)
-		self.vbox.pack_start(inputbox)
-
-		return inputbox
 
 
 
