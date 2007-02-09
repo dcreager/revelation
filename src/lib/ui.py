@@ -179,7 +179,7 @@ class PasswordLabel(EventBox):
 	def __init__(self, password = "", cfg = None, clipboard = None, justify = gtk.JUSTIFY_LEFT):
 		EventBox.__init__(self)
 
-		self.password	= util.unescape_markup(password)
+		self.password	= shinygnome.util.text.unescape_markup(password)
 		self.config	= cfg
 		self.clipboard	= clipboard
 
