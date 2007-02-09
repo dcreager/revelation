@@ -32,7 +32,6 @@ _ = gettext.gettext
 
 
 EVENT_FILTER		= None
-UNIQUE_DIALOGS		= {}
 
 
 ##### EXCEPTIONS #####
@@ -51,6 +50,8 @@ Popup			= shinygnome.ui.Popup
 Question		= shinygnome.ui.QuestionMessageDialog
 Utility			= shinygnome.ui.UtilityDialog
 Warning			= shinygnome.ui.WarningMessageDialog
+
+unique			= shinygnome.ui.unique_dialog
 
 
 
@@ -269,6 +270,7 @@ class Password(Message):
 		"Displays the dialog"
 
 		self.show_all()
+		self.present()
 
 		if len(self.entries) > 0:
 			self.entries[0].grab_focus()
@@ -811,6 +813,7 @@ class PasswordChecker(Utility):
 		"Displays the dialog"
 
 		self.show_all()
+		self.present()
 
 		if EVENT_FILTER != None:
 			self.window.add_filter(EVENT_FILTER)
@@ -865,71 +868,10 @@ class PasswordGenerator(Utility):
 		"Displays the dialog"
 
 		self.show_all()
+		self.present()
+
 		self.get_response_widget(gtk.RESPONSE_CLOSE).grab_focus()
 
 		if EVENT_FILTER != None:
 			self.window.add_filter(EVENT_FILTER)
-
-
-
-##### FUNCTIONS #####
-
-def create_unique(dialog, *args):
-	"Creates a unique dialog"
-
-	if present_unique(dialog) == True:
-		return get_unique(dialog)
-
-	else:
-		UNIQUE_DIALOGS[dialog] = dialog(*args)
-		UNIQUE_DIALOGS[dialog].connect("destroy", lambda w: remove_unique(dialog))
-
-		return UNIQUE_DIALOGS[dialog]
-
-
-def get_unique(dialog):
-	"Returns a unique dialog"
-
-	if unique_exists(dialog) == True:
-		return UNIQUE_DIALOGS[dialog]
-
-	else:
-		return None
-
-
-def present_unique(dialog):
-	"Presents a unique dialog, if it exists"
-
-	if unique_exists(dialog) == True:
-		get_unique(dialog).present()
-
-		return True
-
-	else:
-		return False
-
-
-def remove_unique(dialog):
-	"Removes a unique dialog"
-
-	if unique_exists(dialog):
-		UNIQUE_DIALOGS[dialog] = None
-
-
-def run_unique(dialog, *args):
-	"Runs a unique dialog"
-
-	if present_unique(dialog) == True:
-		return None
-
-	else:
-		d = create_unique(dialog, *args)
-
-		return d.run()
-
-
-def unique_exists(dialog):
-	"Checks if a unique dialog exists"
-
-	return UNIQUE_DIALOGS.has_key(dialog) == True and UNIQUE_DIALOGS[dialog] != None
 

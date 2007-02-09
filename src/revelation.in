@@ -1021,7 +1021,7 @@ class Revelation(ui.App):
 	def about(self):
 		"Displays the about dialog"
 
-		dialog.run_unique(dialog.About, self)
+		dialog.unique(dialog.About, self).run()
 
 
 	def clip_chain(self, e):
@@ -1489,19 +1489,19 @@ class Revelation(ui.App):
 	def prefs(self):
 		"Displays the application preferences"
 
-		dialog.run_unique(Preferences, self, self.config)
+		dialog.unique(Preferences, self, self.config).run()
 
 
 	def pwcheck(self):
 		"Displays the password checking dialog"
 
-		dialog.run_unique(dialog.PasswordChecker, self, self.config, self.clipboard)
+		dialog.unique(dialog.PasswordChecker, self, self.config, self.clipboard).run()
 
 
 	def pwgen(self):
 		"Displays the password generator dialog"
 
-		dialog.run_unique(dialog.PasswordGenerator, self, self.config, self.clipboard)
+		dialog.unique(dialog.PasswordGenerator, self, self.config, self.clipboard).run()
 
 
 	def quit(self):
@@ -1781,6 +1781,7 @@ class Preferences(dialog.Utility):
 		"Runs the preference dialog"
 
 		self.show_all()
+		self.present()
 
 		if dialog.EVENT_FILTER != None:
 			self.window.add_filter(dialog.EVENT_FILTER)

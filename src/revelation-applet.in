@@ -347,10 +347,7 @@ class RevelationApplet(object):
 		if file in ( "", None ):
 			return False
 
-		if dialog.present_unique(dialog.PasswordOpen) == True:
-			return False
-
-		entrystore = self.datafile.load(file, password, lambda: dialog.run_unique(dialog.PasswordOpen, None, os.path.basename(file)))
+		entrystore = self.datafile.load(file, password, lambda: dialog.unique(dialog.PasswordOpen, None, os.path.basename(file)).run())
 
 		self.entrystore.clear()
 		self.entrystore.import_entry(entrystore, None)
@@ -495,7 +492,7 @@ class RevelationApplet(object):
 	def about(self):
 		"Displays an about dialog"
 
-		dialog.run_unique(About, self.applet)
+		dialog.unique(About, self.applet).run()
 
 
 	def entry_copychain(self, e, launcher = ""):
@@ -664,7 +661,7 @@ class RevelationApplet(object):
 	def prefs(self):
 		"Displays the preference dialog"
 
-		dialog.run_unique(Preferences, None, self.config)
+		dialog.unique(Preferences, None, self.config).run()
 
 
 
@@ -883,6 +880,7 @@ class Preferences(dialog.Utility):
 		"Runs the dialog"
 
 		self.show_all()
+		self.present()
 
 
 
