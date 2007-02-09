@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 
-import datahandler, entry
+import datahandler, entry, shinygnome.ui
 
 import gobject, gtk, gtk.gdk, time
 
@@ -298,18 +298,17 @@ class EntrySearch(gobject.GObject):
 
 
 
-class EntryStore(gtk.TreeStore):
+class EntryStore(shinygnome.ui.TreeStore):
 	"A data structure for storing entries"
 
 	def __init__(self):
-		gtk.TreeStore.__init__(
+		shinygnome.ui.TreeStore.__init__(
 			self,
 			gobject.TYPE_STRING,	# name
 			gobject.TYPE_STRING,	# icon
 			gobject.TYPE_PYOBJECT	# entry
 		)
 
-		self.changed = False
 		self.connect("row-has-child-toggled", self.__cb_iter_has_child)
 
 
@@ -336,16 +335,8 @@ class EntryStore(gtk.TreeStore):
 			iter = self.append(parent)
 
 		self.update_entry(iter, e)
-		self.changed = True
 
 		return iter
-
-
-	def clear(self):
-		"Removes all entries"
-
-		gtk.TreeStore.clear(self)
-		self.changed = False
 
 
 	def copy_entry(self, iter, parent = None, sibling = None):
@@ -406,28 +397,6 @@ class EntryStore(gtk.TreeStore):
 			return e.copy()
 
 
-	def get_iter(self, path):
-		"Gets an iter from a path"
-
-		try:
-			if path in ( None, "", (), [] ):
-				return None
-
-			if type(path) == list:
-				path = tuple(path)
-
-			return gtk.TreeStore.get_iter(self, path)
-
-		except ValueError:
-			return None
-
-
-	def get_path(self, iter):
-		"Gets a path from an iter"
-
-		return iter is not None and gtk.TreeStore.get_path(self, iter) or None
-
-
 	def get_popular_values(self, fieldtype, threshold = 3):
 		"Gets popular values for a field type"
 
@@ -476,50 +445,6 @@ class EntryStore(gtk.TreeStore):
 		return copy is not None and copy or newiters
 
 
-	def iter_traverse_next(self, iter):
-		"Gets the 'logically next' iter"
-
-		# get the first child, if any
-		child = self.iter_nth_child(iter, 0)
-		if child is not None:
-			return child
-
-		# check for a sibling or, if not found, a sibling of any ancestors
-		parent = iter
-		while parent is not None:
-			sibling = parent.copy()
-			sibling = self.iter_next(sibling)
-
-			if sibling is not None:
-				return sibling
-
-			parent = self.iter_parent(parent)
-
-		return None
-
-
-	def iter_traverse_prev(self, iter):
-		"Gets the 'logically previous' iter"
-
-		# get the previous sibling, or parent, of the iter - if any
-		if iter is not None:
-			parent = self.iter_parent(iter)
-			index = self.get_path(iter)[-1]
-
-			# if no sibling is found, return the parent
-			if index == 0:
-				return parent
-
-			# otherwise, get the sibling
-			iter = self.iter_nth_child(parent, index - 1)
-
-		# get the last, deepest child of the sibling or root, if any
-		while self.iter_n_children(iter) > 0:
-			iter = self.iter_nth_child(iter, self.iter_n_children(iter) - 1)
-
-		return iter
-
-
 	def move_entry(self, iter, parent = None, sibling = None):
 		"Moves an entry"
 
@@ -532,11 +457,7 @@ class EntryStore(gtk.TreeStore):
 	def remove_entry(self, iter):
 		"Removes an entry, and its children if any"
 
-		if iter is None:
-			return None
-
 		self.remove(iter)
-		self.changed = True
 
 
 	def update_entry(self, iter, e):
@@ -548,8 +469,6 @@ class EntryStore(gtk.TreeStore):
 		self.set_value(iter, COLUMN_NAME, e.name)
 		self.set_value(iter, COLUMN_ICON, e.icon)
 		self.set_value(iter, COLUMN_ENTRY, e.copy())
-
-		self.changed = True
 
 
 
