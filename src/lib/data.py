@@ -37,6 +37,9 @@ SEARCH_NEXT	= "next"
 SEARCH_PREVIOUS	= "prev"
 
 
+UndoQueue	= shinygnome.ui.UndoQueue
+
+
 
 class Clipboard(gobject.GObject):
 	"A normal text-clipboard"
@@ -520,99 +523,4 @@ class Timer(gobject.GObject):
 
 
 gobject.signal_new("ring", Timer, gobject.SIGNAL_ACTION, gobject.TYPE_BOOLEAN, ())
-
-
-
-class UndoQueue(gobject.GObject):
-	"Handles undo/redo tracking"
-
-	def __init__(self):
-		gobject.GObject.__init__(self)
-
-		self.queue	= []
-		self.pointer	= 0
-
-
-	def add_action(self, name, cb_undo, cb_redo, actiondata):
-		"Adds an action to the undo queue"
-
-		del self.queue[self.pointer:]
-
-		self.queue.append(( name, cb_undo, cb_redo, actiondata ))
-		self.pointer = len(self.queue)
-
-		self.emit("changed")
-
-
-	def can_redo(self):
-		"Checks if a redo action is possible"
-
-		return self.pointer < len(self.queue)
-
-
-	def can_undo(self):
-		"Checks if an undo action is possible"
-
-		return self.pointer > 0
-
-
-	def clear(self):
-		"Clears the queue"
-
-		self.queue = []
-		self.pointer = 0
-
-		self.emit("changed")
-
-
-	def get_redo_action(self):
-		"Returns data for the next redo operation"
-
-		if self.can_redo() == False:
-			return None
-
-		name, cb_undo, cb_redo, actiondata = self.queue[self.pointer]
-
-		return cb_redo, name, actiondata
-
-
-	def get_undo_action(self):
-		"Returns data for the next undo operation"
-
-		if self.can_undo() == False:
-			return None
-
-		name, cb_undo, cb_redo, actiondata = self.queue[self.pointer - 1]
-
-		return cb_undo, name, actiondata
-
-
-	def redo(self):
-		"Executes a redo operation"
-
-		if self.can_redo() == False:
-			return None
-
-		cb_redo, name, actiondata = self.get_redo_action()
-		self.pointer += 1
-
-		cb_redo(name, actiondata)
-		self.emit("changed")
-
-
-	def undo(self):
-		"Executes an undo operation"
-
-		if self.can_undo() == False:
-			return None
-
-		cb_undo, name, actiondata = self.get_undo_action()
-		self.pointer -= 1
-
-		cb_undo(name, actiondata)
-		self.emit("changed")
-
-
-gobject.type_register(UndoQueue)
-gobject.signal_new("changed", UndoQueue, gobject.SIGNAL_ACTION, gobject.TYPE_BOOLEAN, ())
 
