@@ -31,9 +31,6 @@ import gettext, gnome.ui, gobject, gtk, urllib
 _ = gettext.gettext
 
 
-EVENT_FILTER		= None
-
-
 ##### EXCEPTIONS #####
 
 CancelError		= shinygnome.ui.CancelError
@@ -52,6 +49,7 @@ Utility			= shinygnome.ui.UtilityDialog
 Warning			= shinygnome.ui.WarningMessageDialog
 
 unique			= shinygnome.ui.unique_dialog
+add_event_filter	= shinygnome.ui.add_dialog_event_filter
 
 
 
@@ -815,9 +813,6 @@ class PasswordChecker(Utility):
 		self.show_all()
 		self.present()
 
-		if EVENT_FILTER != None:
-			self.window.add_filter(EVENT_FILTER)
-
 		# for some reason, gtk crashes on close-by-escape
 		# if we don't do this
 		self.get_response_widget(gtk.RESPONSE_CLOSE).grab_focus()
@@ -871,7 +866,4 @@ class PasswordGenerator(Utility):
 		self.present()
 
 		self.get_response_widget(gtk.RESPONSE_CLOSE).grab_focus()
-
-		if EVENT_FILTER != None:
-			self.window.add_filter(EVENT_FILTER)
 

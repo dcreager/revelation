@@ -280,8 +280,6 @@ class Revelation(ui.App):
 
 		self.config.monitor("file/autolock_timeout",	lambda k,v,d: self.locktimer.start(v * 60))
 
-		dialog.EVENT_FILTER = self.__cb_event_filter
-
 
 	def __init_states(self):
 		"Sets the initial application state"
@@ -315,6 +313,7 @@ class Revelation(ui.App):
 		self.show_all()
 
 		self.window.add_filter(self.__cb_event_filter)
+		dialog.add_event_filter(self.__cb_event_filter)
 
 
 		# set some variables
@@ -569,6 +568,7 @@ class Revelation(ui.App):
 		"Event filter for gdk window"
 
 		self.locktimer.reset()
+
 		return gtk.gdk.FILTER_CONTINUE
 
 
@@ -1782,9 +1782,6 @@ class Preferences(dialog.Utility):
 
 		self.show_all()
 		self.present()
-
-		if dialog.EVENT_FILTER != None:
-			self.window.add_filter(dialog.EVENT_FILTER)
 
 		# for some reason, gtk crashes on close-by-escape unless we do this
 		self.get_response_widget(gtk.RESPONSE_CLOSE).grab_focus()
