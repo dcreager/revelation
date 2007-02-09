@@ -60,15 +60,19 @@ class DataFile(gobject.GObject):
 
 		self.__monitor_stop()
 
-		if file != None:
-			self.__monitorhandle = file_monitor(file, self.__cb_monitor)
+		if file:
+			try:
+				self.__monitorhandle = shinygnome.io.File(file).monitor(self.__cb_monitor)
+
+			except shinygnome.io.NotSupportedError:
+				self.__monitorhandle = None
 
 
 	def __monitor_stop(self):
 		"Stops monitoring the current file"
 
-		if self.__monitorhandle != None:
-			file_monitor_cancel(self.__monitorhandle)
+		if self.__monitorhandle:
+			shinygnome.io.File().monitor_cancel(self.__monitorhandle)
 			self.__monitorhandle = None
 
 
@@ -160,32 +164,4 @@ class DataFile(gobject.GObject):
 gobject.type_register(DataFile)
 gobject.signal_new("changed", DataFile, gobject.SIGNAL_ACTION, gobject.TYPE_BOOLEAN, (str,))
 gobject.signal_new("content-changed", DataFile, gobject.SIGNAL_ACTION, gobject.TYPE_BOOLEAN, (str,))
-
-
-
-def file_is_local(file):
-	"Checks if a file is on a local filesystem"
-
-	if file is None:
-		return False
-
-	uri = gnomevfs.URI(file)
-
-	return uri.scheme == "file"
-
-
-def file_monitor(file, callback):
-	"Starts monitoring a file"
-
-	try:
-		return gnomevfs.monitor_add(shinygnome.util.path.normalize(file), gnomevfs.MONITOR_FILE, callback)
-
-	except gnomevfs.NotSupportedError:
-		return None
-
-
-def file_monitor_cancel(handle):
-	"Cancels file monitoring"
-
-	gnomevfs.monitor_cancel(handle)
 

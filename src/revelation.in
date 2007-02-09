@@ -474,7 +474,7 @@ class Revelation(ui.App):
 		if file is not None:
 			self.set_title(os.path.basename(file))
 
-			if io.file_is_local(file):
+			if shinygnome.io.File(file).is_local():
 				os.chdir(os.path.dirname(file))
 
 		else:
