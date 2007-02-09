@@ -26,7 +26,7 @@
 import datahandler
 
 import gnomevfs, gobject, os.path, re
-import shinygnome.util
+import shinygnome.io, shinygnome.util
 
 
 
@@ -101,7 +101,8 @@ class DataFile(gobject.GObject):
 		"Loads a file"
 
 		file = shinygnome.util.path.normalize(file)
-		data = file_read(file)
+
+		data = shinygnome.io.File(file).read()
 
 		if self.__handler == None:
 			self.__handler = datahandler.detect_handler(data)()
@@ -123,7 +124,7 @@ class DataFile(gobject.GObject):
 		"Saves an entrystore to a file"
 
 		self.__monitor_stop()
-		file_write(file, self.__handler.export_data(entrystore, password))
+		shinygnome.io.File(file).write(self.__handler.export_data(entrystore, password))
 
 		# need to use idle_add() to avoid notifying about current save
 		gobject.idle_add(lambda: self.__monitor(file))
@@ -162,15 +163,6 @@ gobject.signal_new("content-changed", DataFile, gobject.SIGNAL_ACTION, gobject.T
 
 
 
-def file_exists(file):
-	"Checks if a file exists"
-
-	if file is None:
-		return False
-
-	return gnomevfs.exists(file)
-
-
 def file_is_local(file):
 	"Checks if a file is on a local filesystem"
 
@@ -196,40 +188,4 @@ def file_monitor_cancel(handle):
 	"Cancels file monitoring"
 
 	gnomevfs.monitor_cancel(handle)
-
-
-def file_read(file):
-	"Reads data from a file"
-
-	try:
-		if file is None:
-			raise IOError
-
-		return gnomevfs.read_entire_file(file)
-
-	except gnomevfs.Error:
-		raise IOError
-
-
-def file_write(file, data):
-	"Writes data to file"
-
-	try:
-		if file is None:
-			raise IOError
-
-		if data is None:
-			data = ""
-
-		if file_exists(file) == True:
-			f = gnomevfs.open(file, gnomevfs.OPEN_WRITE)
-
-		else:
-			f = gnomevfs.create(file, gnomevfs.OPEN_WRITE)
-
-		f.write(data)
-		f.close()
-
-	except gnomevfs.Error:
-		raise IOError
 

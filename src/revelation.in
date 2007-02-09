@@ -31,7 +31,7 @@ if "$python_libdir$/$package$" not in sys.path:
 	sys.path.append("$python_libdir$/$package$")
 
 from revelation import config, data, datahandler, dialog, entry, io, stock, ui, util
-import shinygnome.util
+import shinygnome.io, shinygnome.util
 
 _ = gettext.gettext
 
@@ -63,7 +63,7 @@ class Revelation(ui.App):
 			self.__init_ui()
 			self.__init_states()
 
-		except IOError:
+		except ( IOError, shinygnome.io.IOError ):
 			dialog.Error(self, _('Missing data files'), _('Some of Revelations system files could not be found, please reinstall Revelation.')).run()
 			sys.exit(1)
 
@@ -959,7 +959,7 @@ class Revelation(ui.App):
 			self.datafile.save(self.entrystore, self.datafile.get_file(), self.datafile.get_password())
 			self.entrystore.changed = False
 
-		except IOError:
+		except ( IOError, shinygnome.io.IOError ):
 			pass
 
 
@@ -993,7 +993,7 @@ class Revelation(ui.App):
 			self.statusbar.set(_('Open failed'))
 			dialog.Error(self, _('Unable to detect filetype'), _('The file type of the file \'%s\' could not be automatically detected. Try specifying the file type manually.')% file).run()
 
-		except IOError:
+		except ( IOError, shinygnome.io.IOError ):
 			self.statusbar.set(_('Open failed'))
 			dialog.Error(self, _('Unable to open file'), _('The file \'%s\' could not be opened. Make sure that the file exists, and that you have permissions to open it.') % file).run()
 
@@ -1333,7 +1333,7 @@ class Revelation(ui.App):
 		except dialog.CancelError:
 			self.statusbar.set(_('Export cancelled'))
 
-		except IOError:
+		except shinygnome.io.IOError:
 			dialog.Error(self, _('Unable to write to file'), _('The file \'%s\' could not be opened for writing. Make sure that you have the proper permissions to write to it.') % file).run()
 			self.statusbar.set(_('Export failed'))
 
@@ -1480,7 +1480,7 @@ class Revelation(ui.App):
 			self.statusbar.set(_('Save cancelled'))
 			return False
 
-		except IOError:
+		except ( IOError, shinygnome.io.IOError ):
 			dialog.Error(self, _('Unable to save file'), _('The file \'%s\' could not be opened for writing. Make sure that you have the proper permissions to write to it.') % file).run()
 			self.statusbar.set(_('Save failed'))
 			return False
