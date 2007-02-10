@@ -23,9 +23,9 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 
-import config, data, dialog, entry, io, stock, shinygnome.ui, shinygnome.util, util
+import config, data, entry, io, stock, shinygnome.ui, shinygnome.util, util
 
-import gettext, gobject, gtk, gtk.gdk, gnome.ui, time
+import gettext, gtk, gtk.gdk, time
 
 _ = gettext.gettext
 

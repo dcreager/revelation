@@ -25,7 +25,7 @@
 
 import datahandler, entry, shinygnome.ui
 
-import gobject, gtk, gtk.gdk, time
+import gobject, gtk, gtk.gdk
 
 
 
