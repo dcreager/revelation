@@ -30,6 +30,7 @@ import datahandler
 import io
 import entry
 import data
+import stock
 import ui
 import dialog
 

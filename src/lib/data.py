@@ -23,9 +23,9 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 
-import datahandler, entry
+import datahandler, entry, shinygnome.ipc, shinygnome.ui
 
-import gobject, gtk, gtk.gdk, time
+import gobject, gtk, gtk.gdk
 
 
 
@@ -37,15 +37,16 @@ SEARCH_NEXT	= "next"
 SEARCH_PREVIOUS	= "prev"
 
 
+Timer		= shinygnome.ui.Timer
+UndoQueue	= shinygnome.ui.UndoQueue
 
-class Clipboard(gobject.GObject):
+
+
+class Clipboard(shinygnome.ipc.Clipboard):
 	"A normal text-clipboard"
 
 	def __init__(self):
-		gobject.GObject.__init__(self)
-
-		self.clip_clipboard	= gtk.clipboard_get("CLIPBOARD")
-		self.clip_primary	= gtk.clipboard_get("PRIMARY")
+		shinygnome.ipc.Clipboard.__init__(self, None, "CLIPBOARD")
 
 		self.cleartimer		= Timer(10)
 		self.cleartimeout	= 60
@@ -91,31 +92,7 @@ class Clipboard(gobject.GObject):
 		selectiondata.set_text(text, len(text))
 
 
-	def clear(self):
-		"Clears the clipboard"
-
-		self.clip_clipboard.clear()
-		self.clip_primary.clear()
-
-
-	def get(self):
-		"Fetches text from the clipboard"
-
-		text = self.clip_clipboard.wait_for_text()
-
-		if text is None:
-			text = ""
-
-		return text
-
-
-	def has_contents(self):
-		"Checks if the clipboard has any contents"
-
-		return self.clip_clipboard.wait_is_text_available()
-
-
-	def set(self, content, secret = False):
+	def set_text(self, content, secret = False):
 		"Copies text to the clipboard"
 
 		self.content		= content
@@ -129,8 +106,7 @@ class Clipboard(gobject.GObject):
 			( "UTF8_STRING",	0,	0 )
 		)
 
-		self.clip_clipboard.set_with_data(targets, self.__cb_get, self.__cb_clear, None)
-		self.clip_primary.set_with_data(targets, self.__cb_get, self.__cb_clear, None)
+		self.set_with_data(targets, self.__cb_get, self.__cb_clear, None)
 
 		if secret == True:
 			self.cleartimer.start(self.cleartimeout)
@@ -140,13 +116,12 @@ class Clipboard(gobject.GObject):
 
 
 
-class EntryClipboard(gobject.GObject):
+class EntryClipboard(shinygnome.ipc.Clipboard):
 	"A clipboard for entries"
 
 	def __init__(self):
-		gobject.GObject.__init__(self)
+		shinygnome.ipc.Clipboard.__init__(self, None, "_REVELATION_ENTRY")
 
-		self.clipboard = gtk.Clipboard(gtk.gdk.display_get_default(), "_REVELATION_ENTRY")
 		self.__has_contents = False
 
 		gobject.timeout_add(500, lambda: self.__check_contents())
@@ -155,7 +130,7 @@ class EntryClipboard(gobject.GObject):
 	def __check_contents(self):
 		"Callback which check the clipboard"
 
-		state = self.has_contents()
+		state = self.has_text()
 
 		if state != self.__has_contents:
 			self.emit("content-toggled", state)
@@ -167,7 +142,7 @@ class EntryClipboard(gobject.GObject):
 	def clear(self):
 		"Clears the clipboard"
 
-		self.clipboard.clear()
+		shinygnome.ipc.Clipboard.clear(self)
 		self.__check_contents()
 
 
@@ -175,10 +150,10 @@ class EntryClipboard(gobject.GObject):
 		"Fetches entries from the clipboard"
 
 		try:
-			xml = self.clipboard.wait_for_text()
+			xml = self.get_text()
 
-			if xml in ( None, "" ):
-				return None
+			if not xml:
+				return
 
 			handler = datahandler.RevelationXML()
 			entrystore = handler.import_data(xml)
@@ -187,12 +162,6 @@ class EntryClipboard(gobject.GObject):
 
 		except datahandler.HandlerError:
 			return None
-
-
-	def has_contents(self):
-		"Checks if the clipboard has any contents"
-
-		return self.clipboard.wait_for_text() is not None
 
 
 	def set(self, entrystore, iters):
@@ -204,7 +173,7 @@ class EntryClipboard(gobject.GObject):
 			copystore.import_entry(entrystore, iter)
 
 		xml = datahandler.RevelationXML().export_data(copystore)
-		self.clipboard.set_text(xml)
+		self.set_text(xml)
 
 		self.__check_contents()
 
@@ -298,18 +267,17 @@ class EntrySearch(gobject.GObject):
 
 
 
-class EntryStore(gtk.TreeStore):
+class EntryStore(shinygnome.ui.TreeStore):
 	"A data structure for storing entries"
 
 	def __init__(self):
-		gtk.TreeStore.__init__(
+		shinygnome.ui.TreeStore.__init__(
 			self,
 			gobject.TYPE_STRING,	# name
 			gobject.TYPE_STRING,	# icon
 			gobject.TYPE_PYOBJECT	# entry
 		)
 
-		self.changed = False
 		self.connect("row-has-child-toggled", self.__cb_iter_has_child)
 
 
@@ -336,16 +304,8 @@ class EntryStore(gtk.TreeStore):
 			iter = self.append(parent)
 
 		self.update_entry(iter, e)
-		self.changed = True
 
 		return iter
-
-
-	def clear(self):
-		"Removes all entries"
-
-		gtk.TreeStore.clear(self)
-		self.changed = False
 
 
 	def copy_entry(self, iter, parent = None, sibling = None):
@@ -406,28 +366,6 @@ class EntryStore(gtk.TreeStore):
 			return e.copy()
 
 
-	def get_iter(self, path):
-		"Gets an iter from a path"
-
-		try:
-			if path in ( None, "", (), [] ):
-				return None
-
-			if type(path) == list:
-				path = tuple(path)
-
-			return gtk.TreeStore.get_iter(self, path)
-
-		except ValueError:
-			return None
-
-
-	def get_path(self, iter):
-		"Gets a path from an iter"
-
-		return iter is not None and gtk.TreeStore.get_path(self, iter) or None
-
-
 	def get_popular_values(self, fieldtype, threshold = 3):
 		"Gets popular values for a field type"
 
@@ -476,50 +414,6 @@ class EntryStore(gtk.TreeStore):
 		return copy is not None and copy or newiters
 
 
-	def iter_traverse_next(self, iter):
-		"Gets the 'logically next' iter"
-
-		# get the first child, if any
-		child = self.iter_nth_child(iter, 0)
-		if child is not None:
-			return child
-
-		# check for a sibling or, if not found, a sibling of any ancestors
-		parent = iter
-		while parent is not None:
-			sibling = parent.copy()
-			sibling = self.iter_next(sibling)
-
-			if sibling is not None:
-				return sibling
-
-			parent = self.iter_parent(parent)
-
-		return None
-
-
-	def iter_traverse_prev(self, iter):
-		"Gets the 'logically previous' iter"
-
-		# get the previous sibling, or parent, of the iter - if any
-		if iter is not None:
-			parent = self.iter_parent(iter)
-			index = self.get_path(iter)[-1]
-
-			# if no sibling is found, return the parent
-			if index == 0:
-				return parent
-
-			# otherwise, get the sibling
-			iter = self.iter_nth_child(parent, index - 1)
-
-		# get the last, deepest child of the sibling or root, if any
-		while self.iter_n_children(iter) > 0:
-			iter = self.iter_nth_child(iter, self.iter_n_children(iter) - 1)
-
-		return iter
-
-
 	def move_entry(self, iter, parent = None, sibling = None):
 		"Moves an entry"
 
@@ -532,11 +426,7 @@ class EntryStore(gtk.TreeStore):
 	def remove_entry(self, iter):
 		"Removes an entry, and its children if any"
 
-		if iter is None:
-			return None
-
 		self.remove(iter)
-		self.changed = True
 
 
 	def update_entry(self, iter, e):
@@ -548,152 +438,4 @@ class EntryStore(gtk.TreeStore):
 		self.set_value(iter, COLUMN_NAME, e.name)
 		self.set_value(iter, COLUMN_ICON, e.icon)
 		self.set_value(iter, COLUMN_ENTRY, e.copy())
-
-		self.changed = True
-
-
-
-class Timer(gobject.GObject):
-	"Handles timeouts etc"
-
-	def __init__(self, resolution = 1):
-		gobject.GObject.__init__(self)
-
-		self.offset		= None
-		self.timeout		= None
-
-		gobject.timeout_add(resolution * 1000, self.__cb_check)
-
-
-	def __cb_check(self):
-		"Checks if the timeout has been reached"
-
-		if None not in (self.offset, self.timeout) and int(time.time()) >= (self.offset + self.timeout):
-			self.stop()
-			self.emit("ring")
-
-		return True
-
-
-	def reset(self):
-		"Resets the timer"
-
-		if self.offset != None:
-			self.offset = int(time.time())
-
-
-	def start(self, timeout):
-		"Starts the timer"
-
-		if timeout == 0:
-			self.stop()
-
-		else:
-			self.offset = int(time.time())
-			self.timeout = timeout
-
-
-	def stop(self):
-		"Stops the timer"
-
-		self.offset = None
-		self.timeout = None
-
-
-gobject.signal_new("ring", Timer, gobject.SIGNAL_ACTION, gobject.TYPE_BOOLEAN, ())
-
-
-
-class UndoQueue(gobject.GObject):
-	"Handles undo/redo tracking"
-
-	def __init__(self):
-		gobject.GObject.__init__(self)
-
-		self.queue	= []
-		self.pointer	= 0
-
-
-	def add_action(self, name, cb_undo, cb_redo, actiondata):
-		"Adds an action to the undo queue"
-
-		del self.queue[self.pointer:]
-
-		self.queue.append(( name, cb_undo, cb_redo, actiondata ))
-		self.pointer = len(self.queue)
-
-		self.emit("changed")
-
-
-	def can_redo(self):
-		"Checks if a redo action is possible"
-
-		return self.pointer < len(self.queue)
-
-
-	def can_undo(self):
-		"Checks if an undo action is possible"
-
-		return self.pointer > 0
-
-
-	def clear(self):
-		"Clears the queue"
-
-		self.queue = []
-		self.pointer = 0
-
-		self.emit("changed")
-
-
-	def get_redo_action(self):
-		"Returns data for the next redo operation"
-
-		if self.can_redo() == False:
-			return None
-
-		name, cb_undo, cb_redo, actiondata = self.queue[self.pointer]
-
-		return cb_redo, name, actiondata
-
-
-	def get_undo_action(self):
-		"Returns data for the next undo operation"
-
-		if self.can_undo() == False:
-			return None
-
-		name, cb_undo, cb_redo, actiondata = self.queue[self.pointer - 1]
-
-		return cb_undo, name, actiondata
-
-
-	def redo(self):
-		"Executes a redo operation"
-
-		if self.can_redo() == False:
-			return None
-
-		cb_redo, name, actiondata = self.get_redo_action()
-		self.pointer += 1
-
-		cb_redo(name, actiondata)
-		self.emit("changed")
-
-
-	def undo(self):
-		"Executes an undo operation"
-
-		if self.can_undo() == False:
-			return None
-
-		cb_undo, name, actiondata = self.get_undo_action()
-		self.pointer -= 1
-
-		cb_undo(name, actiondata)
-		self.emit("changed")
-
-
-gobject.type_register(UndoQueue)
-gobject.signal_new("changed", UndoQueue, gobject.SIGNAL_ACTION, gobject.TYPE_BOOLEAN, ())
 

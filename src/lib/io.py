@@ -26,6 +26,7 @@
 import datahandler
 
 import gnomevfs, gobject, os.path, re
+import shinygnome.io, shinygnome.util
 
 
 
@@ -59,15 +60,19 @@ class DataFile(gobject.GObject):
 
 		self.__monitor_stop()
 
-		if file != None:
-			self.__monitorhandle = file_monitor(file, self.__cb_monitor)
+		if file:
+			try:
+				self.__monitorhandle = shinygnome.io.File(file).monitor(self.__cb_monitor)
+
+			except shinygnome.io.NotSupportedError:
+				self.__monitorhandle = None
 
 
 	def __monitor_stop(self):
 		"Stops monitoring the current file"
 
-		if self.__monitorhandle != None:
-			file_monitor_cancel(self.__monitorhandle)
+		if self.__monitorhandle:
+			shinygnome.io.File().monitor_cancel(self.__monitorhandle)
 			self.__monitorhandle = None
 
 
@@ -99,8 +104,9 @@ class DataFile(gobject.GObject):
 	def load(self, file, password = None, pwgetter = None):
 		"Loads a file"
 
-		file = file_normpath(file)
-		data = file_read(file)
+		file = shinygnome.util.path.normalize(file)
+
+		data = shinygnome.io.File(file).read()
 
 		if self.__handler == None:
 			self.__handler = datahandler.detect_handler(data)()
@@ -122,7 +128,7 @@ class DataFile(gobject.GObject):
 		"Saves an entrystore to a file"
 
 		self.__monitor_stop()
-		file_write(file, self.__handler.export_data(entrystore, password))
+		shinygnome.io.File(file).write(self.__handler.export_data(entrystore, password))
 
 		# need to use idle_add() to avoid notifying about current save
 		gobject.idle_add(lambda: self.__monitor(file))
@@ -134,7 +140,7 @@ class DataFile(gobject.GObject):
 	def set_file(self, file):
 		"Sets the current file"
 
-		uri = file is not None and gnomevfs.URI(file_normpath(file)) or None
+		uri = file is not None and gnomevfs.URI(shinygnome.util.path.normalize(file)) or None
 
 		if self.__uri != uri:
 			self.__uri = uri
@@ -158,92 +164,4 @@ class DataFile(gobject.GObject):
 gobject.type_register(DataFile)
 gobject.signal_new("changed", DataFile, gobject.SIGNAL_ACTION, gobject.TYPE_BOOLEAN, (str,))
 gobject.signal_new("content-changed", DataFile, gobject.SIGNAL_ACTION, gobject.TYPE_BOOLEAN, (str,))
-
-
-
-def file_exists(file):
-	"Checks if a file exists"
-
-	if file is None:
-		return False
-
-	return gnomevfs.exists(file)
-
-
-def file_is_local(file):
-	"Checks if a file is on a local filesystem"
-
-	if file is None:
-		return False
-
-	uri = gnomevfs.URI(file)
-
-	return uri.scheme == "file"
-
-
-def file_monitor(file, callback):
-	"Starts monitoring a file"
-
-	try:
-		return gnomevfs.monitor_add(file_normpath(file), gnomevfs.MONITOR_FILE, callback)
-
-	except gnomevfs.NotSupportedError:
-		return None
-
-
-def file_monitor_cancel(handle):
-	"Cancels file monitoring"
-
-	gnomevfs.monitor_cancel(handle)
-
-
-def file_normpath(file):
-	"Normalizes a file path"
-
-	if file in ( None, "" ):
-		return ""
-
-	file = re.sub("^file:/{,2}", "", file)
-	file = os.path.expanduser(file)
-
-	if not re.match("^[a-zA-Z]+://", file) and file[0] != "/":
-		file = os.path.abspath(file)
-
-	return re.sub("^file:/{,2}", "", str(gnomevfs.URI(file)))
-
-
-def file_read(file):
-	"Reads data from a file"
-
-	try:
-		if file is None:
-			raise IOError
-
-		return gnomevfs.read_entire_file(file)
-
-	except gnomevfs.Error:
-		raise IOError
-
-
-def file_write(file, data):
-	"Writes data to file"
-
-	try:
-		if file is None:
-			raise IOError
-
-		if data is None:
-			data = ""
-
-		if file_exists(file) == True:
-			f = gnomevfs.open(file, gnomevfs.OPEN_WRITE)
-
-		else:
-			f = gnomevfs.create(file, gnomevfs.OPEN_WRITE)
-
-		f.write(data)
-		f.close()
-
-	except gnomevfs.Error:
-		raise IOError
 

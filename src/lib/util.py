@@ -149,16 +149,6 @@ def entropy_ideal(length):
 	return -1.0 * length * prob * math.log(prob) / math.log(2.0)
 
 
-def escape_markup(string):
-	"Escapes a string so it can be placed in a markup string"
-
-	string = string.replace("&", "&amp;")
-	string = string.replace("<", "&lt;")
-	string = string.replace(">", "&gt;")
-
-	return string
-
-
 def execute(command):
 	"Runs a command, returns its status code and output"
 
@@ -372,14 +362,4 @@ def trace_exception(type, value, tb):
 	traceback.print_exception(type, value, tb, None, trace)
 
 	return trace.getvalue()
-
-
-def unescape_markup(string):
-	"Unescapes a string to get literal values"
-
-	string = string.replace("&amp;", "&")
-	string = string.replace("&lt;", "<")
-	string = string.replace("&gt;", ">")
-
-	return string
 

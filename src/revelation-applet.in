@@ -347,10 +347,7 @@ class RevelationApplet(object):
 		if file in ( "", None ):
 			return False
 
-		if dialog.present_unique(dialog.PasswordOpen) == True:
-			return False
-
-		entrystore = self.datafile.load(file, password, lambda: dialog.run_unique(dialog.PasswordOpen, None, os.path.basename(file)))
+		entrystore = self.datafile.load(file, password, lambda: dialog.unique(dialog.PasswordOpen, None, os.path.basename(file)).run())
 
 		self.entrystore.clear()
 		self.entrystore.import_entry(entrystore, None)
@@ -495,7 +492,7 @@ class RevelationApplet(object):
 	def about(self):
 		"Displays an about dialog"
 
-		dialog.run_unique(About, self.applet)
+		dialog.unique(About, self.applet).run()
 
 
 	def entry_copychain(self, e, launcher = ""):
@@ -511,7 +508,7 @@ class RevelationApplet(object):
 				if "%" + entry.UsernameField.symbol not in launcher:
 					secrets.insert(0, e[entry.UsernameField])
 
-		self.clipboard.set(secrets)
+		self.clipboard.set_text(secrets)
 
 
 	def entry_goto(self, e):
@@ -578,9 +575,13 @@ class RevelationApplet(object):
 			self.popup_entrylist.connect("entry-chosen", lambda w,e: self.entry_show(e, focusafter))
 
 			if focusafter == True:
-				self.popup_entrylist.connect("closed", lambda w: self.__focus_entry())
+				self.popup_entrylist.connect("unrealize", lambda w: self.__focus_entry())
 
 			self.popup_entrylist.realize()
+
+			for child in self.popup_entrylist.get_children():
+				child.show_all()
+
 			x, y = self.__get_popup_offset(self.popup_entrylist)
 			self.popup_entrylist.show(x, y)
 
@@ -593,13 +594,13 @@ class RevelationApplet(object):
 		self.popup_entryview = EntryViewPopup(e, self.config, self.clipboard)
 
 		if focusafter == True:
-			self.popup_entryview.connect("closed", lambda w: self.__focus_entry())
+			self.popup_entryview.connect("unrealize", lambda w: self.__focus_entry())
 
 		def cb_goto(widget):
 			if self.__launcher_valid(e):
 				self.entry_goto(e)
 
-			self.popup_entryview.close()
+			self.popup_entryview.destroy()
 
 		self.popup_entryview.button_goto.connect("clicked", cb_goto)
 		self.popup_entryview.button_goto.set_sensitive(self.__launcher_valid(e))
@@ -660,7 +661,7 @@ class RevelationApplet(object):
 	def prefs(self):
 		"Displays the preference dialog"
 
-		dialog.run_unique(Preferences, None, self.config)
+		dialog.unique(Preferences, None, self.config).run()
 
 
 
@@ -748,28 +749,28 @@ class Preferences(dialog.Utility):
 		self.vbox.pack_start(self.notebook)
 
 		self.page_general = self.notebook.create_page(_('General'))
-		self.__init_section_file(self.page_general)
-		self.__init_section_menuaction(self.page_general)
-		self.__init_section_misc(self.page_general)
+		self.__init_inputbox_file(self.page_general)
+		self.__init_inputbox_menuaction(self.page_general)
+		self.__init_inputbox_misc(self.page_general)
 
 		self.page_goto = self.notebook.create_page(_('Goto Commands'))
-		self.__init_section_gotocmd(self.page_goto)
+		self.__init_inputbox_gotocmd(self.page_goto)
 
 		self.connect("response", lambda w,d: self.destroy())
 
 
-	def __init_section_file(self, page):
-		"Sets up a file section in a page"
+	def __init_inputbox_file(self, page):
+		"Sets up a file inputbox in a page"
 
-		self.section_file = page.add_section(_('File Handling'))
+		self.inputbox_file = page.add_inputbox(_('File Handling'))
 
 		# entry for file
-		self.button_file = ui.FileButton(_('Select File to Use'))
+		self.button_file = ui.FileChooserButton(_('Select File to Use'))
 		ui.config_bind(self.config, "file", self.button_file)
 
 		eventbox = ui.EventBox(self.button_file)
 		self.tooltips.set_tip(eventbox, _('The data file to search for accounts in'))
-		self.section_file.append_widget(_('File to use'), eventbox)
+		self.inputbox_file.add(eventbox, _('File to use'))
 
 		# check-button for autolock
 		self.check_autolock = ui.CheckButton(_('Lock file when inactive for'))
@@ -778,7 +779,7 @@ class Preferences(dialog.Utility):
 		self.tooltips.set_tip(self.check_autolock, _('Automatically lock the file after a period of inactivity'))
 
 		# spin-entry for autolock-timeout
-		self.spin_autolock_timeout = ui.SpinEntry()
+		self.spin_autolock_timeout = ui.SpinButton()
 		self.spin_autolock_timeout.set_range(1, 120)
 		self.spin_autolock_timeout.set_sensitive(self.check_autolock.get_active())
 		ui.config_bind(self.config, "autolock_timeout", self.spin_autolock_timeout)
@@ -790,13 +791,13 @@ class Preferences(dialog.Utility):
 		hbox.pack_start(self.check_autolock)
 		hbox.pack_start(self.spin_autolock_timeout)
 		hbox.pack_start(ui.Label(_('minutes')))
-		self.section_file.append_widget(None, hbox)
+		self.inputbox_file.add(hbox)
 
 
-	def __init_section_gotocmd(self, page):
-		"Sets up the goto command section"
+	def __init_inputbox_gotocmd(self, page):
+		"Sets up the goto command inputbox"
 
-		self.section_goto = page.add_section(_('Goto Commands'))
+		self.inputbox_goto = page.add_inputbox(_('Goto Commands'))
 
 		for entrytype in entry.ENTRYLIST:
 			if entrytype == entry.FolderEntry:
@@ -818,67 +819,68 @@ class Preferences(dialog.Utility):
 			tooltip += _('%(...%): optional substring expansion')
 
 			self.tooltips.set_tip(widget, tooltip)
-			self.section_goto.append_widget(e.typename, widget)
+			self.inputbox_goto.add(widget, e.typename)
 
 
-	def __init_section_menuaction(self, page):
-		"Sets up a menuaction section in a page"
+	def __init_inputbox_menuaction(self, page):
+		"Sets up a menuaction inputbox in a page"
 
-		self.section_menuaction = page.add_section(_('Menu Action'))
+		self.inputbox_menuaction = page.add_inputbox(_('Menu Action'))
 
 		# radio-button for show
 		self.radio_show = ui.RadioButton(None, _('Display account info'))
 		ui.config_bind(self.config, "menuaction", self.radio_show, "show")
 
 		self.tooltips.set_tip(self.radio_show, _('Display the account information'))
-		self.section_menuaction.append_widget(None, self.radio_show)
+		self.inputbox_menuaction.add(self.radio_show)
 
 		# radio-button for goto
 		self.radio_goto = ui.RadioButton(self.radio_show, _('Go to account, if possible'))
 		ui.config_bind(self.config, "menuaction", self.radio_goto, "goto")
 
 		self.tooltips.set_tip(self.radio_goto, _('Open the account in an external application if possible, otherwise display it'))
-		self.section_menuaction.append_widget(None, self.radio_goto)
+		self.inputbox_menuaction.add(self.radio_goto)
 
 		# radio-button for copy username/password
 		self.radio_copy = ui.RadioButton(self.radio_show, _('Copy password to clipboard'))
 		ui.config_bind(self.config, "menuaction", self.radio_copy, "copy")
 
 		self.tooltips.set_tip(self.radio_copy, _('Copy the account password to the clipboard'))
-		self.section_menuaction.append_widget(None, self.radio_copy)
+		self.inputbox_menuaction.add(self.radio_copy)
 
 
-	def __init_section_misc(self, page):
-		"Sets up the misc section"
+	def __init_inputbox_misc(self, page):
+		"Sets up the misc inputbox"
 
-		self.section_misc = page.add_section(_('Miscellaneous'))
+		self.inputbox_misc = page.add_inputbox(_('Miscellaneous'))
 
 		# show searchentry checkbutton
 		self.check_show_searchentry = ui.CheckButton(_('Show search entry'))
 		ui.config_bind(self.config, "show_searchentry", self.check_show_searchentry)
 
 		self.tooltips.set_tip(self.check_show_searchentry, _('Display an entry box in the applet for searching'))
-		self.section_misc.append_widget(None, self.check_show_searchentry)
+		self.inputbox_misc.add(self.check_show_searchentry)
 
 		# show passwords checkbutton
 		self.check_show_passwords = ui.CheckButton(_('Show passwords and other secrets'))
 		ui.config_bind(self.config, "show_passwords", self.check_show_passwords)
 
 		self.tooltips.set_tip(self.check_show_passwords, _('Display passwords and other secrets, such as PIN codes (otherwise, hide with ******)'))
-		self.section_misc.append_widget(None, self.check_show_passwords)
+		self.inputbox_misc.add(self.check_show_passwords)
 
 		# check-button for username
 		self.check_chain_username = ui.CheckButton(_('Also copy username when copying password'))
 		ui.config_bind(self.config, "chain_username", self.check_chain_username)
 
 		self.tooltips.set_tip(self.check_chain_username, _('When the password is copied to clipboard, put the username before the password as a clipboard "chain"'))
-		self.section_misc.append_widget(None, self.check_chain_username)
+		self.inputbox_misc.add(self.check_chain_username)
 
 
 	def run(self):
 		"Runs the dialog"
 
 		self.show_all()
+		self.present()
 
 
 
