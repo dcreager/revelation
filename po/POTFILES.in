@@ -1,9 +1,10 @@
-[encoding: UTF-8]
 src/revelation.in
 src/revelation-applet.in
 src/lib/config.py.in
 src/lib/dialog.py
 src/lib/entry.py
+src/lib/io.py
+src/lib/stock.py
 src/lib/ui.py
 src/lib/util.py
 src/lib/datahandler/xhtml.py
