@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 
-import datahandler, entry, shinygnome.ui
+import datahandler, entry, shinygnome.ipc, shinygnome.ui
 
 import gobject, gtk, gtk.gdk
 
@@ -42,14 +42,11 @@ UndoQueue	= shinygnome.ui.UndoQueue
 
 
 
-class Clipboard(gobject.GObject):
+class Clipboard(shinygnome.ipc.Clipboard):
 	"A normal text-clipboard"
 
 	def __init__(self):
-		gobject.GObject.__init__(self)
-
-		self.clip_clipboard	= gtk.clipboard_get("CLIPBOARD")
-		self.clip_primary	= gtk.clipboard_get("PRIMARY")
+		shinygnome.ipc.Clipboard.__init__(self, None, "CLIPBOARD")
 
 		self.cleartimer		= Timer(10)
 		self.cleartimeout	= 60
@@ -95,31 +92,7 @@ class Clipboard(gobject.GObject):
 		selectiondata.set_text(text, len(text))
 
 
-	def clear(self):
-		"Clears the clipboard"
-
-		self.clip_clipboard.clear()
-		self.clip_primary.clear()
-
-
-	def get(self):
-		"Fetches text from the clipboard"
-
-		text = self.clip_clipboard.wait_for_text()
-
-		if text is None:
-			text = ""
-
-		return text
-
-
-	def has_contents(self):
-		"Checks if the clipboard has any contents"
-
-		return self.clip_clipboard.wait_is_text_available()
-
-
-	def set(self, content, secret = False):
+	def set_text(self, content, secret = False):
 		"Copies text to the clipboard"
 
 		self.content		= content
@@ -133,8 +106,7 @@ class Clipboard(gobject.GObject):
 			( "UTF8_STRING",	0,	0 )
 		)
 
-		self.clip_clipboard.set_with_data(targets, self.__cb_get, self.__cb_clear, None)
-		self.clip_primary.set_with_data(targets, self.__cb_get, self.__cb_clear, None)
+		self.set_with_data(targets, self.__cb_get, self.__cb_clear, None)
 
 		if secret == True:
 			self.cleartimer.start(self.cleartimeout)
@@ -144,13 +116,12 @@ class Clipboard(gobject.GObject):
 
 
 
-class EntryClipboard(gobject.GObject):
+class EntryClipboard(shinygnome.ipc.Clipboard):
 	"A clipboard for entries"
 
 	def __init__(self):
-		gobject.GObject.__init__(self)
+		shinygnome.ipc.Clipboard.__init__(self, None, "_REVELATION_ENTRY")
 
-		self.clipboard = gtk.Clipboard(gtk.gdk.display_get_default(), "_REVELATION_ENTRY")
 		self.__has_contents = False
 
 		gobject.timeout_add(500, lambda: self.__check_contents())
@@ -159,7 +130,7 @@ class EntryClipboard(gobject.GObject):
 	def __check_contents(self):
 		"Callback which check the clipboard"
 
-		state = self.has_contents()
+		state = self.has_text()
 
 		if state != self.__has_contents:
 			self.emit("content-toggled", state)
@@ -171,7 +142,7 @@ class EntryClipboard(gobject.GObject):
 	def clear(self):
 		"Clears the clipboard"
 
-		self.clipboard.clear()
+		shinygnome.ipc.Clipboard.clear(self)
 		self.__check_contents()
 
 
@@ -179,10 +150,10 @@ class EntryClipboard(gobject.GObject):
 		"Fetches entries from the clipboard"
 
 		try:
-			xml = self.clipboard.wait_for_text()
+			xml = self.get_text()
 
-			if xml in ( None, "" ):
-				return None
+			if not xml:
+				return
 
 			handler = datahandler.RevelationXML()
 			entrystore = handler.import_data(xml)
@@ -191,12 +162,6 @@ class EntryClipboard(gobject.GObject):
 
 		except datahandler.HandlerError:
 			return None
-
-
-	def has_contents(self):
-		"Checks if the clipboard has any contents"
-
-		return self.clipboard.wait_for_text() is not None
 
 
 	def set(self, entrystore, iters):
@@ -208,7 +173,7 @@ class EntryClipboard(gobject.GObject):
 			copystore.import_entry(entrystore, iter)
 
 		xml = datahandler.RevelationXML().export_data(copystore)
-		self.clipboard.set_text(xml)
+		self.set_text(xml)
 
 		self.__check_contents()
 

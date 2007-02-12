@@ -508,7 +508,7 @@ class RevelationApplet(object):
 				if "%" + entry.UsernameField.symbol not in launcher:
 					secrets.insert(0, e[entry.UsernameField])
 
-		self.clipboard.set(secrets)
+		self.clipboard.set_text(secrets)
 
 
 	def entry_goto(self, e):

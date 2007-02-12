@@ -123,7 +123,7 @@ class PasswordEntry(IconEntry):
 
 		if self.clipboard != None:
 			menuitem = ImageMenuItem(gtk.stock.STOCK_COPY, _('Copy password'))
-			menuitem.connect("activate", lambda w: self.clipboard.set(self.get_text(), True))
+			menuitem.connect("activate", lambda w: self.clipboard.set_text(self.get_text(), True))
 
 			menu.insert(menuitem, 2)
 
@@ -214,7 +214,7 @@ class PasswordLabel(EventBox):
 			menu = Menu()
 
 			menuitem = ImageMenuItem(gtk.stock.STOCK_COPY, _('Copy password'))
-			menuitem.connect("activate", lambda w: self.clipboard.set(self.password, True))
+			menuitem.connect("activate", lambda w: self.clipboard.set_text(self.password, True))
 			menu.append(menuitem)
 
 			menu.show_all()
