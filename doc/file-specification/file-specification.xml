@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook V5.0//EN"
+	"http://www.oasis-open.org/docbook/xml/5.0/docbookx.dtd" [
+
+	<!ENTITY email-erikg		"erikg@codepoet.no">
+	<!ENTITY url-revelation		"http://oss.codepoet.no/revelation/">
+
+	<!ENTITY ch-accounttypes	SYSTEM "accounttypes.xml">
+	<!ENTITY ch-encryption		SYSTEM "encryption.xml">
+	<!ENTITY ch-intro		SYSTEM "intro.xml">
+	<!ENTITY ch-xml			SYSTEM "xml.xml">
+]>
+
+<article>
+	<title>Revelation File Format 1.0 Specification DRAFT</title>
+
+	<articleinfo>
+
+		<author>
+			<firstname>Erik</firstname>
+			<surname>Grinaker</surname>
+			<email>&email-erikg;</email>
+		</author>
+
+		<copyright>
+			<year>2006</year>
+			<holder>Erik Grinaker</holder>
+		</copyright>
+
+		<abstract><para>
+			This document specifies a file format used for storing authentication
+			information. The format is primarily intended for use in the Revelation
+			password manager, but it may be of interest to other projects as
+			well.
+		</para></abstract>
+	</articleinfo>
+
+	&ch-intro;
+	&ch-xml;
+	&ch-encryption;
+	&ch-accounttypes;
+</article>
+
