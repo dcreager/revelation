@@ -53,6 +53,7 @@ env.Install("$python_libdir/$package/bundle", source_bundle + bundle)
 # handle library
 source_lib = env.Substitute("lib/config.py.in") + [
 	"lib/__init__.py",
+	"lib/account.py",
 	"lib/data.py",
 	"lib/dialog.py",
 	"lib/entry.py",

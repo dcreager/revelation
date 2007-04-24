@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 
-import config, data, entry, io, stock, shinygnome.ui, shinygnome.util, util
+import account, config, data, entry, io, stock, shinygnome.ui, shinygnome.util, util
 
 import gettext, gtk, gtk.gdk, time
 
@@ -255,100 +255,129 @@ class PasswordLabel(EventBox):
 
 
 
-##### ENTRY WIDGETS #####
+##### ACCOUNT WIDGETS #####
 
-class EntryDropDown(SimpleComboBox):
-	"An entry type dropdown"
+class AccountList(shinygnome.ui.TreeView):
+	"An account list"
 
-	def __init__(self):
-		SimpleComboBox.__init__(self, True)
+	def __init__(self, accountstore):
+		shinygnome.ui.TreeView.__init__(self, accountstore)
 
-		for e in entry.ENTRYLIST:
-			if e != entry.FolderEntry:
-				self.append_item(e().typename, e().icon, e)
+		cr_icon	= shinygnome.ui.CellRendererPixbuf(stock_size = gtk.ICON_SIZE_MENU)
+		cr_name	= shinygnome.ui.CellRendererText()
+
+		column = shinygnome.ui.TreeViewColumn(None)
+		column.pack_start(cr_icon, False)
+		column.pack_start(cr_name)
+		column.add_attribute(cr_icon, "stock-id", 0)
+		column.add_attribute(cr_name, "text", 1)
+		self.append_column(column)
 
 
-	def get_active_type(self):
-		"Get the currently active type"
+
+class AccountTypeDropdown(shinygnome.ui.SimpleComboBox):
+	"An account type dropdown"
+
+	def __init__(self, accounttypes):
+		shinygnome.ui.SimpleComboBox.__init__(self, True)
+
+		for accounttype in accounttypes:
+			self.append_item(accounttype.name, accounttype.icon, accounttype)
+
+
+	def get_active_accounttype(self):
+		"Returns the currently active accounttype"
 
 		item = self.get_active_item()
 
-		if item is not None:
-			return item[2]
+		if item:
+			return item[-1]
 
 
-	def set_active_type(self, entrytype):
-		"Set the active type"
+	def set_active_accounttype(self, accounttype):
+		"Sets the active accounttype"
 
 		for i in range(self.model.iter_n_children(None)):
 			iter = self.model.iter_nth_child(None, i)
 
-			if self.model.get_value(iter, 2) == entrytype:
+			if self.model.get_value(iter, 2) == accounttype:
 				self.set_active(i)
 
 
 
-class EntryTree(TreeView):
-	"An entry tree"
+class AccountView(VBox):
+	"An account display widget"
 
-	def __init__(self, entrystore):
-		TreeView.__init__(self, entrystore)
+	def __init__(self, account = None):
+		VBox.__init__(self)
+		self.set_spacing(12)
+		self.set_border_width(12)
 
-		column = gtk.TreeViewColumn()
-		self.append_column(column)
+		self.account = None
 
-		cr = gtk.CellRendererPixbuf()
-		column.pack_start(cr, False) 
-		column.add_attribute(cr, "stock-id", data.COLUMN_ICON)
-		cr.set_property("stock-size", gtk.ICON_SIZE_MENU)
-
-		cr = gtk.CellRendererText()
-		column.pack_start(cr, True)
-		column.add_attribute(cr, "text", data.COLUMN_NAME)
-
-		self.connect("doubleclick", self.__cb_doubleclick)
-		self.connect("row-expanded", self.__cb_row_expanded)
-		self.connect("row-collapsed", self.__cb_row_collapsed)
+		if account:
+			self.display(account)
 
 
-	def __cb_doubleclick(self, widget, iter):
-		"Stop doubleclick emission on folder"
+	def clear(self):
+		"Clears the account view"
 
-		if type(self.model.get_entry(iter)) == entry.FolderEntry:
-			self.stop_emission("doubleclick")
+		self.account = None
 
-
-	def __cb_row_collapsed(self, object, iter, extra):
-		"Updates folder icons when collapsed"
-
-		self.model.folder_expanded(iter, False)
+		VBox.clear(self)
 
 
-	def __cb_row_expanded(self, object, iter, extra):
-		"Updates folder icons when expanded"
+	def display(self, acct):
+		"Displays an account"
 
-		# make sure all children are collapsed (some may have lingering expand icons)
-		for i in range(self.model.iter_n_children(iter)):
-			child = self.model.iter_nth_child(iter, i)
+		self.clear()
 
-			if self.row_expanded(self.model.get_path(child)) == False:
-				self.model.folder_expanded(child, False)
-
-		self.model.folder_expanded(iter, True)
-
-
-	def set_model(self, model):
-		"Sets the model displayed by the tree view"
-
-		TreeView.set_model(self, model)
-
-		if model is None:
+		if not acct:
 			return
 
-		for i in range(model.iter_n_children(None)):
-			model.folder_expanded(model.iter_nth_child(None, i), False)
+		self.account = acct
+
+		# set up metadata display
+		metabox = VBox(
+			Alignment(ImageLabel(
+				"<span size=\"large\" weight=\"bold\">%s</span>" % shinygnome.util.text.escape_markup(acct.name),
+				acct.accounttype.icon, gtk.ICON_SIZE_LARGE_TOOLBAR
+			)),
+			Label(
+				"<span weight=\"bold\">%s%s</span>%s" % (
+					shinygnome.util.text.escape_markup(acct.accounttype.name),
+					acct.description != "" and ": " or "",
+					shinygnome.util.text.escape_markup(acct.description)
+				), gtk.JUSTIFY_CENTER
+			)
+		)
+
+		self.pack_start(Alignment(metabox), False, False)
+
+		# set up field display
+		fields = [ field for field in acct.fields if field.value != "" ]
+
+		if fields:
+			table = Table(2, len(fields))
+			self.pack_start(Alignment(table))
+
+			for rowindex, field in zip(range(len(fields)), fields):
+				table.attach(Label("<span weight=\"bold\">%s:</span>" % shinygnome.util.text.escape_markup(field.name)), 0, rowindex)
+				table.attach(field.get_display_widget(), 1, rowindex)
+
+		# display modified time
+		self.pack_start(Alignment(Label(
+			_("Updated %s ago\n%s") % (
+				util.time_period_rough(acct.modified, time.time()),
+				time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(acct.modified))
+			), gtk.JUSTIFY_CENTER
+		)))
+
+		self.show_all()
 
 
+
+##### ENTRY WIDGETS #####
 
 class EntryView(VBox):
 	"A component for displaying an entry"
@@ -432,14 +461,14 @@ class Searchbar(Toolbar):
 
 		self.label		= Label("  " + _('  Find:') + " ")
 		self.entry		= Entry()
-		self.dropdown		= EntryDropDown()
-		self.dropdown.insert_item(0, _('Any type'), "gnome-stock-about")
+		#self.dropdown		= EntryDropDown()
+		#self.dropdown.insert_item(0, _('Any type'), "gnome-stock-about")
 		self.button_next	= ToolButton(stock.STOCK_NEXT, important = True)
 		self.button_prev	= ToolButton(stock.STOCK_PREVIOUS, important = True)
 
 		self.append(ToolItem(self.label))
 		self.append(ToolItem(self.entry), _('Text to search for'))
-		self.append(ToolItem(EventBox(self.dropdown)), _('The type of account to search for'))
+		#self.append(ToolItem(EventBox(self.dropdown)), _('The type of account to search for'))
 		self.append(SeparatorToolItem())
 		self.append(self.button_next, _('Find the next match'))
 		self.append(self.button_prev, _('Find the previous match'))
@@ -482,46 +511,4 @@ class Searchbar(Toolbar):
 		self.set_style(gtk.TOOLBAR_BOTH_HORIZ)
 		self.entry.select_region(0, -1)
 		self.entry.grab_focus()
-
-
-
-##### FUNCTIONS #####
-
-def generate_field_display_widget(field, cfg = None, userdata = None):
-	"Generates a widget for displaying a field value"
-
-	if field.datatype == entry.DATATYPE_EMAIL:
-		widget = LinkButton("mailto:%s" % field.value, shinygnome.util.text.escape_markup(field.value))
-
-	elif field.datatype == entry.DATATYPE_PASSWORD:
-		widget = PasswordLabel(shinygnome.util.text.escape_markup(field.value), cfg, userdata)
-
-	elif field.datatype == entry.DATATYPE_URL:
-		widget = LinkButton(field.value, shinygnome.util.text.escape_markup(field.value))
-
-	else:
-		widget = Label(shinygnome.util.text.escape_markup(field.value))
-		widget.set_selectable(True)
-
-	return widget
-
-
-def generate_field_edit_widget(field, cfg = None, userdata = None):
-	"Generates a widget for editing a field"
-
-	if type(field) == entry.PasswordField:
-		widget = PasswordEntryGenerate(None, cfg, userdata)
-
-	elif type(field) == entry.UsernameField:
-		widget = SimpleComboBoxEntry(userdata)
-
-	elif field.datatype == entry.DATATYPE_PASSWORD:
-		widget = PasswordEntry(None, cfg, userdata)
-
-	else:
-		widget = Entry()
-
-	widget.set_text(field.value)
-
-	return widget
 

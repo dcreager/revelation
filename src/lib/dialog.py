@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 
-import config, datahandler, entry, stock, ui, util
+import account, config, datahandler, entry, stock, ui, util
 import shinygnome.ui, shinygnome.util
 
 import gettext, gtk
@@ -454,6 +454,90 @@ class PasswordSave(Password):
 
 				self.destroy()
 				return password
+
+
+##### ACCOUNT DIALOGS #####
+
+class AccountEdit(Utility):
+	"A dialog for editing account"
+
+	def __init__(self, parent, title, accounttypes, acct = None):
+		Utility.__init__(self, parent, title, (
+			( gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL ),
+			( acct and stock.STOCK_UPDATE or stock.STOCK_CREATE, gtk.RESPONSE_OK )
+		))
+
+		self.accounttypes	= accounttypes
+
+		# set up the meta inputbox
+		self.input_meta		= self.add_inputbox(title)
+
+		self.entry_name		= ui.Entry()
+		self.entry_name.set_width_chars(50)
+		self.entry_desc		= ui.Entry()
+		self.entry_tags		= ui.Entry()
+		self.dropdown		= ui.AccountTypeDropdown(self.accounttypes)
+		self.dropdown.connect("changed", lambda w: self.__setup_fields(self.dropdown.get_active_accounttype().fields))
+
+		self.input_meta.add(self.entry_name, _('Name'))
+		self.input_meta.add(self.entry_desc, _('Description'))
+		self.input_meta.add(self.entry_tags, _('Tags'))
+		self.input_meta.add(self.dropdown, _('Account Type'))
+
+		self.tooltips.set_tip(self.entry_name, _('The name of the account'))
+		self.tooltips.set_tip(self.entry_desc, _('A description of the account'))
+		self.tooltips.set_tip(self.entry_tags, _('A list of comma-separated keywords for the account'))
+		self.tooltips.set_tip(self.dropdown, _('The type of account'))
+
+		# set up the field inputbox
+		self.input_fields	= self.add_inputbox(_('Account Data'))
+
+
+	def __setup_fields(self, fields):
+		"Generates a field section based on a field list"
+
+		self.input_fields.clear()
+
+		for field in fields:
+			self.input_fields.add(field.get_edit_widget(), field.name)
+
+		self.input_fields.show_all()
+
+
+	def get_account(self):
+		"Creates an account from the dialog contents"
+
+		acct			= account.Account(self.dropdown.get_active_accounttype())
+		acct.name		= self.entry_name.get_text()
+		acct.description	= self.entry_desc.get_text()
+
+		acct.tags.from_string(self.entry_tags.get_text())
+
+		for field, editor in zip(self.dropdown.get_active_accounttype().fields, self.input_fields.get_widgets()):
+			acct.fields.append(account.Field(field.name, editor.get_text(), field.datatype, field.description))
+
+		return acct
+
+
+	def run(self):
+		"Runs the dialog"
+
+		while True:
+			self.show_all()
+
+			if Utility.run(self) != gtk.RESPONSE_OK:
+				self.destroy()
+				raise CancelError
+
+			acct = self.get_account()
+
+			if acct.name == "":
+				Error(self, _('No name'), _('You must enter a name for the account')).run()
+				continue
+
+			self.destroy()
+
+			return acct
 
 
 

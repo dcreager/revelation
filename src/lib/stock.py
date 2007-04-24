@@ -31,6 +31,7 @@ _ = gettext.gettext
 
 
 STOCK_CONTINUE			= "revelation-continue"
+STOCK_CREATE			= "revelation-create"
 STOCK_DISCARD			= "revelation-discard"
 STOCK_EDIT			= "revelation-edit"
 STOCK_EXPORT			= "revelation-export"
@@ -39,8 +40,6 @@ STOCK_GENERATE			= "revelation-generate"
 STOCK_IMPORT			= "revelation-import"
 STOCK_GOTO			= "revelation-goto"
 STOCK_LOCK			= "revelation-lock"
-STOCK_NEW_ENTRY			= "revelation-new-entry"
-STOCK_NEW_FOLDER		= "revelation-new-folder"
 STOCK_NEXT			= "revelation-next"
 STOCK_PASSWORD_CHANGE		= "revelation-password-change"
 STOCK_PASSWORD_CHECK		= "revelation-password-check"
@@ -56,18 +55,8 @@ STOCK_UPDATE			= "revelation-update"
 STOCK_WARNING			= "revelation-warning"
 
 
-STOCK_ENTRY_FOLDER		= "revelation-account-folder"
-STOCK_ENTRY_FOLDER_OPEN		= "revelation-account-folder-open"
-STOCK_ENTRY_CREDITCARD		= "revelation-account-creditcard"
-STOCK_ENTRY_CRYPTOKEY		= "revelation-account-cryptokey"
-STOCK_ENTRY_DATABASE		= "revelation-account-database"
-STOCK_ENTRY_DOOR		= "revelation-account-door"
-STOCK_ENTRY_EMAIL		= "revelation-account-email"
-STOCK_ENTRY_FTP			= "revelation-account-ftp"
-STOCK_ENTRY_GENERIC		= "revelation-account-generic"
-STOCK_ENTRY_PHONE		= "revelation-account-phone"
-STOCK_ENTRY_SHELL		= "revelation-account-shell"
-STOCK_ENTRY_WEBSITE		= "revelation-account-website"
+STOCK_ACCOUNT_GENERIC		= "revelation-account-generic"
+STOCK_ACCOUNT_WEB		= "revelation-account-web"
 
 STOCK_REVELATION		= "revelation-revelation"
 STOCK_REVELATION_LOCKED		= "revelation-revelation-locked"
@@ -86,22 +75,13 @@ ICON_SIZE_TREEVIEW		= gtk.ICON_SIZE_MENU
 STOCK_ICONS			= (
 	( STOCK_REVELATION,		"revelation" ),
 	( STOCK_REVELATION_LOCKED,	"revelation-locked" ),
-	( STOCK_ENTRY_CREDITCARD,	"stock_creditcard" ),
-	( STOCK_ENTRY_CRYPTOKEY,	"stock_keyring" ),
-	( STOCK_ENTRY_DATABASE,		"stock_data-sources" ),
-	( STOCK_ENTRY_DOOR,		"stock_exit" ),
-	( STOCK_ENTRY_EMAIL,		"stock_mail" ),
-	( STOCK_ENTRY_FTP,		"system-file-manager" ),
-	( STOCK_ENTRY_GENERIC,		"stock_lock" ),
-	( STOCK_ENTRY_PHONE,		"stock_cell-phone" ),
-	( STOCK_ENTRY_SHELL,		"gnome-terminal" ),
-	( STOCK_ENTRY_WEBSITE,		"stock_hyperlink-toolbar" ),
-	( STOCK_ENTRY_FOLDER,		"stock_folder" ),
-	( STOCK_ENTRY_FOLDER_OPEN,	"stock_folder" ),
+	( STOCK_ACCOUNT_GENERIC,	"stock_lock" ),
+	( STOCK_ACCOUNT_WEB,		"stock_hyperlink-toolbar" ),
 )
 
 STOCK_ITEMS = (
 	( STOCK_CONTINUE,		_('_Continue'),			"stock_test-mode" ),
+	( STOCK_CREATE,			_('_Create Account'),		gtk.STOCK_NEW ),
 	( STOCK_DISCARD,		_('_Discard'),			gtk.STOCK_DELETE ),
 	( STOCK_EDIT,			_('_Edit'),			"stock_edit" ),
 	( STOCK_EXPORT,			_('_Export'),			gtk.STOCK_EXECUTE ),
@@ -110,8 +90,6 @@ STOCK_ITEMS = (
 	( STOCK_GOTO,			_('_Go to'),			gtk.STOCK_JUMP_TO ),
 	( STOCK_IMPORT,			_('_Import'),			gtk.STOCK_CONVERT ),
 	( STOCK_LOCK,			_('_Lock'),			"stock_lock" ),
-	( STOCK_NEW_ENTRY,		_('_Add Entry'),		gtk.STOCK_ADD ),
-	( STOCK_NEW_FOLDER,		_('_Add Folder'),		"stock_folder" ),
 	( STOCK_NEXT,			_('Next'),			gtk.STOCK_GO_DOWN ),
 	( STOCK_PASSWORD_CHANGE,	_('_Change'),			"stock_lock-ok" ),
 	( STOCK_PASSWORD_CHECK,		_('_Check'),			"stock_lock-ok" ),

@@ -30,7 +30,7 @@ if "$python_libdir$" not in sys.path:
 if "$python_libdir$/$package$" not in sys.path:
 	sys.path.append("$python_libdir$/$package$")
 
-from revelation import config, data, datahandler, dialog, entry, io, stock, ui, util
+from revelation import account, config, data, datahandler, dialog, entry, io, stock, ui, util
 import shinygnome.io, shinygnome.util
 
 _ = gettext.gettext
@@ -95,7 +95,7 @@ class Revelation(ui.App):
 		group.add_action(action, "<Control>V")
 
 		action	= ui.Action("entry-goto",	_('_Go to'),		_('Go to the selected entries'),		"revelation-goto",	True)
-		action.connect("activate",		lambda w: self.entry_goto(self.tree.get_selected()))
+		action.connect("activate",		lambda w: self.entry_goto(self.accountlist.get_selected()))
 		group.add_action(action, "<Shift><Control>Return")
 
 		action	= ui.Action("redo",		_('_Redo'),		_('Redo the previously undone action'),		"gtk-redo")
@@ -115,7 +115,7 @@ class Revelation(ui.App):
 		group.add_action(action, "<Control>C")
 
 		action	= ui.Action("clip-chain",	_('_Copy Pass_word'),	_('Copy password to the clipboard'))
-		action.connect("activate",		lambda w: self.clip_chain(self.entrystore.get_entry(self.tree.get_active())))
+		action.connect("activate",		lambda w: self.clip_chain(self.entrystore.get_entry(self.accountlist.get_active())))
 		group.add_action(action, "<Shift><Control>C")
 
 		action	= ui.Action("clip-cut",		_('Cu_t'),		_('Cut selected entries to the clipboard'),	"gtk-cut")
@@ -123,27 +123,23 @@ class Revelation(ui.App):
 		group.add_action(action, "<Control>X")
 
 		action	= ui.Action("entry-remove",	_('Re_move'),		_('Remove the selected entries'),		"revelation-remove")
-		action.connect("activate",		lambda w: self.entry_remove(self.tree.get_selected()))
+		action.connect("activate",		lambda w: self.entry_remove(self.accountlist.get_selected()))
 		group.add_action(action, "<Control>Delete")
 
 		# action group for "optional" entries
 		group	= ui.ActionGroup("entry-optional")
 		self.uimanager.append_action_group(group)
 
-		action	= ui.Action("entry-add",	_('_Add Entry...'),	_('Create a new entry'),			"revelation-new-entry",		True)
-		action.connect("activate",		lambda w: self.entry_add(None, self.tree.get_active()))
+		action	= ui.Action("account-create",	_('_Create Account...'),	_('Create a new account'),		stock.STOCK_CREATE,	True)
+		action.connect("activate",		lambda w: self.account_create())
 		group.add_action(action, "<Control>Insert")
-
-		action	= ui.Action("entry-folder",	_('Add _Folder...'),	_('Create a new folder'),			"revelation-new-folder")
-		action.connect("activate",		lambda w: self.entry_folder(None, self.tree.get_active()))
-		group.add_action(action, "<Shift><Control>Insert")
 
 		# action group for single entries
 		group	= ui.ActionGroup("entry-single")
 		self.uimanager.append_action_group(group)
 
 		action	= ui.Action("entry-edit",	_('_Edit...'),		_('Edit the selected entry'),			"revelation-edit")
-		action.connect("activate",		lambda w: self.entry_edit(self.tree.get_active()))
+		action.connect("activate",		lambda w: self.entry_edit(self.accountlist.get_active()))
 		group.add_action(action, "<Control>Return")
 
 		# action group for existing file
@@ -227,11 +223,11 @@ class Revelation(ui.App):
 		group.add_action(action, "<Control>Q")
 
 		action	= ui.Action("select-all",	_('_Select All'),	_('Selects all entries'))
-		action.connect("activate",		lambda w: self.tree.select_all())
+		action.connect("activate",		lambda w: self.accountlist.select_all())
 		group.add_action(action, "<Control>A")
 
 		action	= ui.Action("select-none",	_('_Deselect All'),	_('Deselects all entries'))
-		action.connect("activate",		lambda w: self.tree.unselect_all())
+		action.connect("activate",		lambda w: self.accountlist.unselect_all())
 		group.add_action(action, "<Shift><Control>A")
 
 		action	= ui.ToggleAction("view-passwords",	_('Show _Passwords'),	_('Toggle display of passwords'))
@@ -250,16 +246,29 @@ class Revelation(ui.App):
 	def __init_facilities(self):
 		"Sets up various facilities"
 
+		self.accountstore	= account.AccountStore()
+		self.accounttypes	= account.Types()
 		self.clipboard		= data.Clipboard()
 		self.config		= config.Config("/apps/revelation")
 		self.datafile		= io.DataFile(datahandler.Revelation)
 		self.entryclipboard	= data.EntryClipboard()
-		self.entrystore		= data.EntryStore()
-		self.entrysearch	= data.EntrySearch(self.entrystore)
+		#self.entrysearch	= data.EntrySearch(self.entrystore)
 		self.items		= stock.StockFactory(self, config.DIR_ICONS)
 		self.locktimer		= data.Timer()
 		self.sessionclient	= gnome.ui.master_client()
 		self.undoqueue		= data.UndoQueue()
+
+		at = account.Type("revelation-generic", _('Generic'), stock.STOCK_ACCOUNT_GENERIC, _('A generic account'))
+		at.fields.append(account.Field(_('Hostname'), "", account.DATATYPE_HOSTNAME))
+		at.fields.append(account.Field(_('Username'), "", account.DATATYPE_USERID))
+		at.fields.append(account.Field(_('Password'), "", account.DATATYPE_SECRET))
+		self.accounttypes.append(at)
+
+		at = account.Type("revelation-web", _('Website'), stock.STOCK_ACCOUNT_WEB, _('A website account'))
+		at.fields.append(account.Field(_('URL'), "", account.DATATYPE_URL))
+		at.fields.append(account.Field(_('Username'), "", account.DATATYPE_USERID))
+		at.fields.append(account.Field(_('Password'), "", account.DATATYPE_SECRET))
+		self.accounttypes.append(at)
 
 		self.datafile.connect("changed", lambda w,f: self.__state_file(f))
 		self.datafile.connect("content-changed", self.__cb_file_content_changed)
@@ -317,8 +326,8 @@ class Revelation(ui.App):
 
 
 		# set some variables
-		self.entrysearch.string	= ''
-		self.entrysearch.type	= None
+		#self.entrysearch.string	= ''
+		#self.entrysearch.type	= None
 
 		# set ui widget states
 		self.__state_clipboard(self.entryclipboard.has_text())
@@ -373,11 +382,11 @@ class Revelation(ui.App):
 		self.add_toolbar(self.searchbar, "searchbar", 2, detachable)
 
 		# set up main application widgets
-		self.tree = ui.EntryTree(self.entrystore)
-		self.scrolledwindow = ui.ScrolledWindow(self.tree)
+		self.accountlist = ui.AccountList(self.accountstore)
+		self.scrolledwindow = ui.ScrolledWindow(self.accountlist)
 
-		self.entryview = ui.EntryView(self.config, self.clipboard)
-		alignment = ui.Alignment(self.entryview, 0.5, 0.5, 1, 0)
+		self.accountview = ui.AccountView()
+		alignment = ui.Alignment(self.accountview, 0.5, 0.5, 1, 0)
 
 		self.hpaned = ui.HPaned(self.scrolledwindow, alignment)
 		self.set_contents(self.hpaned)
@@ -386,21 +395,17 @@ class Revelation(ui.App):
 		self.drag_dest_set(gtk.DEST_DEFAULT_ALL, ( ( "text/uri-list", 0, 0 ), ), gtk.gdk.ACTION_COPY | gtk.gdk.ACTION_MOVE | gtk.gdk.ACTION_LINK )
 		self.connect("drag_data_received", self.__cb_drag_dest)
 
-		self.tree.enable_model_drag_source(gtk.gdk.BUTTON1_MASK, ( ( "revelation/treerow", gtk.TARGET_SAME_APP | gtk.TARGET_SAME_WIDGET, 0), ), gtk.gdk.ACTION_MOVE)
-		self.tree.enable_model_drag_dest(( ( "revelation/treerow", gtk.TARGET_SAME_APP | gtk.TARGET_SAME_WIDGET, 0), ), gtk.gdk.ACTION_MOVE)
-		self.tree.connect("drag_data_received", self.__cb_tree_drag_received)
-
 		# set up callbacks
 		self.searchbar.connect("key-press-event", self.__cb_searchbar_key_press)
 		self.searchbar.button_next.connect("clicked", self.__cb_searchbar_button_clicked, data.SEARCH_NEXT)
 		self.searchbar.button_prev.connect("clicked", self.__cb_searchbar_button_clicked, data.SEARCH_PREVIOUS)
 		self.searchbar.entry.connect("changed", lambda w: self.__state_find(self.searchbar.entry.get_text()))
 
-		self.tree.connect("popup", lambda w,d: self.popup(self.uimanager.get_widget("/popup-tree"), d.button, d.time))
-		self.tree.connect("doubleclick", self.__cb_tree_doubleclick)
-		self.tree.connect("key-press-event", self.__cb_tree_keypress)
-		self.tree.selection.connect("changed", lambda w: self.entryview.display_entry(self.entrystore.get_entry(self.tree.get_active())))
-		self.tree.selection.connect("changed", lambda w: self.__state_entry(self.tree.get_selected()))
+		self.accountlist.connect("popup", lambda w,d: self.popup(self.uimanager.get_widget("/popup-tree"), d.button, d.time))
+		#self.accountlist.connect("doubleclick", self.__cb_tree_doubleclick)
+		#self.accountlist.connect("key-press-event", self.__cb_tree_keypress)
+		self.accountlist.selection.connect("changed", lambda w: self.accountview.display(self.accountstore.get_account(self.accountlist.get_active())))
+		#self.accountlist.selection.connect("changed", lambda w: self.__state_entry(self.accountlist.get_selected()))
 
 
 
@@ -521,8 +526,8 @@ class Revelation(ui.App):
 
 		focuswidget = self.get_focus()
 
-		if focuswidget is self.tree:
-			self.clip_copy(self.tree.get_selected())
+		if focuswidget is self.accountlist:
+			self.clip_copy(self.accountlist.get_selected())
 
 		elif isinstance(focuswidget, gtk.Label) or isinstance(focuswidget, gtk.Entry):
 			focuswidget.emit("copy-clipboard")
@@ -533,8 +538,8 @@ class Revelation(ui.App):
 
 		focuswidget = self.get_focus()
 
-		if focuswidget is self.tree:
-			self.clip_cut(self.tree.get_selected())
+		if focuswidget is self.accountlist:
+			self.clip_cut(self.accountlist.get_selected())
 
 		elif isinstance(focuswidget, gtk.Entry):
 			focuswidget.emit("cut-clipboard")
@@ -545,8 +550,8 @@ class Revelation(ui.App):
 
 		focuswidget = self.get_focus()
 
-		if focuswidget is self.tree:
-			self.clip_paste(self.entryclipboard.get(), self.tree.get_active())
+		if focuswidget is self.accountlist:
+			self.clip_paste(self.entryclipboard.get(), self.accountlist.get_active())
 
 		elif isinstance(focuswidget, gtk.Entry):
 			focuswidget.emit("paste-clipboard")
@@ -661,75 +666,20 @@ class Revelation(ui.App):
 			self.entry_goto((iter,))
 
 
-	def __cb_tree_drag_received(self, tree, context, x, y, seldata, info, time):
-		"Callback for drag drops on the treeview"
-
-		# get source and destination data
-		sourceiters = self.entrystore.filter_parents(self.tree.get_selected())
-		destrow = self.tree.get_dest_row_at_pos(x, y)
-
-		if destrow is None:
-			destpath = ( self.entrystore.iter_n_children(None) - 1, )
-			pos = gtk.TREE_VIEW_DROP_AFTER
-
-		else:
-			destpath, pos = destrow
-
-		destiter = self.entrystore.get_iter(destpath)
-		destpath = self.entrystore.get_path(destiter)
-
-		# avoid drops to current iter or descentants
-		for sourceiter in sourceiters:
-			sourcepath = self.entrystore.get_path(sourceiter)
-
-			if self.entrystore.is_ancestor(sourceiter, destiter) == True or sourcepath == destpath:
-				context.finish(False, False, long(time))
-				return
-
-			elif pos == gtk.TREE_VIEW_DROP_BEFORE and sourcepath[:-1] == destpath[:-1] and sourcepath[-1] == destpath[-1] - 1:
-				context.finish(False, False, long(time))
-				return
-
-			elif pos == gtk.TREE_VIEW_DROP_AFTER and sourcepath[:-1] == destpath[:-1] and sourcepath[-1] == destpath[-1] + 1:
-				context.finish(False, False, long(time))
-				return
-
-
-		# move the entries
-		if pos in ( gtk.TREE_VIEW_DROP_INTO_OR_BEFORE, gtk.TREE_VIEW_DROP_INTO_OR_AFTER):
-			parent = destiter
-			sibling = None
-
-		elif pos == gtk.TREE_VIEW_DROP_BEFORE:
-			parent = self.entrystore.iter_parent(destiter)
-			sibling = destiter
-
-		elif pos == gtk.TREE_VIEW_DROP_AFTER:
-			parent = self.entrystore.iter_parent(destiter)
-
-			sibpath = list(destpath)
-			sibpath[-1] += 1
-			sibling = self.entrystore.get_iter(sibpath)
-
-		self.entry_move(sourceiters, parent, sibling)
-
-		context.finish(False, False, long(time))
-
-
 	def __cb_tree_keypress(self, widget, data = None):
 		"Handles key presses for the tree"
 
 		# return
 		if data.keyval == 65293:
-			self.entry_edit(self.tree.get_active())
+			self.entry_edit(self.accountlist.get_active())
 
 		# insert
 		elif data.keyval == 65379:
-			self.entry_add(None, self.tree.get_active())
+			self.account_create()
 
 		# delete
 		elif data.keyval == 65535:
-			self.entry_remove(self.tree.get_selected())
+			self.entry_remove(self.accountlist.get_selected())
 
 
 
@@ -774,7 +724,7 @@ class Revelation(ui.App):
 		sibling = self.entrystore.get_iter(path)
 
 		iter = self.entrystore.add_entry(e, parent, sibling)
-		self.tree.select(iter)
+		self.accountlist.select(iter)
 
 
 	def __cb_redo_edit(self, name, actiondata):
@@ -784,7 +734,7 @@ class Revelation(ui.App):
 		iter = self.entrystore.get_iter(path)
 
 		self.entrystore.update_entry(iter, postentry)
-		self.tree.select(iter)
+		self.accountlist.select(iter)
 
 
 	def __cb_redo_import(self, name, actiondata):
@@ -817,7 +767,7 @@ class Revelation(ui.App):
 			newiters.append(newiter)
 
 		if len(newiters) > 0:
-			self.tree.select(newiters[0])
+			self.accountlist.select(newiters[0])
 
 
 	def __cb_redo_paste(self, name, actiondata):
@@ -827,7 +777,7 @@ class Revelation(ui.App):
 		iters = self.entrystore.import_entry(entrystore, None, self.entrystore.get_iter(parentpath))
 
 		if len(iters) > 0:
-			self.tree.select(iters[0])
+			self.accountlist.select(iters[0])
 
 
 	def __cb_redo_remove(self, name, actiondata):
@@ -840,7 +790,7 @@ class Revelation(ui.App):
 		for iter in iters:
 			self.entrystore.remove_entry(iter)
 
-		self.tree.unselect_all()
+		self.accountlist.unselect_all()
 
 
 	def __cb_undo_add(self, name, actiondata):
@@ -849,7 +799,7 @@ class Revelation(ui.App):
 		path, e = actiondata
 
 		self.entrystore.remove_entry(self.entrystore.get_iter(path))
-		self.tree.unselect_all()
+		self.accountlist.unselect_all()
 
 
 	def __cb_undo_edit(self, name, actiondata):
@@ -859,7 +809,7 @@ class Revelation(ui.App):
 		iter = self.entrystore.get_iter(path)
 
 		self.entrystore.update_entry(iter, preentry)
-		self.tree.select(iter)
+		self.accountlist.select(iter)
 
 
 	def __cb_undo_import(self, name, actiondata):
@@ -871,7 +821,7 @@ class Revelation(ui.App):
 		for iter in iters:
 			self.entrystore.remove_entry(iter)
 
-		self.tree.unselect_all()
+		self.accountlist.unselect_all()
 
 
 	def __cb_undo_move(self, name, actiondata):
@@ -900,7 +850,7 @@ class Revelation(ui.App):
 			newiters.append(newiter)
 
 		if len(newiters) > 0:
-			self.tree.select(newiters[-1])
+			self.accountlist.select(newiters[-1])
 
 
 	def __cb_undo_paste(self, name, actiondata):
@@ -912,7 +862,7 @@ class Revelation(ui.App):
 		for iter in iters:
 			self.entrystore.remove_entry(iter)
 
-		self.tree.unselect_all()
+		self.accountlist.unselect_all()
 
 
 	def __cb_undo_remove(self, name, actiondata):
@@ -926,7 +876,7 @@ class Revelation(ui.App):
 			iter = self.entrystore.import_entry(entrystore, entrystore.iter_nth_child(None, 0), parent, sibling)
 			iters.append(iter)
 
-		self.tree.select(iters[0])
+		self.accountlist.select(iters[0])
 
 
 
@@ -935,10 +885,10 @@ class Revelation(ui.App):
 	def __entry_find(self, parent, string, entrytype, direction = data.SEARCH_NEXT):
 		"Searches for an entry"
 
-		match = self.entrysearch.find(string, entrytype, self.tree.get_active(), direction)
+		match = self.entrysearch.find(string, entrytype, self.accountlist.get_active(), direction)
 
 		if match != None:
-			self.tree.select(match)
+			self.accountlist.select(match)
 			self.statusbar.set(_('Match found for \'%s\'') % string)
 
 		else:
@@ -1007,7 +957,7 @@ class Revelation(ui.App):
 			list.append(e[entry.UsernameField])
 
 		list.append(pwd.getpwuid(os.getuid())[0])
-		list.extend(self.entrystore.get_popular_values(entry.UsernameField, 3))
+		#list.extend(self.entrystore.get_popular_values(entry.UsernameField, 3))
 
 		list = {}.fromkeys(list).keys()
 		list.sort()
@@ -1022,6 +972,30 @@ class Revelation(ui.App):
 		"Displays the about dialog"
 
 		dialog.unique(dialog.About, self).run()
+
+
+	def account_create(self):
+		"Creates an account"
+
+		try:
+			d = dialog.AccountEdit(self, _('Create Account'), self.accounttypes)
+			#d.set_fieldwidget_data(entry.UsernameField, self.__get_common_usernames())
+			acct = d.run()
+
+			iter = self.accountstore.add_account(acct)
+
+			#self.undoqueue.add_action(
+			#	_('Add entry'), self.__cb_undo_add, self.__cb_redo_add,
+			#	( self.entrystore.get_path(iter), e.copy() )
+			#)
+
+			#self.__file_autosave()
+			self.accountlist.select(iter)
+			self.statusbar.set(_('Account created'))
+
+		except dialog.CancelError:
+			self.statusbar.set(_('Create account cancelled'))
+
 
 
 	def clip_chain(self, e):
@@ -1075,7 +1049,7 @@ class Revelation(ui.App):
 
 		self.__file_autosave()
 
-		self.tree.unselect_all()
+		self.accountlist.unselect_all()
 		self.statusbar.set(_('Entries cut'))
 
 
@@ -1085,7 +1059,7 @@ class Revelation(ui.App):
 		if entrystore == None:
 			return
 
-		parent = self.tree.get_active()
+		parent = self.accountlist.get_active()
 		iters = self.entrystore.import_entry(entrystore, None, parent)
 
 		paths = [ self.entrystore.get_path(iter) for iter in iters ]
@@ -1096,7 +1070,7 @@ class Revelation(ui.App):
 		)
 
 		if len(iters) > 0:
-			self.tree.select(iters[0])
+			self.accountlist.select(iters[0])
 
 		self.statusbar.set(_('Entries pasted'))
 
@@ -1118,7 +1092,7 @@ class Revelation(ui.App):
 			)
 
 			self.__file_autosave()
-			self.tree.select(iter)
+			self.accountlist.select(iter)
 			self.statusbar.set(_('Entry added'))
 
 		except dialog.CancelError:
@@ -1144,7 +1118,7 @@ class Revelation(ui.App):
 
 			n = d.run()
 			self.entrystore.update_entry(iter, n)
-			self.tree.select(iter)
+			self.accountlist.select(iter)
 
 			self.undoqueue.add_action(
 				_('Update entry'), self.__cb_undo_edit, self.__cb_redo_edit,
@@ -1181,7 +1155,7 @@ class Revelation(ui.App):
 			)
 
 			self.__file_autosave()
-			self.tree.select(iter)
+			self.accountlist.select(iter)
 			self.statusbar.set(_('Folder added'))
 
 		except dialog.CancelError:
@@ -1254,7 +1228,7 @@ class Revelation(ui.App):
 		)
 
 		if len(newiters) > 0:
-			self.tree.select(newiters[0])
+			self.accountlist.select(newiters[0])
 
 		self.__file_autosave()
 		self.statusbar.set(_('Entries moved'))
@@ -1288,7 +1262,7 @@ class Revelation(ui.App):
 				undoactions
 			)
 
-			self.tree.unselect_all()
+			self.accountlist.unselect_all()
 			self.__file_autosave()
 			self.statusbar.set(_('Entries removed'))
 
@@ -1377,12 +1351,12 @@ class Revelation(ui.App):
 		transients = [ window for window in gtk.window_list_toplevels() if window.get_transient_for() == self ]
 
 		# store current state
-		activeiter = self.tree.get_active()
+		activeiter = self.accountlist.get_active()
 		oldtitle = self.get_title()
 
 		# clear application contents
-		self.tree.set_model(None)
-		self.entryview.clear()
+		self.accountlist.set_model(None)
+		self.accountview.clear()
 		self.set_title('[' + _('Locked') + ']')
 		self.statusbar.set(_('File locked'))
 
@@ -1405,8 +1379,8 @@ class Revelation(ui.App):
 			self.quit()
 
 		# unlock the file and restore state
-		self.tree.set_model(self.entrystore)
-		self.tree.select(activeiter)
+		self.accountlist.set_model(self.entrystore)
+		self.accountlist.select(activeiter)
 		self.set_title(oldtitle)
 		self.statusbar.set(_('File unlocked'))
 
@@ -1437,7 +1411,7 @@ class Revelation(ui.App):
 		"Opens a data file"
 
 		try:
-			if self.entrystore.changed == True and dialog.FileChangesOpen(self).run() == True:
+			if self.accountstore.changed == True and dialog.FileChangesOpen(self).run() == True:
 				if self.file_save(self.datafile.get_file(), self.datafile.get_password()) == False:
 					raise dialog.CancelError
 
@@ -1508,7 +1482,7 @@ class Revelation(ui.App):
 		"Quits the application"
 
 		try:
-			if self.entrystore.changed == True and dialog.FileChangesQuit(self).run() == True:
+			if self.accountstore.changed == True and dialog.FileChangesQuit(self).run() == True:
 				if self.file_save(self.datafile.get_file(), self.datafile.get_password()) == False:
 					raise dialog.CancelError
 
