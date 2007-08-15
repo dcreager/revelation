@@ -30,17 +30,33 @@ import sys
 if "$python_libdir$" not in sys.path:
 	sys.path.insert(0, "$python_libdir$")
 
-import revelation
+from revelation import config, ui
 
 
 
-class Revelation:
+class Revelation(ui.App):
 	"The Revelation application"
 
 	def __init__(self):
 		os.umask(0077)
 
+		ui.App.__init__(self, config.NAME, sys.argv)
+
+		self.connect("delete-event", self.__cb_quit)
+
+
+	def __cb_quit(self, widget, data = None):
+		"Callback for quit"
+
+		self.quit()
+
+
+	def quit(self):
+		"Quits Revelation"
+
+		ui.App.quit(self)
+
 
 
 if __name__ == "__main__":
-	Revelation()
+	Revelation().run()

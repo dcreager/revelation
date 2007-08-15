@@ -30,11 +30,17 @@ VERSION			= "0.5.0"
 RELEASENAME		= "Unnamed"
 
 REQ_PYTHON_VERSION	= "2.5.0"
-REQ_PYTHON_MODULES	= []
+REQ_PYTHON_MODULES	= [ "bonobo", "gtk", "gnome", "gobject", "pango" ]
+REQ_PKGCONFIG_PACKAGES	= {
+	"pygtk-2.0"			: "2.8.0",
+	"gnome-python-2.0"		: "2.10.0",
+	"gnome-python-desktop-2.0"	: "2.10.0",
+	"gnome-python-extras-2.0"	: "2.10.0",
+}
 
 
 # set up sconsent
-sconsent.LoadTool("groff", "python", "xsltproc")
+sconsent.LoadTool("groff", "pkgconfig", "python", "xsltproc")
 
 # set up environment
 options = sconsent.option.Options(args = ARGUMENTS)
@@ -51,6 +57,7 @@ env = sconsent.InitEnv(
 try:
 	conf = env.Configure()
 
+	conf.CheckPKGConfig(REQ_PKGCONFIG_PACKAGES)
 	conf.CheckPython(REQ_PYTHON_VERSION, REQ_PYTHON_MODULES)
 	conf.CheckXSLTProc()
 	conf.CheckDocbookXSL()

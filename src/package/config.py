@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Package initialization
+# Configuration values and functionality
 # $Id$
 #
 # Copyright ©2003-2007 Erik Grinaker <erikg@codepoet.no>
@@ -23,6 +23,4 @@
 
 from __future__ import absolute_import
 
-from . import config
-from . import ui
-
+NAME		= "Revelation"

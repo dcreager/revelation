@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Package initialization
+# User interface classes
 # $Id$
 #
 # Copyright ©2003-2007 Erik Grinaker <erikg@codepoet.no>
@@ -23,6 +23,9 @@
 
 from __future__ import absolute_import
 
-from . import config
-from . import ui
+from .shinygnome import ui as shinyui
+
+
+# these widgets are just used as-is from shinygnome
+App		= shinyui.window.App
 
