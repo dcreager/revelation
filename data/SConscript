@@ -23,6 +23,31 @@
 
 Import ("env")
 
+# handle icons
+env.Install("$datadir/icons/hicolor/16x16/apps", [
+	"icons/16x16/revelation.png",
+])
+
+env.Install("$datadir/icons/hicolor/24x24/apps", [
+	"icons/24x24/revelation.png",
+	"icons/24x24/revelation-locked.png",
+])
+
+env.Install("$datadir/icons/hicolor/32x32/apps", [
+	"icons/32x32/revelation.png",
+	"icons/32x32/revelation-locked.png",
+])
+
+env.Install("$datadir/icons/hicolor/48x48/apps", [
+	"icons/48x48/revelation.png",
+	"icons/48x48/revelation-locked.png",
+])
+
+env.Install("$datadir/icons/hicolor/48x48/mimetypes", [
+	"icons/48x48/gnome-mime-application-x-revelation.png",
+])
+
+
 # handle ui data
 env.Install("$datadir/$package/ui", [
 	"ui/menubar.xml",
