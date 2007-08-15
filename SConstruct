@@ -70,3 +70,6 @@ except sconsent.config.ConfigureError, error:
 env.SConscript("docs/SConscript", exports = "env", build_dir = "build/docs")
 env.SConscript("src/SConscript", exports = "env", build_dir = "build/src")
 
+# build shinygnome
+env.Replace(shinygnome_libdir = env.subst("$python_libdir/$package/shinygnome"))
+env.SConscript("src/shinygnome/SConscript", exports = "env", build_dir = "build/src/shinygnome")
