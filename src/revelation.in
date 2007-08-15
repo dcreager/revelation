@@ -30,7 +30,7 @@ import sys
 if "$python_libdir$" not in sys.path:
 	sys.path.insert(0, "$python_libdir$")
 
-from revelation import config, ui
+from revelation import config, dialog, stock, ui
 
 
 
@@ -44,11 +44,56 @@ class Revelation(ui.App):
 
 		self.connect("delete-event", self.__cb_quit)
 
+		self.__init_actions()
+		self.__init_ui()
+
+
+	def __init_actions(self):
+		"Sets up actions"
+
+		# set up action groups
+		group_global	= ui.ActionGroup("global")
+		group_menubar	= ui.ActionGroup("menubar")
+
+		self.uimanager.append_action_group(group_global)
+		self.uimanager.append_action_group(group_menubar)
+
+		# set up global actions
+		group_global.add_actions([
+			( "help-about",		stock.STOCK_ABOUT,	None, None, "About this application", self.__cb_about),
+		])
+
+		# set up menubar actions
+		group_menubar.add_actions([
+			( "menu-help",		None,			"_Help" ),
+		])
+
+		# load ui from file
+		self.uimanager.add_ui_from_file("%s/menubar.xml" % config.DIR_UI)
+
+
+	def __init_ui(self):
+		"Sets up the user interface"
+
+		self.set_menus(self.uimanager.get_widget("/menubar"))
+
+
+	def __cb_about(self, widget, data = None):
+		"Callback for about"
+
+		self.about()
+
 
 	def __cb_quit(self, widget, data = None):
 		"Callback for quit"
 
 		self.quit()
+
+
+	def about(self):
+		"Displays an about dialog"
+
+		dialog.AboutDialog(self).run()
 
 
 	def quit(self):

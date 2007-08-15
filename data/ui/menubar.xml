@@ -1,0 +1,10 @@
+<?xml version="1.0" ?>
+
+<ui>
+	<menubar name="menubar">
+		<menu action="menu-help">
+			<menuitem action="help-about" />
+		</menu>
+	</menubar>
+</ui>
+

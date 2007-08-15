@@ -74,6 +74,7 @@ except sconsent.config.ConfigureError, error:
 
 
 # load sconscript files
+env.SConscript("data/SConscript", exports = "env", build_dir = "build/data")
 env.SConscript("docs/SConscript", exports = "env", build_dir = "build/docs")
 env.SConscript("src/SConscript", exports = "env", build_dir = "build/src")
 

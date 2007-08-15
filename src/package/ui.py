@@ -27,5 +27,6 @@ from .shinygnome import ui as shinyui
 
 
 # these widgets are just used as-is from shinygnome
+ActionGroup	= shinyui.uimanager.ActionGroup
 App		= shinyui.window.App
 

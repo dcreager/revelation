@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Package initialization
+# Stock items
 # $Id$
 #
 # Copyright ©2003-2007 Erik Grinaker <erikg@codepoet.no>
@@ -23,8 +23,7 @@
 
 from __future__ import absolute_import
 
-from . import config
-from . import dialog
-from . import stock
-from . import ui
+import gtk
 
+
+STOCK_ABOUT	= gtk.STOCK_ABOUT

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Package initialization
+# SCons build script
 # $Id$
 #
 # Copyright ©2003-2007 Erik Grinaker <erikg@codepoet.no>
@@ -21,10 +21,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from __future__ import absolute_import
+Import ("env")
 
-from . import config
-from . import dialog
-from . import stock
-from . import ui
+# handle ui data
+env.Install("$datadir/$package/ui", [
+	"ui/menubar.xml",
+])
 
