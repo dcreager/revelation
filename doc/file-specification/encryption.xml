@@ -15,7 +15,7 @@
 	<figure>
 		<title>An overview of the encryption process</title>
 
-		<mediaobject><imageobject><imagedata fileref="images/diagram-encryption.png" format="PNG" /></imageobject></mediaobject>
+		<mediaobject><imageobject><imagedata fileref="../images/diagram-encryption.png" format="PNG" /></imageobject></mediaobject>
 	</figure>
 
 	<section id="encryption.keygen">
@@ -142,7 +142,7 @@ data = aes256_encrypt_cbc(data, key, iv)</programlisting>
 		<figure>
 			<title>The final, encrypted file format</title>
 
-			<mediaobject><imageobject><imagedata fileref="images/diagram-fileformat.png" format="PNG" /></imageobject></mediaobject>
+			<mediaobject><imageobject><imagedata fileref="../images/diagram-fileformat.png" format="PNG" /></imageobject></mediaobject>
 		</figure>
 	</section>
 </section>

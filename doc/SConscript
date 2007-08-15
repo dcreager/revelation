@@ -24,23 +24,38 @@
 
 Import("env")
 
+# handle css
+env.Install("$datadir/$package/doc/css", "file-specification/stylesheets/file-specification.css")
+
+# handle images
+images = []
+images += env.PIC2Graph("file-specification/images/diagram-encryption.png", "file-specification/images/diagram-encryption.pic")
+images += env.PIC2Graph("file-specification/images/diagram-fileformat.png", "file-specification/images/diagram-fileformat.pic")
+
+env.Install("$datadir/$package/doc/images", images)
+
 # handle file-specification xhtml
-env.XSLTProc("file-specification/xhtml/index.html", [
-	"file-specification/stylesheets/xhtml.xsl",
+filespec_xhtml	= env.XSLTProc("file-specification/xhtml/index.html", env.Substitute([
+	"file-specification/stylesheets/xhtml.xsl.in",
+]) + [
 	"file-specification/file-specification.xml",
 ])
 
-env.Command("file-specification/xhtml/css/file-specification.css", "file-specification/stylesheets/file-specification.css", Copy("$TARGET", "$SOURCE"))
-env.PIC2Graph("file-specification/xhtml/images/diagram-encryption.png", "file-specification/images/diagram-encryption.pic")
-env.PIC2Graph("file-specification/xhtml/images/diagram-fileformat.png", "file-specification/images/diagram-fileformat.pic")
+env.Install("$datadir/$package/doc/xhtml", filespec_xhtml)
+
 
 # handle file-specification xhtml-chunks
-env.XSLTProc("file-specification/xhtml-chunks/index.html", [
-	"file-specification/stylesheets/xhtml-chunks.xsl",
+filespec_xhtmlc	= env.XSLTProc("file-specification/xhtml-chunks/index.html", env.Substitute([
+	"file-specification/stylesheets/xhtml-chunks.xsl.in",
+]) + [
 	"file-specification/file-specification.xml",
 ])
 
-env.Command("file-specification/xhtml-chunks/css/file-specification.css", "file-specification/stylesheets/file-specification.css", Copy("$TARGET", "$SOURCE"))
-env.PIC2Graph("file-specification/xhtml-chunks/images/diagram-encryption.png", "file-specification/images/diagram-encryption.pic")
-env.PIC2Graph("file-specification/xhtml-chunks/images/diagram-fileformat.png", "file-specification/images/diagram-fileformat.pic")
+filespec_xhtmlc += env.SideEffect([
+	"file-specification/xhtml-chunks/accounttypes.html",
+	"file-specification/xhtml-chunks/encryption.html",
+	"file-specification/xhtml-chunks/xml.html",
+], filespec_xhtmlc)
+
+env.Install("$datadir/$package/doc/xhtml-chunks", filespec_xhtmlc)
 

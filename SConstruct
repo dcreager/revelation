@@ -72,6 +72,7 @@ try:
 	conf.CheckGConf()
 	conf.CheckIntlTool()
 	conf.CheckXSLTProc()
+	conf.CheckDocbookXSL()
 	conf.CheckPIC2Graph()
 
 	env = conf.Finish()
