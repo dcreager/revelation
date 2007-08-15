@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<section id="xml">
+	<title id="xml-title">XML format</title>
+
+	<para>
+		Account data is represented as XML, which must conform
+		to the XML 1.0 specification as published by the World
+		Wide Web Consortium (W3C).
+	</para>
+
+	<section id="xml.root">
+		<title id="xml.root-title">Root element</title>
+
+		<para>
+			The root element is <literal>revelationdata</literal>,
+			which can contain an unlimited number of
+			<literal>account</literal> elements.
+		</para>
+		
+		<itemizedlist>
+			<title>Attributes</title>
+
+			<listitem><para>
+				<literal>version</literal> (required): which version of
+				this specification the data file conforms to,
+				in this case <literal>1.0</literal>. New
+				minor-version releases will be backwards-compatible,
+				while new major-version releases will not.
+			</para></listitem>
+
+			<listitem><para>
+				<literal>id</literal> (required): a randomly generated
+				128-bit hex-encoded identifier for this
+				particular file. When a file is loaded and
+				then saved this ID must be preserved.
+			</para></listitem>
+		</itemizedlist>
+
+		<example>
+			<title>XML root element</title>
+
+			<programlisting>&lt;revelationdata version="1.0" id="722ec5ad92a014c81ec71b06db23faab"&gt;
+&lt;/revelationdata&gt;</programlisting>
+		</example>
+	</section>
+
+	<section id="xml.account">
+		<title>Accounts</title>
+
+		<para>
+			<literal>account</literal> is an element containing
+			account data.
+		</para>
+
+		<itemizedlist>
+			<title>Attributes</title>
+
+			<listitem><para>
+				<literal>id</literal> (required): a
+				randomly generated 32-bit hex-encoded
+				identifier for the account. This ID must be
+				unique within the file, ie it cannot be used
+				by other accounts. Applications must preserve
+				this ID when re-saving the file.
+			</para></listitem>
+
+			<listitem><para>
+				<literal>type</literal> (required): a string
+				defining the type of account (website,
+				shell, etc). A list of recommended types
+				can be found in the <link linkend="accounttypes" endterm="accounttypes-title" />
+				section, but applications are free to make
+				up their own.
+			</para></listitem>
+
+			<listitem><para>
+				<literal>typename</literal> (required): a
+				name for the account type (for example
+				Website, Shell, etc). If the application
+				recognizes the type defined in the
+				<literal>type</literal> attribute it should
+				use its own typename, but this attribute
+				can be used as a fallback if the type is
+				unknown.
+			</para></listitem>
+		</itemizedlist>
+
+		<itemizedlist>
+			<title>Child elements</title>
+
+			<listitem><para>
+				<literal>name</literal> (required): a 256-char
+				name for the account
+			</para></listitem>
+
+			<listitem><para>
+				<literal>description</literal> (optional): a
+				256-char description of the account
+			</para></listitem>
+
+			<listitem><para>
+				<literal>note</literal> (optional): an
+				unlimited-length note for the account
+			</para></listitem>
+
+			<listitem><para>
+				<literal>changed</literal> (required): the
+				time when the account was last changed,
+				as an ISO-formatted UTC timestamp
+			</para></listitem>
+		</itemizedlist>
+
+		<para>
+			In addititon to these elements it also contains
+			an arbitrary number of <literal>field</literal>
+			elements, which contains the actual account data.
+			These are described in the
+			<link linkend="xml.fields" endterm="xml.fields-title" />
+			section.
+		</para>
+
+		<example>
+			<title>Simple web account</title>
+
+			<programlisting>&lt;account id="a1e1fc9a" type="web" typename="Website"&gt;
+	&lt;name&gt;Example web account&lt;/name&gt;
+	&lt;description&gt;Just an example&lt;/description&gt;
+	&lt;note&gt;This account is just an example&lt;/note&gt;
+	&lt;updated&gt;2006-02-13 18:36:11&lt;/updated&gt;
+	&lt;field type="url" name="URL" datatype="url"&gt;http://www.example.com/&lt;field&gt;
+	&lt;field type="username" name="Username" datatype="userid"&gt;username&lt;field&gt;
+	&lt;field type="password" name="Password" datatype="secret"&gt;password&lt;field&gt;
+&lt;/account&gt;</programlisting>
+		</example>
+	</section>
+
+	<section id="xml.fields">
+		<title id="xml.fields-title">Account fields</title>
+
+		<para>
+			Accounts can contain an arbitrary number of
+			<literal>field</literal> elements. A field
+			is a piece of data for the account, such as
+			a username or password.
+		</para>
+
+		<itemizedlist>
+			<title>Attributes</title>
+
+			<listitem><para>
+				<literal>type</literal> (required): a string
+				defining the type of field (such as username,
+				password, url, etc). Some recommended types
+				can be found in the <link linkend="accounttypes" endterm="accounttypes-title" />
+				section, but applications are free to make
+				up their own.
+			</para></listitem>
+
+			<listitem><para>
+				<literal>typename</literal> (required): a
+				name for this field type. If the application
+				recognizes the type in the <literal>type</literal>
+				attribute it should use its own name, otherwise
+				this attribute can be used as a fallback.
+			</para></listitem>
+
+			<listitem><para>
+				<literal>datatype</literal> (required): the
+				datatype for the field. All field contents
+				should be expected to be strings, but this
+				datatype may give a hint as to how the field
+				should be displayed or edited. Unknown datatypes
+				should be handled as normal strings. A list of
+				valid datatypes can be found in the
+				<link linkend="xml.datatypes" endterm="xml.datatypes-title" />
+				section.
+			</para></listitem>
+		</itemizedlist>
+
+		<example>
+			<title>A single field</title>
+
+			<programlisting>&lt;field type="username" typename="Username" datatype="userid"&gt;erikg&lt;/field&gt;</programlisting>
+		</example>
+	</section>
+
+	<section id="xml.datatypes">
+		<title id="xml.datatypes-title">Field datatypes</title>
+
+		<para>
+			Field data is basically just normal strings,
+			but they have a <literal>datatype</literal> attribute
+			which can be used as hints for how to display or
+			edit the data. There should be no restrictions on
+			what data a user can enter into a field. The valid
+			datatypes are:
+		</para>
+
+		<itemizedlist>
+			<listitem><para>
+				<literal>string</literal>: a normal string,
+				up to 256 characters long
+			</para></listitem>
+
+			<listitem><para>
+				<literal>integer</literal>: an integer number
+				of arbitrary length
+			</para></listitem>
+
+			<listitem><para>
+				<literal>userid</literal>: a user identification
+				token, such as a username or customer number
+			</para></listitem>
+
+			<listitem><para>
+				<literal>secret</literal>: a secret, such as
+				a password, a PIN code, or the answer to a
+				question
+			</para></listitem>
+
+			<listitem><para>
+				<literal>url</literal>: a Uniform Resource Locator,
+				like a website address
+			</para></listitem>
+
+			<listitem><para>
+				<literal>hostname</literal>: a computer hostname
+			</para></listitem>
+
+			<listitem><para>
+				<literal>email</literal>: an email address
+			</para></listitem>
+		</itemizedlist>
+
+		<para>
+			Applications are <emphasis>not</emphasis> allowed to
+			make up their own datatypes, but should handle
+			unknown datatypes as <literal>string</literal>.
+			This is to maintain forwards-compatability with
+			future versions of this specification.
+		</para>
+	</section>
+
+	<section id="xml.dtd">
+		<title id="xml.dtd-title">Document Type Definition</title>
+
+		<para>
+			The Document Type Definition for the XML is as
+			follows:
+		</para>
+
+<programlisting><![CDATA[<?xml version="1.0" encoding="utf-8" ?>
+
+<!DOCTYPE revelation [
+	<!ELEMENT revelationdata	(account*)>
+	<!ATTLIST revelationdata	id		ID	#REQUIRED>
+	<!ATTLIST revelationdata	version		CDATA	#REQUIRED>
+
+	<!ELEMENT account		(name,description?,note?,updated,field*)>
+	<!ATTLIST account		id		ID	#REQUIRED>
+	<!ATTLIST account		type		CDATA	#REQUIRED>
+	<!ATTLIST account		typename	CDATA	#REQUIRED>
+
+	<!ELEMENT field			(#CDATA)>
+	<!ATTLIST field			type		CDATA	#REQUIRED>
+	<!ATTLIST field			name		CDATA	#REQUIRED>
+	<!ATTLIST field			datatype	CDATA	#REQUIRED>
+
+	<!ELEMENT name			(#CDATA)>
+	<!ELEMENT description		(#CDATA)>
+	<!ELEMENT note			(#CDATA)>
+	<!ELEMENT updated		(#CDATA)>
+]>]]></programlisting>
+	</section>
+</section>

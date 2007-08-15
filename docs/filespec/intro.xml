@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<section id="intro">
+	<title id="intro-title">Introduction</title>
+
+	<para>
+		This document describes a file format used for storing authentication
+		data. It is primarily intended for use in the
+		<ulink url="&url-revelation;">Revelation</ulink> password manager, but
+		it may be useful for other projects as well.
+	</para>
+
+	<para>
+		The latest version of this specification can be found at
+		<ulink url="http://oss.codepoet.no/revelation/file-spec/current/" />.
+	</para>
+</section>

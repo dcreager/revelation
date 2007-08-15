@@ -1,0 +1,60 @@
+# -*- coding: utf-8 -*-
+#
+# SCons build script for documentation
+# $Id$
+#
+# Copyright ©2003-2007 Erik Grinaker <erikg@codepoet.no>
+#
+# This file is part of Revelation.
+#
+# Revelation is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# Revelation is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+
+Import("env")
+
+# handle css
+env.Install("$datadir/$package/docs/css", "filespec/stylesheets/filespec.css")
+
+# handle images
+images = []
+images += env.PIC2Graph("filespec/images/diagram-encryption.png", "filespec/images/diagram-encryption.pic")
+images += env.PIC2Graph("filespec/images/diagram-fileformat.png", "filespec/images/diagram-fileformat.pic")
+
+env.Install("$datadir/$package/docs/images", images)
+
+# handle filespec xhtml
+filespec_xhtml	= env.XSLTProc("filespec/xhtml/index.html", env.Substitute([
+	"filespec/stylesheets/xhtml.xsl.in",
+]) + [
+	"filespec/filespec.xml",
+])
+
+env.Install("$datadir/$package/docs/xhtml", filespec_xhtml)
+
+
+# handle filespec xhtml-chunks
+filespec_xhtmlc	= env.XSLTProc("filespec/xhtml-chunks/index.html", env.Substitute([
+	"filespec/stylesheets/xhtml-chunks.xsl.in",
+]) + [
+	"filespec/filespec.xml",
+])
+
+filespec_xhtmlc += env.SideEffect([
+	"filespec/xhtml-chunks/accounttypes.html",
+	"filespec/xhtml-chunks/encryption.html",
+	"filespec/xhtml-chunks/xml.html",
+], filespec_xhtmlc)
+
+env.Install("$datadir/$package/docs/xhtml-chunks", filespec_xhtmlc)
+

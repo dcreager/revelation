@@ -1,0 +1,37 @@
+.ft H
+.ps 11
+
+define data { box width 1.2 height 0.7 }
+define process { ellipse width 1.2 height 0.7 }
+
+
+XML: data() "XML data";
+move right at XML.e;
+BZ2: process() "bzip2" "compression";
+move right at BZ2.e;
+AES: process() "AES-256 CBC" "encryption";
+move right at AES.e;
+CIPHER: data() "Encrypted" "data";
+
+arrow from XML.e to BZ2.w;
+arrow from BZ2.e to AES.w;
+arrow from AES.e to CIPHER.w;
+
+
+move down at XML.s;
+Password: data() "Password";
+move right at Password.e;
+SHA: process() "SHA-256" "hashing";
+move down at SHA.s;
+Salt: data() "Salt";
+
+arrow from Password.e to SHA.w;
+arrow from Salt.n to SHA.s;
+arrow from SHA.ne to AES.sw;
+
+
+move down at AES.s;
+IV: data() "Initial vector";
+
+arrow from IV.n to AES.s;
+

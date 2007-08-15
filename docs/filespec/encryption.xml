@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<section id="encryption">
+	<title id="encryption-title">Encryption</title>
+
+	<para>
+		The XML is compressed using bzip2 and then encrypted with an algorithm
+		based on the PKCS #5 (RFC 2898) recommendation, more specifically the
+		PKBDF2 and PBES2 methods, using AES-256 as the cipher and SHA-256 as the
+		hash function. The encrypted data is prepended with a file header,
+		containing a magic string, file versions, and necessary cipher data
+		such as the initialization vector and the password salt.
+	</para>
+
+	<figure>
+		<title>An overview of the encryption process</title>
+
+		<mediaobject><imageobject><imagedata fileref="../images/diagram-encryption.png" format="PNG" /></imageobject></mediaobject>
+	</figure>
+
+	<section id="encryption.keygen">
+		<title id="encryption.keygen-title">Key derivation</title>
+
+		<para>
+			The user must supply a password, encoded as UTF-8.
+			It is concatenated with a randomly generated 256-bit
+			salt, and then hashed a number of times (10 000 is
+			recommended) using the SHA-256 algoriyhm. A pseudo-code
+			example of this process:
+		</para>
+
+		<programlisting>password = get_password()
+salt = sha256_digest(random_string(32))
+key = password + salt
+
+for i = 0 to 10000
+	key = sha256_digest(key)</programlisting>
+
+	</section>
+
+	<section id="encryption.compression">
+		<title id="encryption.compression-title">Compression</title>
+
+		<para>
+			The plain XML must be compressed using the bzip2
+			algorithm. A compression level of 9 is recommended.
+		</para>
+	</section>
+
+	<section id="encryption.padding">
+		<title id="encryption.padding-title">Padding</title>
+
+		<para>
+			The bzip2-compressed data is right-padded to a
+			multiple of 32 bytes, using a byte value equal to the
+			number of pad-bytes. If the data is already a
+			multiple of 32 bytes long, it must be right-padded
+			with another 32 bytes. A pseudo-code example of this
+			process:
+		</para>
+
+<programlisting>padlen = sizeof(data) % 32
+
+if padlen == 0
+	padlen = 32
+
+padchar = char(padlen)
+
+data = data + repeat_string(padchar, padlen)</programlisting>
+	</section>
+
+	<section id="encryption.encryption">
+		<title id="encryption.encryption-title">Encryption</title>
+
+		<para>
+			The data is then encrypted with the AES-256 algorithm
+			in cipher block chaining mode, using the previously
+			generated SHA-256 hash as the key (see the
+			<link linkend="encryption.keygen" endterm="encryption.keygen-title" />
+			section) and a randomly generated 32-byte initial vector.
+			Here is a pseudo-code example:
+		</para>
+
+<programlisting>iv = sha256_digest(random_string(32))
+
+data = aes256_encrypt_cbc(data, key, iv)</programlisting>
+	</section>
+
+	<section id="encryption.header">
+		<title id="encryption.header-title">File header</title>
+
+		<para>
+			The encrypted data is prefixed with a 74-byte file header,
+			containing a magic-string, the major and minor version
+			of the file format, the number of iterations, the
+			key salt, and the CBC initial vector. A detailed layout
+			of the header is as follows:
+		</para>
+
+		<itemizedlist>
+			<listitem><para>
+				<emphasis role="bold">Magic string (6 bytes):</emphasis>
+				<literal>rvl</literal> followed by <literal>0xe0427b</literal>,
+				the whole string is <literal>0x72766ce0427b</literal>.
+			</para></listitem>
+
+			<listitem><para>
+				<emphasis role="bold">File version (2 bytes):</emphasis>
+				one byte for each of the major and minor version
+				of the file format, in this case <literal>0x0100</literal>.
+				Future minor-version releases will be backwards-compatible,
+				while major-version releases will not.
+			</para></listitem>
+
+			<listitem><para>
+				<emphasis role="bold">Hash iterations (2 bytes):</emphasis>
+				the number of hash iterations used for the
+				key derivation function (see the
+				<link linkend="encryption.keygen" endterm="encryption.keygen-title" />
+				section). 10 000 or more is recommended.
+			</para></listitem>
+
+			<listitem><para>
+				<emphasis role="bold">Key salt (32 bytes):</emphasis>
+				the salt used for the key derivation function (see the
+				<link linkend="encryption.keygen" endterm="encryption.keygen-title" />
+				section).
+			</para></listitem>
+
+			<listitem><para>
+				<emphasis role="bold">CBC initial vector (32 bytes):</emphasis>
+				the initial vector used for the CBC-mode encryption
+				(see the <link linkend="encryption.encryption" endterm="encryption.encryption-title" />
+				section).
+			</para></listitem>
+		</itemizedlist>
+
+		<para>
+			The final data format looks like this:
+		</para>
+
+		<figure>
+			<title>The final, encrypted file format</title>
+
+			<mediaobject><imageobject><imagedata fileref="../images/diagram-fileformat.png" format="PNG" /></imageobject></mediaobject>
+		</figure>
+	</section>
+</section>
+

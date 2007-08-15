@@ -34,7 +34,7 @@ REQ_PYTHON_MODULES	= []
 
 
 # set up sconsent
-sconsent.LoadTool("python")
+sconsent.LoadTool("groff", "python", "xsltproc")
 
 # set up environment
 options = sconsent.option.Options(args = ARGUMENTS)
@@ -52,6 +52,9 @@ try:
 	conf = env.Configure()
 
 	conf.CheckPython(REQ_PYTHON_VERSION, REQ_PYTHON_MODULES)
+	conf.CheckXSLTProc()
+	conf.CheckDocbookXSL()
+	conf.CheckPIC2Graph()
 
 	env = conf.Finish()
 
@@ -64,5 +67,6 @@ except sconsent.config.ConfigureError, error:
 
 
 # load sconscript files
+env.SConscript("docs/SConscript", exports = "env", build_dir = "build/docs")
 env.SConscript("src/SConscript", exports = "env", build_dir = "build/src")
 
