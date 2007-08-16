@@ -2,6 +2,10 @@
 
 <ui>
 	<menubar name="menubar">
+		<menu action="menu-file">
+			<menuitem action="file-close" />
+			<menuitem action="file-quit" />
+		</menu>
 		<menu action="menu-help">
 			<menuitem action="help-about" />
 		</menu>

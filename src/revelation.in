@@ -61,11 +61,14 @@ class Revelation(ui.App):
 
 		# set up global actions
 		group_global.add_actions([
-			( "help-about",		stock.STOCK_ABOUT,	None, None, "About this application", self.__cb_about),
+			( "file-close",		stock.STOCK_CLOSE,	None, None, "Closes the application",	self.__cb_quit),
+			( "file-quit",		stock.STOCK_QUIT,	None, None, "Quits the application",	self.__cb_quit),
+			( "help-about",		stock.STOCK_ABOUT,	None, None, "About this application",	self.__cb_about),
 		])
 
 		# set up menubar actions
 		group_menubar.add_actions([
+			( "menu-file",		None,			"_File" ),
 			( "menu-help",		None,			"_Help" ),
 		])
 

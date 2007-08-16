@@ -29,6 +29,8 @@ from .shinygnome import ui as shinyui
 
 
 STOCK_ABOUT		= gtk.STOCK_ABOUT
+STOCK_CLOSE		= gtk.STOCK_CLOSE
+STOCK_QUIT		= gtk.STOCK_QUIT
 STOCK_REVELATION	= "revelation-revelation"
 
 
