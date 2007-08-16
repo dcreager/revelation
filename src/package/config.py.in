@@ -23,15 +23,21 @@
 
 from __future__ import absolute_import
 
+import gettext
+
+_ = gettext.gettext
+
+
 NAME		= "Revelation"
 VERSION		= "$version$"
+DESCRIPTION	= _('A password manager for GNOME')
 RELEASENAME	= "$releasename$"
 WEBSITE		= "http://oss.codepoet.no/revelation/"
 
 AUTHORS		= [ "Erik Grinaker <erikg@codepoet.no>" ]
 ARTISTS		= [ "Erik Grinaker <erikg@codepoet.no>" ]
-COPYRIGHT	= "Copyright ©2003-2007 Erik Grinaker"
-LICENSE		= """Revelation is free software; you can redistribute it and/or modify
+COPYRIGHT	= _('Copyright ©2003-2007 Erik Grinaker')
+LICENSE		= _("""Revelation is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 3 of the License, or
 (at your option) any later version.
@@ -42,7 +48,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>."""
+along with this program.  If not, see <http://www.gnu.org/licenses/>.""")
 
 DIR_ICONS	= "$datadir/icons"
 DIR_UI		= "$datadir$/$package$/ui"

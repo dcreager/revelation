@@ -1,0 +1,6 @@
+src/revelation.in
+src/lib/__init__.py
+src/lib/config.py.in
+src/lib/dialog.py
+src/lib/stock.py
+src/lib/ui.py

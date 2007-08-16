@@ -1,5 +1,6 @@
+# -*- coding: utf-8 -*-
 #
-# User interface classes
+# SCons build script
 # $Id$
 #
 # Copyright ©2003-2007 Erik Grinaker <erikg@codepoet.no>
@@ -20,25 +21,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from __future__ import absolute_import
+import glob
 
-from . import config
+Import("env")
 
-from .shinygnome import ui as shinyui
-
-
-class AboutDialog(shinyui.dialog.AboutDialog):
-	"An about dialog"
-
-	def __init__(self, parent):
-		shinyui.dialog.AboutDialog.__init__(self, parent)
-
-		self.set_name(config.NAME)
-		self.set_version(config.VERSION)
-		self.set_copyright(config.COPYRIGHT)
-		self.set_comments(('"%s"\n\n%s' % ( config.RELEASENAME, config.DESCRIPTION )))
-		self.set_license(config.LICENSE)
-		self.set_website(config.WEBSITE)
-		self.set_authors(config.AUTHORS)
-		self.set_artists(config.ARTISTS)
+for locale in ( ):
+	mo = env.IntlToolPO("%s.po" % locale)
+	env.InstallAs("$datadir/locale/%s/LC_MESSAGES/${package}.mo" % locale)
 

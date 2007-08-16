@@ -40,7 +40,7 @@ REQ_PKGCONFIG_PACKAGES	= {
 
 
 # set up sconsent
-sconsent.LoadTool("groff", "pkgconfig", "python", "xsltproc")
+sconsent.LoadTool("groff", "intltool", "pkgconfig", "python", "xsltproc")
 
 # set up environment
 options = sconsent.option.Options(args = ARGUMENTS)
@@ -59,6 +59,7 @@ try:
 
 	conf.CheckPKGConfig(REQ_PKGCONFIG_PACKAGES)
 	conf.CheckPython(REQ_PYTHON_VERSION, REQ_PYTHON_MODULES)
+	conf.CheckIntlTool()
 	conf.CheckXSLTProc()
 	conf.CheckDocbookXSL()
 	conf.CheckPIC2Graph()
@@ -69,13 +70,14 @@ try:
 except sconsent.configure.ConfigureDisabledError:
 	pass
 
-except sconsent.config.ConfigureError, error:
+except sconsent.configure.ConfigureError, error:
 	env.Error(error)
 
 
 # load sconscript files
 env.SConscript("data/SConscript", exports = "env", build_dir = "build/data")
 env.SConscript("docs/SConscript", exports = "env", build_dir = "build/docs")
+env.SConscript("po/SConscript", exports = "env", build_dir = "build/po")
 env.SConscript("src/SConscript", exports = "env", build_dir = "build/src")
 
 # build shinygnome
