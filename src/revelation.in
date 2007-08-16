@@ -37,8 +37,6 @@ from revelation import dialog
 from revelation import stock
 from revelation import ui
 
-_= gettext.gettext
-
 
 
 class Revelation(ui.App):
@@ -46,6 +44,7 @@ class Revelation(ui.App):
 
 	def __init__(self):
 		os.umask(0077)
+		gettext.install(config.PACKAGE, config.DIR_LOCALE, True)
 
 		ui.App.__init__(self, config.NAME, sys.argv)
 
