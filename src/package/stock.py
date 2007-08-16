@@ -25,5 +25,24 @@ from __future__ import absolute_import
 
 import gtk
 
+from .shinygnome import ui as shinyui
 
-STOCK_ABOUT	= gtk.STOCK_ABOUT
+
+STOCK_ABOUT		= gtk.STOCK_ABOUT
+STOCK_REVELATION	= "revelation-revelation"
+
+
+class StockFactory(shinyui.icon.StockFactory):
+	"A stock item factory"
+
+	icons	= (
+		( STOCK_REVELATION,		"revelation" ),
+	)
+
+	def __init__(self, parent, searchpath = None):
+		shinyui.icon.StockFactory.__init__(self, parent, searchpath)
+
+		# load icons
+		for id, icon in self.icons:
+			self.copy(id, icon)
+

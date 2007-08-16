@@ -24,6 +24,7 @@
 
 from __future__ import absolute_import
 
+import gtk
 import os
 import sys
 
@@ -75,6 +76,11 @@ class Revelation(ui.App):
 	def __init_ui(self):
 		"Sets up the user interface"
 
+		# set up stock items and icons
+		self.stockfactory = stock.StockFactory(self, config.DIR_ICONS)
+		self.set_default_icons(self.stockfactory.get_pixbufs("revelation", ( 48, 32, 24, 16 )))
+
+		# set up user interface
 		self.set_menus(self.uimanager.get_widget("/menubar"))
 
 
