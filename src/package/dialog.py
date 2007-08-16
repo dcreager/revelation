@@ -1,5 +1,6 @@
+# -*- coding: utf-8 -*-
 #
-# User interface classes
+# Dialogs
 # $Id$
 #
 # Copyright ©2003-2007 Erik Grinaker <erikg@codepoet.no>
