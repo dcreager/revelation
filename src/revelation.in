@@ -168,6 +168,16 @@ class Revelation(ui.App):
 		ui.App.quit(self)
 
 
+	def run(self):
+		"Runs the application"
+
+		try:
+			ui.App.run(self)
+
+		except KeyboardInterrupt:
+			self.quit()
+
+
 
 if __name__ == "__main__":
 	Revelation().run()
