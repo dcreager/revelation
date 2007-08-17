@@ -25,7 +25,7 @@ import glob
 
 Import("env")
 
-for locale in ( ):
+for locale in [ ]:
 	mo = env.IntlToolPO("%s.po" % locale)
-	env.InstallAs("$datadir/locale/%s/LC_MESSAGES/${package}.mo" % locale)
+	env.InstallAs("$datadir/locale/%s/LC_MESSAGES/${package}.mo" % locale, mo)
 
