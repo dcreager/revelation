@@ -2,6 +2,7 @@ xxxx-xx-xx: Revelation 0.5.0
 ============================
 
 New features:
+- relicense as GNU General Public License version 3
 - use python-shinygnome for user interface
 - use SCons to build
 
