@@ -24,8 +24,11 @@
 from __future__ import absolute_import
 
 import gettext
+from .shinygnome import config as shinyconfig
 
-_ = gettext.gettext
+
+_	= gettext.gettext
+Config	= shinyconfig.GConf
 
 
 NAME		= "Revelation"
@@ -51,6 +54,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.""")
 
-DIR_ICONS	= "$datadir$/icons"
-DIR_LOCALE	= "$datadir$/locale"
-DIR_UI		= "$datadir$/$package$/ui"
+DIR_GCONFSCHEMAS	= "$gconf_schemadir$"
+DIR_ICONS		= "$datadir$/icons"
+DIR_LOCALE		= "$datadir$/locale"
+DIR_UI			= "$datadir$/$package$/ui"

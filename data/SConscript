@@ -23,6 +23,11 @@
 
 Import ("env")
 
+# handle gconf schemas
+env.InstallGConfSchema(env, "$gconf_schemadir", [
+	"gconf/revelation.schemas",
+])
+
 # handle icons
 env.Install("$datadir/icons/hicolor/16x16/apps", [
 	"icons/16x16/revelation.png",

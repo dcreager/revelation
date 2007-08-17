@@ -52,6 +52,7 @@ class Revelation(ui.App):
 
 		self.__init_actions()
 		self.__init_ui()
+		self.__init_state()
 
 
 	def __init_actions(self):
@@ -79,6 +80,23 @@ class Revelation(ui.App):
 
 		# load ui from file
 		self.uimanager.add_ui_from_file("%s/menubar.xml" % config.DIR_UI)
+
+
+	def __init_state(self):
+		"Sets up the application state"
+
+		# load config
+		self.config	= config.Config("/apps/revelation")
+
+		self.config.schema_ensure((
+			"interface/window-width",
+			"interface/window-height",
+		), "%s/revelation.schemas" % config.DIR_GCONFSCHEMAS)
+
+		self.set_default_size(
+			self.config.get("interface/window-width"),
+			self.config.get("interface/window-height")
+		)
 
 
 	def __init_ui(self):
@@ -110,8 +128,18 @@ class Revelation(ui.App):
 		dialog.AboutDialog(self).run()
 
 
+	def save_state(self):
+		"Saves the state of the application"
+
+		width, height = self.get_size()
+		self.config.set("interface/window-width", width)
+		self.config.set("interface/window-height", height)
+
+
 	def quit(self):
 		"Quits Revelation"
+
+		self.save_state()
 
 		ui.App.quit(self)
 

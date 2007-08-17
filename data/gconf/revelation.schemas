@@ -1,0 +1,36 @@
+<?xml version="1.0" ?>
+<gconfschemafile>
+	<schemalist>
+		<schema>
+			<key>/schemas/apps/revelation/interface/window-height</key>
+			<applyto>/apps/revelation/interface/window-height</applyto>
+			<owner>revelation</owner>
+			<type>int</type>
+			<default>300</default>
+
+			<locale name="C">
+				<short>Initial window height</short>
+				<long>
+					The initial height of the main window,
+					in pixels.
+				</long>
+			</locale>
+		</schema>
+
+		<schema>
+			<key>/schemas/apps/revelation/interface/window-width</key>
+			<applyto>/apps/revelation/interface/window-width</applyto>
+			<owner>revelation</owner>
+			<type>int</type>
+			<default>500</default>
+
+			<locale name="C">
+				<short>Initial window width</short>
+				<long>
+					The initial width of the main window,
+					in pixels.
+				</long>
+			</locale>
+		</schema>
+	</schemalist>
+</gconfschemafile>
