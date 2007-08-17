@@ -25,6 +25,8 @@
 from __future__ import absolute_import
 
 import gettext
+import gnome
+import gnome.ui
 import gtk
 import os
 import sys
@@ -86,7 +88,7 @@ class Revelation(ui.App):
 		"Sets up the application state"
 
 		# load config
-		self.config	= config.Config("/apps/revelation")
+		self.config = config.Config("/apps/revelation")
 
 		self.config.schema_ensure((
 			"interface/window-width",
@@ -97,6 +99,11 @@ class Revelation(ui.App):
 			self.config.get("interface/window-width"),
 			self.config.get("interface/window-height")
 		)
+
+		# set up session client
+		self.sessionclient = gnome.ui.master_client()
+		self.sessionclient.connect("die", lambda w: self.quit())
+		self.sessionclient.connect("save-yourself", self.__cb_session_save)
 
 
 	def __init_ui(self):
@@ -120,6 +127,18 @@ class Revelation(ui.App):
 		"Callback for quit"
 
 		self.quit()
+
+
+	def __cb_session_save(self, widget, phase, what, end, interaction, fast, data = None):
+		"Saves application state for the session client"
+
+		self.sessionclient.set_current_directory(os.getcwd())
+		self.sessionclient.set_clone_command(sys.argv[0])
+		self.sessionclient.set_restart_command(1, [ sys.argv[0] ])
+
+		self.save_state()
+
+		return True
 
 
 	def about(self):
