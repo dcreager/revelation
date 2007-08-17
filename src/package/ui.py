@@ -23,10 +23,43 @@
 
 from __future__ import absolute_import
 
+from . import stock
+
 from .shinygnome import ui as shinyui
 
 
 # these widgets are just used as-is from shinygnome
 ActionGroup	= shinyui.uimanager.ActionGroup
+Alignment	= shinyui.container.Alignment
 App		= shinyui.window.App
+HPaned		= shinyui.container.HPaned
+ScrolledWindow	= shinyui.container.ScrolledWindow
+VBox		= shinyui.container.VBox
+
+
+class AccountList(shinyui.tree.TreeView):
+	"Displays the account list"
+
+	def __init__(self, accountstore = None):
+		shinyui.tree.TreeView.__init__(self, accountstore)
+
+		cr_icon	= shinyui.display.CellRendererPixbuf(stock_size = stock.ICON_SIZE_LIST)
+		cr_name	= shinyui.display.CellRendererText()
+
+		column = shinyui.tree.TreeViewColumn(None)
+		column.pack_start(cr_icon, False)
+		column.pack_start(cr_name)
+		column.add_attribute(cr_icon, "stock-id", 0)
+		column.add_attribute(cr_name, "text", 1)
+		self.append_column(column)
+
+
+
+class AccountView(VBox):
+	"An account display widget"
+
+	def __init__(self, account = None):
+		VBox.__init__(self)
+		self.set_spacing(12)
+		self.set_border_width(12)
 

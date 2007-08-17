@@ -33,6 +33,8 @@ STOCK_CLOSE		= gtk.STOCK_CLOSE
 STOCK_QUIT		= gtk.STOCK_QUIT
 STOCK_REVELATION	= "revelation-revelation"
 
+ICON_SIZE_LIST		= gtk.ICON_SIZE_MENU
+
 
 class StockFactory(shinyui.icon.StockFactory):
 	"A stock item factory"

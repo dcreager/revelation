@@ -96,6 +96,7 @@ class Revelation(ui.App):
 		self.config = config.Config("/apps/revelation")
 
 		self.config.schema_ensure((
+			"interface/pane-position",
 			"interface/window-width",
 			"interface/window-height",
 		), "%s/revelation.schemas" % config.DIR_GCONFSCHEMAS)
@@ -104,6 +105,8 @@ class Revelation(ui.App):
 			self.config.get("interface/window-width"),
 			self.config.get("interface/window-height")
 		)
+
+		self.hpaned.set_position(self.config.get("interface/pane-position"))
 
 		# set up session client
 		self.sessionclient = gnome.ui.master_client()
@@ -120,6 +123,12 @@ class Revelation(ui.App):
 
 		# set up user interface
 		self.set_menus(self.uimanager.get_widget("/menubar"))
+
+		self.accountlist	= ui.AccountList()
+		self.scrolledwindow	= ui.ScrolledWindow(self.accountlist)
+		self.accountview	= ui.AccountView()
+		self.hpaned		= ui.HPaned(self.scrolledwindow, ui.Alignment(self.accountview, 0.5, 0.5, 1, 0))
+		self.set_contents(self.hpaned)
 
 
 	def __cb_about(self, widget, data = None):
@@ -158,6 +167,7 @@ class Revelation(ui.App):
 		width, height = self.get_size()
 		self.config.set("interface/window-width", width)
 		self.config.set("interface/window-height", height)
+		self.config.set("interface/pane-position", self.hpaned.get_position())
 
 
 	def quit(self):
