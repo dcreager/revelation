@@ -23,9 +23,13 @@
 
 from __future__ import absolute_import
 
+import gettext
+
 from . import config
 
 from .shinygnome import ui as shinyui
+
+_ = gettext.gettext
 
 
 class AboutDialog(shinyui.dialog.AboutDialog):
@@ -42,4 +46,5 @@ class AboutDialog(shinyui.dialog.AboutDialog):
 		self.set_website(config.WEBSITE)
 		self.set_authors(config.AUTHORS)
 		self.set_artists(config.ARTISTS)
+		self.set_translator_credits(_('translator-credits'))
 
