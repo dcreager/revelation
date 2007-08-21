@@ -83,4 +83,4 @@ env.SConscript("src/SConscript", exports = "env", build_dir = "build/src")
 
 # build shinygnome
 env.Replace(shinygnome_libdir = env.subst("$python_libdir/$package/shinygnome"))
-env.SConscript("src/shinygnome/SConscript", exports = "env", build_dir = "build/src/shinygnome")
+env.SConscript("python-shinygnome/src/SConscript", exports = "env", build_dir = "build/src/python-shinygnome")
