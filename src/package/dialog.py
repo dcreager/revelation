@@ -32,6 +32,9 @@ from .shinygnome import ui as shinyui
 _ = gettext.gettext
 
 
+ErrorDialog	= shinyui.dialog.ErrorMessageDialog
+
+
 class AboutDialog(shinyui.dialog.AboutDialog):
 	"An about dialog"
 
