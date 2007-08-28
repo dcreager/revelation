@@ -61,7 +61,7 @@ class Revelation(ui.App):
 			self.__init_state()
 
 		except error.LoadError, e:
-			dialog.ErrorDialog(self, _('Failed to load data file'), _('The file %s could not be loaded:\n\n%s' % ( e.file, e.message ))).run()
+			dialog.ErrorDialog(self, _('Failed to load data file'), _('The file %s could not be loaded') % e.file, e.message).run()
 			sys.exit(1)
 
 
