@@ -36,6 +36,7 @@ if "$python_libdir$" not in sys.path:
 
 from revelation import config
 from revelation import dialog
+from revelation import error
 from revelation import stock
 from revelation import ui
 
@@ -59,9 +60,8 @@ class Revelation(ui.App):
 			self.__init_ui()
 			self.__init_state()
 
-		except config.InstallError, e:
-			raise
-			dialog.ErrorDialog(self, _('GConf schema install failed'), _('The GConf configuration schema %s could not be installed' % e.schema)).run()
+		except error.LoadError, e:
+			dialog.ErrorDialog(self, _('Failed to load data file'), _('The file %s could not be loaded:\n\n%s' % ( e.file, e.message ))).run()
 			sys.exit(1)
 
 
@@ -102,7 +102,8 @@ class Revelation(ui.App):
 			"interface/pane-position",
 			"interface/window-width",
 			"interface/window-height",
-		), "%s/revelation.schemas" % config.DIR_GCONFSCHEMAS)
+			"dummy",
+		), "%s/revelation.schemasa" % config.DIR_GCONFSCHEMAS)
 
 		self.set_default_size(
 			self.config.get("interface/window-width"),

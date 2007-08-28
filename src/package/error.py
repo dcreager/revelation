@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# SCons build script
+# Error module
 # $Id$
 #
 # Copyright ©2003-2007 Erik Grinaker <erikg@codepoet.no>
@@ -21,28 +21,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-Import ("env")
+from __future__ import absolute_import
 
-# handle scripts
-scripts = env.Substitute([
-	"revelation.in",
-])
+from .shinygnome import error as shinyerror
 
-env.InstallScript(env, "$bindir", scripts)
-
-
-# handle package
-package_source = env.Substitute([
-	"package/config.py.in",
-]) + [
-	"package/__init__.py",
-	"package/dialog.py",
-	"package/error.py",
-	"package/stock.py",
-	"package/ui.py",
-]
-
-package = env.PythonBytecode(package_source)
-
-env.Install("$python_libdir/$package", package_source + package)
-
+IOError		= shinyerror.IOError
+LoadError	= shinyerror.LoadError
+SaveError	= shinyerror.SaveError

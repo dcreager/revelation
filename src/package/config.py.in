@@ -24,14 +24,11 @@
 from __future__ import absolute_import
 
 import gettext
-from .shinygnome.config import error as shinyerror
 from .shinygnome.config import gconf as shinygconf
 
 
 _		= gettext.gettext
 Config		= shinygconf.GConf
-ConfigError	= shinyerror.ConfigError
-InstallError	= shinyerror.InstallError
 
 
 NAME		= "Revelation"
