@@ -102,8 +102,7 @@ class Revelation(ui.App):
 			"interface/pane-position",
 			"interface/window-width",
 			"interface/window-height",
-			"dummy",
-		), "%s/revelation.schemasa" % config.DIR_GCONFSCHEMAS)
+		), "%s/revelation.schemas" % config.DIR_GCONFSCHEMAS)
 
 		self.set_default_size(
 			self.config.get("interface/window-width"),
@@ -122,7 +121,7 @@ class Revelation(ui.App):
 		"Sets up the user interface"
 
 		# set up stock items and icons
-		self.stockfactory = stock.StockFactory(self, config.DIR_ICONS)
+		self.stockfactory = stock.StockFactory(config.DIR_ICONS)
 		self.set_default_icon_list(self.stockfactory.get_pixbufs("revelation", ( 48, 32, 24, 16 )))
 
 		# set up user interface
