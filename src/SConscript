@@ -33,9 +33,10 @@ env.InstallScript(env, "$bindir", scripts)
 
 # handle package
 package_source = env.Substitute([
-	"package/config.py.in",
+	"package/info.py.in",
 ]) + [
 	"package/__init__.py",
+	"package/config.py",
 	"package/dialog.py",
 	"package/error.py",
 	"package/stock.py",

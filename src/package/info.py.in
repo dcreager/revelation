@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Configuration values and functionality
+# Application information
 # $Id$
 #
 # Copyright ©2003-2007 Erik Grinaker <erikg@codepoet.no>
@@ -24,24 +24,21 @@
 from __future__ import absolute_import
 
 import gettext
-from .shinygnome.config import gconf as shinygconf
+
+_ = gettext.gettext
 
 
-_		= gettext.gettext
-Config		= shinygconf.GConf
+NAME			= "Revelation"
+VERSION			= "$version$"
+PACKAGE			= "$package$"
+DESCRIPTION		= _('A password manager for GNOME')
+RELEASENAME		= "$releasename$"
+WEBSITE			= "http://oss.codepoet.no/revelation/"
 
-
-NAME		= "Revelation"
-VERSION		= "$version$"
-PACKAGE		= "$package$"
-DESCRIPTION	= _('A password manager for GNOME')
-RELEASENAME	= "$releasename$"
-WEBSITE		= "http://oss.codepoet.no/revelation/"
-
-AUTHORS		= [ "Erik Grinaker <erikg@codepoet.no>" ]
-ARTISTS		= [ "Erik Grinaker <erikg@codepoet.no>" ]
-COPYRIGHT	= _('Copyright ©2003-2007 Erik Grinaker')
-LICENSE		= _("""Revelation is free software; you can redistribute it and/or modify
+AUTHORS			= [ "Erik Grinaker <erikg@codepoet.no>" ]
+ARTISTS			= [ "Erik Grinaker <erikg@codepoet.no>" ]
+COPYRIGHT		= _('Copyright ©2003-2007 Erik Grinaker')
+LICENSE			= _("""Revelation is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 3 of the License, or
 (at your option) any later version.

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Dialogs
+# Configuration values and functionality
 # $Id$
 #
 # Copyright ©2003-2007 Erik Grinaker <erikg@codepoet.no>
@@ -23,30 +23,8 @@
 
 from __future__ import absolute_import
 
-import gettext
-
-from . import info
-from .shinygnome import ui as shinyui
-
-_ = gettext.gettext
+from .shinygnome.config import gconf as shinygconf
 
 
-ErrorDialog	= shinyui.dialog.ErrorMessageDialog
-
-
-class AboutDialog(shinyui.dialog.AboutDialog):
-	"An about dialog"
-
-	def __init__(self, parent):
-		shinyui.dialog.AboutDialog.__init__(self, parent)
-
-		self.set_name(info.NAME)
-		self.set_version(info.VERSION)
-		self.set_copyright(info.COPYRIGHT)
-		self.set_comments(('"%s"\n\n%s' % ( info.RELEASENAME, info.DESCRIPTION )))
-		self.set_license(info.LICENSE)
-		self.set_website(info.WEBSITE)
-		self.set_authors(info.AUTHORS)
-		self.set_artists(info.ARTISTS)
-		self.set_translator_credits(_('translator-credits'))
+Config = shinygconf.GConf
 

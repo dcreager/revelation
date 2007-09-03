@@ -37,6 +37,7 @@ if "$python_libdir$" not in sys.path:
 from revelation import config
 from revelation import dialog
 from revelation import error
+from revelation import info
 from revelation import stock
 from revelation import ui
 
@@ -49,9 +50,9 @@ class Revelation(ui.App):
 
 	def __init__(self):
 		os.umask(0077)
-		gettext.bindtextdomain(config.PACKAGE, config.DIR_LOCALE)
+		gettext.bindtextdomain(info.PACKAGE, info.DIR_LOCALE)
 
-		ui.App.__init__(self, config.NAME, config.PACKAGE, config.VERSION, sys.argv)
+		ui.App.__init__(self, info.NAME, info.PACKAGE, info.VERSION, sys.argv)
 
 		self.connect("delete-event", self.__cb_quit)
 
@@ -89,7 +90,7 @@ class Revelation(ui.App):
 		])
 
 		# load ui from file
-		self.uimanager.add_ui_from_file("%s/menubar.xml" % config.DIR_UI)
+		self.uimanager.add_ui_from_file("%s/menubar.xml" % info.DIR_UI)
 
 
 	def __init_state(self):
@@ -102,7 +103,7 @@ class Revelation(ui.App):
 			"interface/pane-position",
 			"interface/window-width",
 			"interface/window-height",
-		), "%s/revelation.schemas" % config.DIR_GCONFSCHEMAS)
+		), "%s/revelation.schemas" % info.DIR_GCONFSCHEMAS)
 
 		self.set_default_size(
 			self.config.get("interface/window-width"),
@@ -121,7 +122,7 @@ class Revelation(ui.App):
 		"Sets up the user interface"
 
 		# set up stock items and icons
-		self.stockfactory = stock.StockFactory(config.DIR_ICONS)
+		self.stockfactory = stock.StockFactory(info.DIR_ICONS)
 		self.set_default_icon_list(self.stockfactory.get_pixbufs("revelation", ( 48, 32, 24, 16 )))
 
 		# set up user interface
