@@ -33,11 +33,44 @@ class TestSuite(testutil.TestSuite):
 
 	def __init__(self):
 		testutil.TestSuite.__init__(self, [
+			Account,
 			Field,
 			SecretField,
 			URLField,
 			UserIDField,
 		])
+
+
+
+class Account(testutil.TestCase):
+	"Unit tests for Account"
+
+	def setUp(self):
+		self.account = account.Account()
+
+
+	def test__attr_changed(self):
+		"Account.changed exists"
+
+		self.assertAttr(self.account, "changed")
+
+
+	def test__attr_description(self):
+		"Account.description exists"
+
+		self.assertAttr(self.account, "description")
+
+
+	def test__attr_name(self):
+		"Account.name exists"
+
+		self.assertAttr(self.account, "name")
+
+
+	def test__attr_note(self):
+		"Account.note exists"
+
+		self.assertAttr(self.account, "note")
 
 
 

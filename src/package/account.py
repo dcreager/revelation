@@ -28,6 +28,18 @@ import gettext
 _ = gettext.gettext
 
 
+
+class Account(object):
+	"Account data"
+
+	def __init__(self):
+		self.name		= None
+		self.description	= None
+		self.note		= None
+		self.changed		= None
+
+
+
 class Field(object):
 	"Base class for account fields"
 
