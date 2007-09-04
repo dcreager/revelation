@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# SCons build script
+# Unit test package for Revelation
 # $Id$
 #
 # Copyright ©2003-2007 Erik Grinaker <erikg@codepoet.no>
@@ -20,31 +20,4 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-
-Import ("env")
-
-# handle scripts
-scripts = env.Substitute([
-	"revelation.in",
-])
-
-env.InstallScript(env, "$bindir", scripts)
-
-
-# handle package
-package_source = env.Substitute([
-	"package/info.py.in",
-]) + [
-	"package/__init__.py",
-	"package/account.py",
-	"package/config.py",
-	"package/dialog.py",
-	"package/error.py",
-	"package/stock.py",
-	"package/ui.py",
-]
-
-package = env.PythonBytecode(package_source)
-
-env.Install("$python_libdir/$package", package_source + package)
 

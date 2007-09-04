@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 #
-# SCons build script
+# Test suite for Revelation
 # $Id$
 #
-# Copyright ©2003-2007 Erik Grinaker <erikg@codepoet.no>
+# Copyright ©2006-2007 Erik Grinaker <erikg@codepoet.no>
 #
 # This file is part of Revelation.
 #
@@ -21,30 +21,18 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-Import ("env")
+from __future__ import absolute_import
 
-# handle scripts
-scripts = env.Substitute([
-	"revelation.in",
-])
-
-env.InstallScript(env, "$bindir", scripts)
+from . import account
+from . import testutil
 
 
-# handle package
-package_source = env.Substitute([
-	"package/info.py.in",
-]) + [
-	"package/__init__.py",
-	"package/account.py",
-	"package/config.py",
-	"package/dialog.py",
-	"package/error.py",
-	"package/stock.py",
-	"package/ui.py",
-]
 
-package = env.PythonBytecode(package_source)
+class TestSuite(testutil.TestSuite):
+	"Main test suite"
 
-env.Install("$python_libdir/$package", package_source + package)
+	def __init__(self):
+		testutil.TestSuite.__init__(self, [
+			account.TestSuite,
+		])
 

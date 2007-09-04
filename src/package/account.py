@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# SCons build script
+# Account data
 # $Id$
 #
 # Copyright ©2003-2007 Erik Grinaker <erikg@codepoet.no>
@@ -21,30 +21,37 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-Import ("env")
+from __future__ import absolute_import
 
-# handle scripts
-scripts = env.Substitute([
-	"revelation.in",
-])
+import gettext
 
-env.InstallScript(env, "$bindir", scripts)
+_ = gettext.gettext
 
 
-# handle package
-package_source = env.Substitute([
-	"package/info.py.in",
-]) + [
-	"package/__init__.py",
-	"package/account.py",
-	"package/config.py",
-	"package/dialog.py",
-	"package/error.py",
-	"package/stock.py",
-	"package/ui.py",
-]
+class Field(object):
+	"Base class for account fields"
 
-package = env.PythonBytecode(package_source)
+	name	= None
+	value	= None
 
-env.Install("$python_libdir/$package", package_source + package)
+
+
+class SecretField(Field):
+	"Field for secrets (passwords, PIN codes, etc)"
+
+	name	= _('Password')
+
+
+
+class URLField(Field):
+	"Field for URLs"
+
+	name	= _('URL')
+
+
+
+class UserIDField(Field):
+	"Field for user IDs (usernames, etc)"
+
+	name	= _('Username')
 

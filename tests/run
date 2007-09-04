@@ -1,6 +1,7 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# SCons build script
+# Runs unit tests
 # $Id$
 #
 # Copyright ©2003-2007 Erik Grinaker <erikg@codepoet.no>
@@ -21,30 +22,36 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-Import ("env")
+from __future__ import absolute_import
 
-# handle scripts
-scripts = env.Substitute([
-	"revelation.in",
-])
+import os
+import sys
+import types
 
-env.InstallScript(env, "$bindir", scripts)
+sys.path.insert(0, "%s/.." % os.path.dirname(__file__))
+sys.path.insert(0, "%s/../build/src" % os.path.dirname(__file__))
 
+testsuites = []
 
-# handle package
-package_source = env.Substitute([
-	"package/info.py.in",
-]) + [
-	"package/__init__.py",
-	"package/account.py",
-	"package/config.py",
-	"package/dialog.py",
-	"package/error.py",
-	"package/stock.py",
-	"package/ui.py",
-]
+if len(sys.argv) == 1:
+	from tests.TestSuite import TestSuite
 
-package = env.PythonBytecode(package_source)
+	testsuites.append(TestSuite)
 
-env.Install("$python_libdir/$package", package_source + package)
+else:
+	try:
+		for module in sys.argv[1:]:
+			exec "from tests.%s import TestSuite" % module
+
+			if type(TestSuite) is types.ModuleType:
+				TestSuite = TestSuite.TestSuite
+
+			testsuites.append(TestSuite)
+
+	except ImportError:
+		sys.stderr.write("Unknown test module %s\n" % sys.argv[1])
+		sys.exit(1)
+
+for testsuite in testsuites:
+	testsuite().execute()
 
