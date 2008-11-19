@@ -26,7 +26,6 @@
 import base
 from revelation import config, data, entry, util
 from revelation.bundle import luks
-import shinygnome.util
 
 import re, StringIO, struct, xml.dom.minidom, zlib
 
@@ -174,12 +173,12 @@ class RevelationXML(base.DataHandler):
 
 			xml += "\n"
 			xml += tabs + "<entry type=\"%s\">\n" % e.id
-			xml += tabs + "	<name>%s</name>\n" % shinygnome.util.text.escape_markup(e.name)
-			xml += tabs + "	<description>%s</description>\n" % shinygnome.util.text.escape_markup(e.description)
+			xml += tabs + "	<name>%s</name>\n" % util.escape_markup(e.name)
+			xml += tabs + "	<description>%s</description>\n" % util.escape_markup(e.description)
 			xml += tabs + "	<updated>%d</updated>\n" % e.updated
 
 			for field in e.fields:
-				xml += tabs + "	<field id=\"%s\">%s</field>\n" % ( field.id, shinygnome.util.text.escape_markup(field.value) )
+				xml += tabs + "	<field id=\"%s\">%s</field>\n" % ( field.id, util.escape_markup(field.value) )
 
 			xml += RevelationXML.export_data(self, entrystore, password, iter, level + 1)
 			xml += tabs + "</entry>\n"

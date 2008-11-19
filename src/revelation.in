@@ -24,14 +24,10 @@
 
 import gettext, gnome, gobject, gtk, gtk.gdk, os, pwd, sys
 
-if "$python_libdir$" not in sys.path:
-	sys.path.insert(0, "$python_libdir$")
+if "@pyexecdir@" not in sys.path:
+	sys.path.insert(0, "@pyexecdir@")
 
-if "$python_libdir$/$package$" not in sys.path:
-	sys.path.append("$python_libdir$/$package$")
-
-from revelation import account, config, data, datahandler, dialog, entry, io, stock, ui, util
-import shinygnome.io, shinygnome.util
+from revelation import config, data, datahandler, dialog, entry, io, ui, util
 
 _ = gettext.gettext
 
@@ -63,12 +59,16 @@ class Revelation(ui.App):
 			self.__init_ui()
 			self.__init_states()
 
-		except ( IOError, shinygnome.io.IOError ):
+		except IOError:
 			dialog.Error(self, _('Missing data files'), _('Some of Revelations system files could not be found, please reinstall Revelation.')).run()
 			sys.exit(1)
 
 		except config.ConfigError:
 			dialog.Error(self, _('Missing configuration data'), _('Revelation could not find its configuration data, please reinstall Revelation.')).run()
+			sys.exit(1)
+
+		except ui.DataError:
+			dialog.Error(self, _('Invalid data files'), _('Some of Revelations system files contain invalid data, please reinstall Revelation.')).run()
 			sys.exit(1)
 
 
@@ -95,7 +95,7 @@ class Revelation(ui.App):
 		group.add_action(action, "<Control>V")
 
 		action	= ui.Action("entry-goto",	_('_Go to'),		_('Go to the selected entries'),		"revelation-goto",	True)
-		action.connect("activate",		lambda w: self.entry_goto(self.accountlist.get_selected()))
+		action.connect("activate",		lambda w: self.entry_goto(self.tree.get_selected()))
 		group.add_action(action, "<Shift><Control>Return")
 
 		action	= ui.Action("redo",		_('_Redo'),		_('Redo the previously undone action'),		"gtk-redo")
@@ -115,7 +115,7 @@ class Revelation(ui.App):
 		group.add_action(action, "<Control>C")
 
 		action	= ui.Action("clip-chain",	_('_Copy Pass_word'),	_('Copy password to the clipboard'))
-		action.connect("activate",		lambda w: self.clip_chain(self.entrystore.get_entry(self.accountlist.get_active())))
+		action.connect("activate",		lambda w: self.clip_chain(self.entrystore.get_entry(self.tree.get_active())))
 		group.add_action(action, "<Shift><Control>C")
 
 		action	= ui.Action("clip-cut",		_('Cu_t'),		_('Cut selected entries to the clipboard'),	"gtk-cut")
@@ -123,23 +123,27 @@ class Revelation(ui.App):
 		group.add_action(action, "<Control>X")
 
 		action	= ui.Action("entry-remove",	_('Re_move'),		_('Remove the selected entries'),		"revelation-remove")
-		action.connect("activate",		lambda w: self.entry_remove(self.accountlist.get_selected()))
+		action.connect("activate",		lambda w: self.entry_remove(self.tree.get_selected()))
 		group.add_action(action, "<Control>Delete")
 
 		# action group for "optional" entries
 		group	= ui.ActionGroup("entry-optional")
 		self.uimanager.append_action_group(group)
 
-		action	= ui.Action("account-create",	_('_Create Account...'),	_('Create a new account'),		stock.STOCK_CREATE,	True)
-		action.connect("activate",		lambda w: self.account_create())
+		action	= ui.Action("entry-add",	_('_Add Entry...'),	_('Create a new entry'),			"revelation-new-entry",		True)
+		action.connect("activate",		lambda w: self.entry_add(None, self.tree.get_active()))
 		group.add_action(action, "<Control>Insert")
+
+		action	= ui.Action("entry-folder",	_('Add _Folder...'),	_('Create a new folder'),			"revelation-new-folder")
+		action.connect("activate",		lambda w: self.entry_folder(None, self.tree.get_active()))
+		group.add_action(action, "<Shift><Control>Insert")
 
 		# action group for single entries
 		group	= ui.ActionGroup("entry-single")
 		self.uimanager.append_action_group(group)
 
 		action	= ui.Action("entry-edit",	_('_Edit...'),		_('Edit the selected entry'),			"revelation-edit")
-		action.connect("activate",		lambda w: self.entry_edit(self.accountlist.get_active()))
+		action.connect("activate",		lambda w: self.entry_edit(self.tree.get_active()))
 		group.add_action(action, "<Control>Return")
 
 		# action group for existing file
@@ -223,11 +227,11 @@ class Revelation(ui.App):
 		group.add_action(action, "<Control>Q")
 
 		action	= ui.Action("select-all",	_('_Select All'),	_('Selects all entries'))
-		action.connect("activate",		lambda w: self.accountlist.select_all())
+		action.connect("activate",		lambda w: self.tree.select_all())
 		group.add_action(action, "<Control>A")
 
 		action	= ui.Action("select-none",	_('_Deselect All'),	_('Deselects all entries'))
-		action.connect("activate",		lambda w: self.accountlist.unselect_all())
+		action.connect("activate",		lambda w: self.tree.unselect_all())
 		group.add_action(action, "<Shift><Control>A")
 
 		action	= ui.ToggleAction("view-passwords",	_('Show _Passwords'),	_('Toggle display of passwords'))
@@ -246,29 +250,16 @@ class Revelation(ui.App):
 	def __init_facilities(self):
 		"Sets up various facilities"
 
-		self.accountstore	= account.AccountStore()
-		self.accounttypes	= account.Types()
 		self.clipboard		= data.Clipboard()
-		self.config		= config.Config("/apps/revelation")
+		self.config		= config.Config()
 		self.datafile		= io.DataFile(datahandler.Revelation)
 		self.entryclipboard	= data.EntryClipboard()
-		#self.entrysearch	= data.EntrySearch(self.entrystore)
-		self.items		= stock.StockFactory(self, config.DIR_ICONS)
+		self.entrystore		= data.EntryStore()
+		self.entrysearch	= data.EntrySearch(self.entrystore)
+		self.items		= ui.ItemFactory(self)
 		self.locktimer		= data.Timer()
 		self.sessionclient	= gnome.ui.master_client()
 		self.undoqueue		= data.UndoQueue()
-
-		at = account.Type("revelation-generic", _('Generic'), stock.STOCK_ACCOUNT_GENERIC, _('A generic account'))
-		at.fields.append(account.Field(_('Hostname'), "", account.DATATYPE_HOSTNAME))
-		at.fields.append(account.Field(_('Username'), "", account.DATATYPE_USERID))
-		at.fields.append(account.Field(_('Password'), "", account.DATATYPE_SECRET))
-		self.accounttypes.append(at)
-
-		at = account.Type("revelation-web", _('Website'), stock.STOCK_ACCOUNT_WEB, _('A website account'))
-		at.fields.append(account.Field(_('URL'), "", account.DATATYPE_URL))
-		at.fields.append(account.Field(_('Username'), "", account.DATATYPE_USERID))
-		at.fields.append(account.Field(_('Password'), "", account.DATATYPE_SECRET))
-		self.accounttypes.append(at)
 
 		self.datafile.connect("changed", lambda w,f: self.__state_file(f))
 		self.datafile.connect("content-changed", self.__cb_file_content_changed)
@@ -279,15 +270,19 @@ class Revelation(ui.App):
 		self.undoqueue.connect("changed", lambda w: self.__state_undo(self.undoqueue.get_undo_action(), self.undoqueue.get_redo_action()))
 
 		# check if configuration is updated, install schema if not
-		self.config.schema_ensure([
-			"launcher/website",
-			"view/searchbar",
-			"clipboard/chain_username",
-			"behavior/doubleclick",
-			"view/toolbar_style",
-		], "%s/revelation.schemas" % config.DIR_GCONFSCHEMAS)
+		if self.__check_config() == False:
+
+			if config.install_schema("%s/revelation.schemas" % config.DIR_GCONFSCHEMAS) == False:
+				raise config.ConfigError
+
+			self.config.client.clear_cache()
+
+			if self.__check_config() == False:
+				raise config.ConfigError
 
 		self.config.monitor("file/autolock_timeout",	lambda k,v,d: self.locktimer.start(v * 60))
+
+		dialog.EVENT_FILTER = self.__cb_event_filter
 
 
 	def __init_states(self):
@@ -317,20 +312,19 @@ class Revelation(ui.App):
 		}
 
 		for key, path in bind.items():
-			self.config.bind_widget(key, self.uimanager.get_widget(path))
+			ui.config_bind(self.config, key, self.uimanager.get_widget(path))
 
 		self.show_all()
 
 		self.window.add_filter(self.__cb_event_filter)
-		dialog.add_event_filter(self.__cb_event_filter)
 
 
 		# set some variables
-		#self.entrysearch.string	= ''
-		#self.entrysearch.type	= None
+		self.entrysearch.string	= ''
+		self.entrysearch.type	= None
 
 		# set ui widget states
-		self.__state_clipboard(self.entryclipboard.has_text())
+		self.__state_clipboard(self.entryclipboard.has_contents())
 		self.__state_entry([])
 		self.__state_file(None)
 		self.__state_find(self.searchbar.entry.get_text())
@@ -382,11 +376,11 @@ class Revelation(ui.App):
 		self.add_toolbar(self.searchbar, "searchbar", 2, detachable)
 
 		# set up main application widgets
-		self.accountlist = ui.AccountList(self.accountstore)
-		self.scrolledwindow = ui.ScrolledWindow(self.accountlist)
+		self.tree = ui.EntryTree(self.entrystore)
+		self.scrolledwindow = ui.ScrolledWindow(self.tree)
 
-		self.accountview = ui.AccountView()
-		alignment = ui.Alignment(self.accountview, 0.5, 0.5, 1, 0)
+		self.entryview = ui.EntryView(self.config, self.clipboard)
+		alignment = ui.Alignment(self.entryview, 0.5, 0.5, 1, 0)
 
 		self.hpaned = ui.HPaned(self.scrolledwindow, alignment)
 		self.set_contents(self.hpaned)
@@ -395,17 +389,21 @@ class Revelation(ui.App):
 		self.drag_dest_set(gtk.DEST_DEFAULT_ALL, ( ( "text/uri-list", 0, 0 ), ), gtk.gdk.ACTION_COPY | gtk.gdk.ACTION_MOVE | gtk.gdk.ACTION_LINK )
 		self.connect("drag_data_received", self.__cb_drag_dest)
 
+		self.tree.enable_model_drag_source(gtk.gdk.BUTTON1_MASK, ( ( "revelation/treerow", gtk.TARGET_SAME_APP | gtk.TARGET_SAME_WIDGET, 0), ), gtk.gdk.ACTION_MOVE)
+		self.tree.enable_model_drag_dest(( ( "revelation/treerow", gtk.TARGET_SAME_APP | gtk.TARGET_SAME_WIDGET, 0), ), gtk.gdk.ACTION_MOVE)
+		self.tree.connect("drag_data_received", self.__cb_tree_drag_received)
+
 		# set up callbacks
 		self.searchbar.connect("key-press-event", self.__cb_searchbar_key_press)
 		self.searchbar.button_next.connect("clicked", self.__cb_searchbar_button_clicked, data.SEARCH_NEXT)
 		self.searchbar.button_prev.connect("clicked", self.__cb_searchbar_button_clicked, data.SEARCH_PREVIOUS)
 		self.searchbar.entry.connect("changed", lambda w: self.__state_find(self.searchbar.entry.get_text()))
 
-		self.accountlist.connect("popup", lambda w,d: self.popup(self.uimanager.get_widget("/popup-tree"), d.button, d.time))
-		#self.accountlist.connect("doubleclick", self.__cb_tree_doubleclick)
-		#self.accountlist.connect("key-press-event", self.__cb_tree_keypress)
-		self.accountlist.selection.connect("changed", lambda w: self.accountview.display(self.accountstore.get_account(self.accountlist.get_active())))
-		#self.accountlist.selection.connect("changed", lambda w: self.__state_entry(self.accountlist.get_selected()))
+		self.tree.connect("popup", lambda w,d: self.popup(self.uimanager.get_widget("/popup-tree"), d.button, d.time))
+		self.tree.connect("doubleclick", self.__cb_tree_doubleclick)
+		self.tree.connect("key-press-event", self.__cb_tree_keypress)
+		self.tree.selection.connect("changed", lambda w: self.entryview.display_entry(self.entrystore.get_entry(self.tree.get_active())))
+		self.tree.selection.connect("changed", lambda w: self.__state_entry(self.tree.get_selected()))
 
 
 
@@ -479,7 +477,7 @@ class Revelation(ui.App):
 		if file is not None:
 			self.set_title(os.path.basename(file))
 
-			if shinygnome.io.File(file).is_local():
+			if io.file_is_local(file):
 				os.chdir(os.path.dirname(file))
 
 		else:
@@ -526,8 +524,8 @@ class Revelation(ui.App):
 
 		focuswidget = self.get_focus()
 
-		if focuswidget is self.accountlist:
-			self.clip_copy(self.accountlist.get_selected())
+		if focuswidget is self.tree:
+			self.clip_copy(self.tree.get_selected())
 
 		elif isinstance(focuswidget, gtk.Label) or isinstance(focuswidget, gtk.Entry):
 			focuswidget.emit("copy-clipboard")
@@ -538,8 +536,8 @@ class Revelation(ui.App):
 
 		focuswidget = self.get_focus()
 
-		if focuswidget is self.accountlist:
-			self.clip_cut(self.accountlist.get_selected())
+		if focuswidget is self.tree:
+			self.clip_cut(self.tree.get_selected())
 
 		elif isinstance(focuswidget, gtk.Entry):
 			focuswidget.emit("cut-clipboard")
@@ -550,8 +548,8 @@ class Revelation(ui.App):
 
 		focuswidget = self.get_focus()
 
-		if focuswidget is self.accountlist:
-			self.clip_paste(self.entryclipboard.get(), self.accountlist.get_active())
+		if focuswidget is self.tree:
+			self.clip_paste(self.entryclipboard.get(), self.tree.get_active())
 
 		elif isinstance(focuswidget, gtk.Entry):
 			focuswidget.emit("paste-clipboard")
@@ -573,7 +571,6 @@ class Revelation(ui.App):
 		"Event filter for gdk window"
 
 		self.locktimer.reset()
-
 		return gtk.gdk.FILTER_CONTINUE
 
 
@@ -601,7 +598,7 @@ class Revelation(ui.App):
 				self.file_open(self.datafile.get_file(), self.datafile.get_password())
 
 		except dialog.CancelError:
-			self.statusbar.set(_('Open cancelled'))
+			self.statusbar.set_status(_('Open cancelled'))
 
 
 	def __cb_file_autolock(self, widget, data = None):
@@ -666,20 +663,75 @@ class Revelation(ui.App):
 			self.entry_goto((iter,))
 
 
+	def __cb_tree_drag_received(self, tree, context, x, y, seldata, info, time):
+		"Callback for drag drops on the treeview"
+
+		# get source and destination data
+		sourceiters = self.entrystore.filter_parents(self.tree.get_selected())
+		destrow = self.tree.get_dest_row_at_pos(x, y)
+
+		if destrow is None:
+			destpath = ( self.entrystore.iter_n_children(None) - 1, )
+			pos = gtk.TREE_VIEW_DROP_AFTER
+
+		else:
+			destpath, pos = destrow
+
+		destiter = self.entrystore.get_iter(destpath)
+		destpath = self.entrystore.get_path(destiter)
+
+		# avoid drops to current iter or descentants
+		for sourceiter in sourceiters:
+			sourcepath = self.entrystore.get_path(sourceiter)
+
+			if self.entrystore.is_ancestor(sourceiter, destiter) == True or sourcepath == destpath:
+				context.finish(False, False, long(time))
+				return
+
+			elif pos == gtk.TREE_VIEW_DROP_BEFORE and sourcepath[:-1] == destpath[:-1] and sourcepath[-1] == destpath[-1] - 1:
+				context.finish(False, False, long(time))
+				return
+
+			elif pos == gtk.TREE_VIEW_DROP_AFTER and sourcepath[:-1] == destpath[:-1] and sourcepath[-1] == destpath[-1] + 1:
+				context.finish(False, False, long(time))
+				return
+
+
+		# move the entries
+		if pos in ( gtk.TREE_VIEW_DROP_INTO_OR_BEFORE, gtk.TREE_VIEW_DROP_INTO_OR_AFTER):
+			parent = destiter
+			sibling = None
+
+		elif pos == gtk.TREE_VIEW_DROP_BEFORE:
+			parent = self.entrystore.iter_parent(destiter)
+			sibling = destiter
+
+		elif pos == gtk.TREE_VIEW_DROP_AFTER:
+			parent = self.entrystore.iter_parent(destiter)
+
+			sibpath = list(destpath)
+			sibpath[-1] += 1
+			sibling = self.entrystore.get_iter(sibpath)
+
+		self.entry_move(sourceiters, parent, sibling)
+
+		context.finish(False, False, long(time))
+
+
 	def __cb_tree_keypress(self, widget, data = None):
 		"Handles key presses for the tree"
 
 		# return
 		if data.keyval == 65293:
-			self.entry_edit(self.accountlist.get_active())
+			self.entry_edit(self.tree.get_active())
 
 		# insert
 		elif data.keyval == 65379:
-			self.account_create()
+			self.entry_add(None, self.tree.get_active())
 
 		# delete
 		elif data.keyval == 65535:
-			self.entry_remove(self.accountlist.get_selected())
+			self.entry_remove(self.tree.get_selected())
 
 
 
@@ -724,7 +776,7 @@ class Revelation(ui.App):
 		sibling = self.entrystore.get_iter(path)
 
 		iter = self.entrystore.add_entry(e, parent, sibling)
-		self.accountlist.select(iter)
+		self.tree.select(iter)
 
 
 	def __cb_redo_edit(self, name, actiondata):
@@ -734,7 +786,7 @@ class Revelation(ui.App):
 		iter = self.entrystore.get_iter(path)
 
 		self.entrystore.update_entry(iter, postentry)
-		self.accountlist.select(iter)
+		self.tree.select(iter)
 
 
 	def __cb_redo_import(self, name, actiondata):
@@ -767,7 +819,7 @@ class Revelation(ui.App):
 			newiters.append(newiter)
 
 		if len(newiters) > 0:
-			self.accountlist.select(newiters[0])
+			self.tree.select(newiters[0])
 
 
 	def __cb_redo_paste(self, name, actiondata):
@@ -777,7 +829,7 @@ class Revelation(ui.App):
 		iters = self.entrystore.import_entry(entrystore, None, self.entrystore.get_iter(parentpath))
 
 		if len(iters) > 0:
-			self.accountlist.select(iters[0])
+			self.tree.select(iters[0])
 
 
 	def __cb_redo_remove(self, name, actiondata):
@@ -790,7 +842,7 @@ class Revelation(ui.App):
 		for iter in iters:
 			self.entrystore.remove_entry(iter)
 
-		self.accountlist.unselect_all()
+		self.tree.unselect_all()
 
 
 	def __cb_undo_add(self, name, actiondata):
@@ -799,7 +851,7 @@ class Revelation(ui.App):
 		path, e = actiondata
 
 		self.entrystore.remove_entry(self.entrystore.get_iter(path))
-		self.accountlist.unselect_all()
+		self.tree.unselect_all()
 
 
 	def __cb_undo_edit(self, name, actiondata):
@@ -809,7 +861,7 @@ class Revelation(ui.App):
 		iter = self.entrystore.get_iter(path)
 
 		self.entrystore.update_entry(iter, preentry)
-		self.accountlist.select(iter)
+		self.tree.select(iter)
 
 
 	def __cb_undo_import(self, name, actiondata):
@@ -821,7 +873,7 @@ class Revelation(ui.App):
 		for iter in iters:
 			self.entrystore.remove_entry(iter)
 
-		self.accountlist.unselect_all()
+		self.tree.unselect_all()
 
 
 	def __cb_undo_move(self, name, actiondata):
@@ -850,7 +902,7 @@ class Revelation(ui.App):
 			newiters.append(newiter)
 
 		if len(newiters) > 0:
-			self.accountlist.select(newiters[-1])
+			self.tree.select(newiters[-1])
 
 
 	def __cb_undo_paste(self, name, actiondata):
@@ -862,7 +914,7 @@ class Revelation(ui.App):
 		for iter in iters:
 			self.entrystore.remove_entry(iter)
 
-		self.accountlist.unselect_all()
+		self.tree.unselect_all()
 
 
 	def __cb_undo_remove(self, name, actiondata):
@@ -876,23 +928,39 @@ class Revelation(ui.App):
 			iter = self.entrystore.import_entry(entrystore, entrystore.iter_nth_child(None, 0), parent, sibling)
 			iters.append(iter)
 
-		self.accountlist.select(iters[0])
+		self.tree.select(iters[0])
 
 
 
 	##### PRIVATE METHODS #####
 
+	def __check_config(self):
+		"Checks if the configuration is correct"
+
+		try:
+			self.config.get("launcher/website")
+			self.config.get("view/searchbar")
+			self.config.get("clipboard/chain_username")
+			self.config.get("behavior/doubleclick")
+			self.config.get("view/toolbar_style")
+
+			return True
+
+		except config.ConfigError:
+			return False
+
+
 	def __entry_find(self, parent, string, entrytype, direction = data.SEARCH_NEXT):
 		"Searches for an entry"
 
-		match = self.entrysearch.find(string, entrytype, self.accountlist.get_active(), direction)
+		match = self.entrysearch.find(string, entrytype, self.tree.get_active(), direction)
 
 		if match != None:
-			self.accountlist.select(match)
-			self.statusbar.set(_('Match found for \'%s\'') % string)
+			self.tree.select(match)
+			self.statusbar.set_status(_('Match found for \'%s\'') % string)
 
 		else:
-			self.statusbar.set(_('No match found for \'%s\'') % string)
+			self.statusbar.set_status(_('No match found for \'%s\'') % string)
 			dialog.Error(parent, _('No match found'), _('The string \'%s\' does not match any entries. Try searching for a different phrase.') % string).run()
 
 
@@ -909,7 +977,7 @@ class Revelation(ui.App):
 			self.datafile.save(self.entrystore, self.datafile.get_file(), self.datafile.get_password())
 			self.entrystore.changed = False
 
-		except ( IOError, shinygnome.io.IOError ):
+		except IOError:
 			pass
 
 
@@ -928,23 +996,23 @@ class Revelation(ui.App):
 					dialog.Error(self, _('Incorrect password'), _('The password you entered for the file \'%s\' was not correct.') % file).run()
 
 		except datahandler.FormatError:
-			self.statusbar.set(_('Open failed'))
+			self.statusbar.set_status(_('Open failed'))
 			dialog.Error(self, _('Invalid file format'), _('The file \'%s\' contains invalid data.') % file).run()
 
 		except ( datahandler.DataError, entry.EntryTypeError, entry.EntryFieldError ):
-			self.statusbar.set(_('Open failed'))
+			self.statusbar.set_status(_('Open failed'))
 			dialog.Error(self, _('Unknown data'), _('The file \'%s\' contains unknown data. It may have been created by a newer version of Revelation.') % file).run()
 
 		except datahandler.VersionError:
-			self.statusbar.set(_('Open failed'))
+			self.statusbar.set_status(_('Open failed'))
 			dialog.Error(self, _('Unknown data version'), _('The file \'%s\' has a future version number, please upgrade Revelation to open it.') % file).run()
 
 		except datahandler.DetectError:
-			self.statusbar.set(_('Open failed'))
+			self.statusbar.set_status(_('Open failed'))
 			dialog.Error(self, _('Unable to detect filetype'), _('The file type of the file \'%s\' could not be automatically detected. Try specifying the file type manually.')% file).run()
 
-		except ( IOError, shinygnome.io.IOError ):
-			self.statusbar.set(_('Open failed'))
+		except IOError:
+			self.statusbar.set_status(_('Open failed'))
 			dialog.Error(self, _('Unable to open file'), _('The file \'%s\' could not be opened. Make sure that the file exists, and that you have permissions to open it.') % file).run()
 
 
@@ -957,7 +1025,7 @@ class Revelation(ui.App):
 			list.append(e[entry.UsernameField])
 
 		list.append(pwd.getpwuid(os.getuid())[0])
-		#list.extend(self.entrystore.get_popular_values(entry.UsernameField, 3))
+		list.extend(self.entrystore.get_popular_values(entry.UsernameField, 3))
 
 		list = {}.fromkeys(list).keys()
 		list.sort()
@@ -971,31 +1039,7 @@ class Revelation(ui.App):
 	def about(self):
 		"Displays the about dialog"
 
-		dialog.unique(dialog.About, self).run()
-
-
-	def account_create(self):
-		"Creates an account"
-
-		try:
-			d = dialog.AccountEdit(self, _('Create Account'), self.accounttypes)
-			#d.set_fieldwidget_data(entry.UsernameField, self.__get_common_usernames())
-			acct = d.run()
-
-			iter = self.accountstore.add_account(acct)
-
-			#self.undoqueue.add_action(
-			#	_('Add entry'), self.__cb_undo_add, self.__cb_redo_add,
-			#	( self.entrystore.get_path(iter), e.copy() )
-			#)
-
-			#self.__file_autosave()
-			self.accountlist.select(iter)
-			self.statusbar.set(_('Account created'))
-
-		except dialog.CancelError:
-			self.statusbar.set(_('Create account cancelled'))
-
+		dialog.run_unique(dialog.About, self)
 
 
 	def clip_chain(self, e):
@@ -1010,18 +1054,18 @@ class Revelation(ui.App):
 			secrets.insert(0, e[entry.UsernameField])
 
 		if len(secrets) == 0:
-			self.statusbar.set(_('Entry has no password to copy'))
+			self.statusbar.set_status(_('Entry has no password to copy'))
 
 		else:
-			self.clipboard.set_text(secrets, True)
-			self.statusbar.set(_('Password copied to clipboard'))
+			self.clipboard.set(secrets, True)
+			self.statusbar.set_status(_('Password copied to clipboard'))
 
 
 	def clip_copy(self, iters):
 		"Copies entries to the clipboard"
 
 		self.entryclipboard.set(self.entrystore, iters)
-		self.statusbar.set(_('Entries copied'))
+		self.statusbar.set_status(_('Entries copied'))
 
 
 	def clip_cut(self, iters):
@@ -1049,8 +1093,8 @@ class Revelation(ui.App):
 
 		self.__file_autosave()
 
-		self.accountlist.unselect_all()
-		self.statusbar.set(_('Entries cut'))
+		self.tree.unselect_all()
+		self.statusbar.set_status(_('Entries cut'))
 
 
 	def clip_paste(self, entrystore, parent):
@@ -1059,7 +1103,7 @@ class Revelation(ui.App):
 		if entrystore == None:
 			return
 
-		parent = self.accountlist.get_active()
+		parent = self.tree.get_active()
 		iters = self.entrystore.import_entry(entrystore, None, parent)
 
 		paths = [ self.entrystore.get_path(iter) for iter in iters ]
@@ -1070,9 +1114,9 @@ class Revelation(ui.App):
 		)
 
 		if len(iters) > 0:
-			self.accountlist.select(iters[0])
+			self.tree.select(iters[0])
 
-		self.statusbar.set(_('Entries pasted'))
+		self.statusbar.set_status(_('Entries pasted'))
 
 
 	def entry_add(self, e = None, parent = None, sibling = None):
@@ -1092,11 +1136,11 @@ class Revelation(ui.App):
 			)
 
 			self.__file_autosave()
-			self.accountlist.select(iter)
-			self.statusbar.set(_('Entry added'))
+			self.tree.select(iter)
+			self.statusbar.set_status(_('Entry added'))
 
 		except dialog.CancelError:
-			self.statusbar.set(_('Add entry cancelled'))
+			self.statusbar.set_status(_('Add entry cancelled'))
 
 
 	def entry_edit(self, iter):
@@ -1118,7 +1162,7 @@ class Revelation(ui.App):
 
 			n = d.run()
 			self.entrystore.update_entry(iter, n)
-			self.accountlist.select(iter)
+			self.tree.select(iter)
 
 			self.undoqueue.add_action(
 				_('Update entry'), self.__cb_undo_edit, self.__cb_redo_edit,
@@ -1126,10 +1170,10 @@ class Revelation(ui.App):
 			)
 
 			self.__file_autosave()
-			self.statusbar.set(_('Entry updated'))
+			self.statusbar.set_status(_('Entry updated'))
 
 		except dialog.CancelError:
-			self.statusbar.set(_('Edit entry cancelled'))
+			self.statusbar.set_status(_('Edit entry cancelled'))
 
 
 	def entry_find(self):
@@ -1155,11 +1199,11 @@ class Revelation(ui.App):
 			)
 
 			self.__file_autosave()
-			self.accountlist.select(iter)
-			self.statusbar.set(_('Folder added'))
+			self.tree.select(iter)
+			self.statusbar.set_status(_('Folder added'))
 
 		except dialog.CancelError:
-			self.statusbar.set(_('Add folder cancelled'))
+			self.statusbar.set_status(_('Add folder cancelled'))
 
 
 	def entry_goto(self, iters):
@@ -1173,7 +1217,7 @@ class Revelation(ui.App):
 				command = self.config.get("launcher/%s" % e.id)
 
 				if command in ( "", None ):
-					self.statusbar.set(_('No goto command found for %s entries') % e.typename)
+					self.statusbar.set_status(_('No goto command found for %s entries') % e.typename)
 					return
 
 				subst = {}
@@ -1190,13 +1234,13 @@ class Revelation(ui.App):
 				if self.config.get("clipboard/chain_username") == True and len(chain) > 0 and e.has_field(entry.UsernameField) == True and e[entry.UsernameField] != "" and "%" + entry.UsernameField.symbol not in command:
 					chain.insert(0, e[entry.UsernameField])
 
-				self.clipboard.set_text(chain, True)
+				self.clipboard.set(chain, True)
 
 				# generate and run goto command
 				command = util.parse_subst(command, subst)
 				util.execute_child(command)
 
-				self.statusbar.set(_('Entry opened'))
+				self.statusbar.set_status(_('Entry opened'))
 
 			except ( util.SubstFormatError, config.ConfigError ):
 				dialog.Error(self, _('Invalid goto command format'), _('The goto command for \'%s\' entries is invalid, please correct it in the preferences.') % e.typename).run()
@@ -1228,10 +1272,10 @@ class Revelation(ui.App):
 		)
 
 		if len(newiters) > 0:
-			self.accountlist.select(newiters[0])
+			self.tree.select(newiters[0])
 
 		self.__file_autosave()
-		self.statusbar.set(_('Entries moved'))
+		self.statusbar.set_status(_('Entries moved'))
 
 
 	def entry_remove(self, iters):
@@ -1262,12 +1306,12 @@ class Revelation(ui.App):
 				undoactions
 			)
 
-			self.accountlist.unselect_all()
+			self.tree.unselect_all()
 			self.__file_autosave()
-			self.statusbar.set(_('Entries removed'))
+			self.statusbar.set_status(_('Entries removed'))
 
 		except dialog.CancelError:
-			self.statusbar.set(_('Entry removal cancelled'))
+			self.statusbar.set_status(_('Entry removal cancelled'))
 
 
 	def file_change_password(self, password = None):
@@ -1281,17 +1325,17 @@ class Revelation(ui.App):
 			self.entrystore.changed = True
 
 			self.__file_autosave()
-			self.statusbar.set(_('Password changed'))
+			self.statusbar.set_status(_('Password changed'))
 
 		except dialog.CancelError:
-			self.statusbar.set(_('Password change cancelled'))
+			self.statusbar.set_status(_('Password change cancelled'))
 
 
 	def file_export(self):
 		"Exports data to a foreign file format"
 
 		try:
-			file, handler = dialog.ExportFileChooser(self).run()
+			file, handler = dialog.ExportFileSelector(self).run()
 			datafile = io.DataFile(handler)
 
 			if datafile.get_handler().encryption == True:
@@ -1302,21 +1346,21 @@ class Revelation(ui.App):
 				password = None
 
 			datafile.save(self.entrystore, file, password)
-			self.statusbar.set(_('Data exported to %s') % datafile.get_file())
+			self.statusbar.set_status(_('Data exported to %s') % datafile.get_file())
 
 		except dialog.CancelError:
-			self.statusbar.set(_('Export cancelled'))
+			self.statusbar.set_status(_('Export cancelled'))
 
-		except shinygnome.io.IOError:
+		except IOError:
 			dialog.Error(self, _('Unable to write to file'), _('The file \'%s\' could not be opened for writing. Make sure that you have the proper permissions to write to it.') % file).run()
-			self.statusbar.set(_('Export failed'))
+			self.statusbar.set_status(_('Export failed'))
 
 
 	def file_import(self):
 		"Imports data from a foreign file"
 
 		try:
-			file, handler = dialog.ImportFileChooser(self).run()
+			file, handler = dialog.ImportFileSelector(self).run()
 			datafile = io.DataFile(handler)
 			entrystore = self.__file_load(file, None, datafile)
 
@@ -1329,12 +1373,12 @@ class Revelation(ui.App):
 					( paths, entrystore )
 				)
 
-				self.statusbar.set(_('Data imported from %s') % datafile.get_file())
+				self.statusbar.set_status(_('Data imported from %s') % datafile.get_file())
 
 			self.__file_autosave()
 
 		except dialog.CancelError:
-			self.statusbar.set(_('Import cancelled'))
+			self.statusbar.set_status(_('Import cancelled'))
 
 
 	def file_lock(self):
@@ -1351,14 +1395,14 @@ class Revelation(ui.App):
 		transients = [ window for window in gtk.window_list_toplevels() if window.get_transient_for() == self ]
 
 		# store current state
-		activeiter = self.accountlist.get_active()
+		activeiter = self.tree.get_active()
 		oldtitle = self.get_title()
 
 		# clear application contents
-		self.accountlist.set_model(None)
-		self.accountview.clear()
+		self.tree.set_model(None)
+		self.entryview.clear()
 		self.set_title('[' + _('Locked') + ']')
-		self.statusbar.set(_('File locked'))
+		self.statusbar.set_status(_('File locked'))
 
 		# hide any dialogs
 		for window in transients:
@@ -1369,9 +1413,9 @@ class Revelation(ui.App):
 			d = dialog.PasswordLock(self, password)
 
 			if self.entrystore.changed == True:
-				l = ui.ImageLabel(_('Quit disabled due to unsaved changes'), stock.STOCK_WARNING)
+				l = ui.ImageLabel(_('Quit disabled due to unsaved changes'), ui.STOCK_WARNING)
 				d.contents.pack_start(l)
-				d.get_response_widget(gtk.RESPONSE_CANCEL).set_sensitive(False)
+				d.get_button(1).set_sensitive(False)
 
 			d.run()
 
@@ -1379,10 +1423,10 @@ class Revelation(ui.App):
 			self.quit()
 
 		# unlock the file and restore state
-		self.accountlist.set_model(self.entrystore)
-		self.accountlist.select(activeiter)
+		self.tree.set_model(self.entrystore)
+		self.tree.select(activeiter)
 		self.set_title(oldtitle)
-		self.statusbar.set(_('File unlocked'))
+		self.statusbar.set_status(_('File unlocked'))
 
 		for window in transients:
 			window.show()
@@ -1401,22 +1445,22 @@ class Revelation(ui.App):
 			self.entrystore.clear()
 			self.datafile.close()
 			self.undoqueue.clear()
-			self.statusbar.set(_('New file created'))
+			self.statusbar.set_status(_('New file created'))
 
 		except dialog.CancelError:
-			self.statusbar.set(_('New file cancelled'))
+			self.statusbar.set_status(_('New file cancelled'))
 
 
 	def file_open(self, file = None, password = None):
 		"Opens a data file"
 
 		try:
-			if self.accountstore.changed == True and dialog.FileChangesOpen(self).run() == True:
+			if self.entrystore.changed == True and dialog.FileChangesOpen(self).run() == True:
 				if self.file_save(self.datafile.get_file(), self.datafile.get_password()) == False:
 					raise dialog.CancelError
 
 			if file is None:
-				file = dialog.OpenFileChooser(self).run()
+				file = dialog.OpenFileSelector(self).run()
 
 			entrystore = self.__file_load(file, password)
 
@@ -1428,10 +1472,10 @@ class Revelation(ui.App):
 			self.entrystore.changed = False
 			self.undoqueue.clear()
 
-			self.statusbar.set(_('Opened file %s') % self.datafile.get_file())
+			self.statusbar.set_status(_('Opened file %s') % self.datafile.get_file())
 
 		except dialog.CancelError:
-			self.statusbar.set(_('Open cancelled'))
+			self.statusbar.set_status(_('Open cancelled'))
 
 
 	def file_save(self, file = None, password = None):
@@ -1439,50 +1483,50 @@ class Revelation(ui.App):
 
 		try:
 			if file is None:
-				file = dialog.SaveFileChooser(self).run()
+				file = dialog.SaveFileSelector(self).run()
 
 			if password == None:
 				password = dialog.PasswordSave(self, file).run()
 
 			self.datafile.save(self.entrystore, file, password)
 			self.entrystore.changed = False
-			self.statusbar.set(_('Data saved to file %s') % file)
+			self.statusbar.set_status(_('Data saved to file %s') % file)
 
 			return True
 
 		except dialog.CancelError:
-			self.statusbar.set(_('Save cancelled'))
+			self.statusbar.set_status(_('Save cancelled'))
 			return False
 
-		except ( IOError, shinygnome.io.IOError ):
+		except IOError:
 			dialog.Error(self, _('Unable to save file'), _('The file \'%s\' could not be opened for writing. Make sure that you have the proper permissions to write to it.') % file).run()
-			self.statusbar.set(_('Save failed'))
+			self.statusbar.set_status(_('Save failed'))
 			return False
 
 
 	def prefs(self):
 		"Displays the application preferences"
 
-		dialog.unique(Preferences, self, self.config).run()
+		dialog.run_unique(Preferences, self, self.config)
 
 
 	def pwcheck(self):
 		"Displays the password checking dialog"
 
-		dialog.unique(dialog.PasswordChecker, self, self.config, self.clipboard).run()
+		dialog.run_unique(dialog.PasswordChecker, self, self.config, self.clipboard)
 
 
 	def pwgen(self):
 		"Displays the password generator dialog"
 
-		dialog.unique(dialog.PasswordGenerator, self, self.config, self.clipboard).run()
+		dialog.run_unique(dialog.PasswordGenerator, self, self.config, self.clipboard)
 
 
 	def quit(self):
 		"Quits the application"
 
 		try:
-			if self.accountstore.changed == True and dialog.FileChangesQuit(self).run() == True:
+			if self.entrystore.changed == True and dialog.FileChangesQuit(self).run() == True:
 				if self.file_save(self.datafile.get_file(), self.datafile.get_password()) == False:
 					raise dialog.CancelError
 
@@ -1496,7 +1540,7 @@ class Revelation(ui.App):
 			return True
 
 		except dialog.CancelError:
-			self.statusbar.set(_('Quit cancelled'))
+			self.statusbar.set_status(_('Quit cancelled'))
 			return False
 
 
@@ -1509,7 +1553,7 @@ class Revelation(ui.App):
 			return
 
 		self.undoqueue.redo()
-		self.statusbar.set(_('%s redone') % action[1])
+		self.statusbar.set_status(_('%s redone') % action[1])
 		self.__file_autosave()
 
 
@@ -1529,7 +1573,7 @@ class Revelation(ui.App):
 
 
 		if file != "":
-			self.file_open(shinygnome.util.path.normalize(file))
+			self.file_open(io.file_normpath(file))
 
 		gtk.main()
 
@@ -1543,7 +1587,7 @@ class Revelation(ui.App):
 			return
 
 		self.undoqueue.undo()
-		self.statusbar.set(_('%s undone') % action[1])
+		self.statusbar.set_status(_('%s undone') % action[1])
 		self.__file_autosave()
 
 
@@ -1559,64 +1603,61 @@ class Preferences(dialog.Utility):
 		self.notebook = ui.Notebook()
 		self.vbox.pack_start(self.notebook)
 
-		self.page_general = ui.NotebookPage()
-		self.notebook.append_page(self.page_general, _('General'))
-		self.__init_inputbox_files(self.page_general)
-		self.__init_inputbox_password(self.page_general)
+		self.page_general = self.notebook.create_page(_('General'))
+		self.__init_section_files(self.page_general)
+		self.__init_section_password(self.page_general)
 
-		self.page_interface = ui.NotebookPage()
-		self.notebook.append_page(self.page_interface, _('Interface'))
-		self.__init_inputbox_doubleclick(self.page_interface)
-		self.__init_inputbox_toolbar(self.page_interface)
+		self.page_interface = self.notebook.create_page(_('Interface'))
+		self.__init_section_doubleclick(self.page_interface)
+		self.__init_section_toolbar(self.page_interface)
 
-		self.page_gotocmd = ui.NotebookPage()
-		self.notebook.append_page(self.page_gotocmd, _('Goto Commands'))
-		self.__init_inputbox_gotocmd(self.page_gotocmd)
+		self.page_gotocmd = self.notebook.create_page(_('Goto Commands'))
+		self.__init_section_gotocmd(self.page_gotocmd)
 
 		self.connect("response", lambda w,d: self.destroy())
 
 
-	def __init_inputbox_doubleclick(self, page):
-		"Sets up the doubleclick inputbox"
+	def __init_section_doubleclick(self, page):
+		"Sets up the doubleclick section"
 
-		self.inputbox_doubleclick = page.add_inputbox(_('Doubleclick Action'))
+		self.section_doubleclick = page.add_section(_('Doubleclick Action'))
 
 		# radio-button for go to
 		self.radio_doubleclick_goto = ui.RadioButton(None, _('Go to account, if possible'))
-		self.config.bind_widget("behavior/doubleclick", self.radio_doubleclick_goto, "goto")
+		ui.config_bind(self.config, "behavior/doubleclick", self.radio_doubleclick_goto, "goto")
 
 		self.tooltips.set_tip(self.radio_doubleclick_goto, _('Go to the account (open in external application) on doubleclick, if required data is filled in'))
-		self.inputbox_doubleclick.add(self.radio_doubleclick_goto)
+		self.section_doubleclick.append_widget(None, self.radio_doubleclick_goto)
 
 		# radio-button for edit
 		self.radio_doubleclick_edit = ui.RadioButton(self.radio_doubleclick_goto, _('Edit account'))
-		self.config.bind_widget("behavior/doubleclick", self.radio_doubleclick_edit, "edit")
+		ui.config_bind(self.config, "behavior/doubleclick", self.radio_doubleclick_edit, "edit")
 
 		self.tooltips.set_tip(self.radio_doubleclick_edit, _('Edit the account on doubleclick'))
-		self.inputbox_doubleclick.add(self.radio_doubleclick_edit)
+		self.section_doubleclick.append_widget(None, self.radio_doubleclick_edit)
 
 		# radio-button for copy
 		self.radio_doubleclick_copy = ui.RadioButton(self.radio_doubleclick_goto, _('Copy password to clipboard'))
-		self.config.bind_widget("behavior/doubleclick", self.radio_doubleclick_copy, "copy")
+		ui.config_bind(self.config, "behavior/doubleclick", self.radio_doubleclick_copy, "copy")
 
 		self.tooltips.set_tip(self.radio_doubleclick_copy, _('Copy the account password to clipboard on doubleclick'))
-		self.inputbox_doubleclick.add(self.radio_doubleclick_copy)
+		self.section_doubleclick.append_widget(None, self.radio_doubleclick_copy)
 
 
-	def __init_inputbox_files(self, page):
-		"Sets up the files inputbox"
+	def __init_section_files(self, page):
+		"Sets up the files section"
 
-		self.inputbox_files = page.add_inputbox(_('Files'))
+		self.section_files = page.add_section(_('Files'))
 
 		# checkbutton and file button for autoloading a file
 		self.check_autoload = ui.CheckButton(_('Open file on startup:'))
-		self.config.bind_widget("file/autoload", self.check_autoload)
+		ui.config_bind(self.config, "file/autoload", self.check_autoload)
 
 		self.check_autoload.connect("toggled", lambda w: self.button_autoload_file.set_sensitive(w.get_active()))
 		self.tooltips.set_tip(self.check_autoload, _('When enabled, this file will be opened when the program is started'))
 
-		self.button_autoload_file = ui.FileChooserButton(_('Select File to Automatically Open'))
-		self.config.bind_widget("file/autoload_file", self.button_autoload_file)
+		self.button_autoload_file = ui.FileButton(_('Select File to Automatically Open'))
+		ui.config_bind(self.config, "file/autoload_file", self.button_autoload_file)
 		self.button_autoload_file.set_sensitive(self.check_autoload.get_active())
 
 		eventbox = ui.EventBox(self.button_autoload_file)
@@ -1625,25 +1666,25 @@ class Preferences(dialog.Utility):
 		hbox = ui.HBox()
 		hbox.pack_start(self.check_autoload, False, False)
 		hbox.pack_start(eventbox)
-		self.inputbox_files.add(hbox)
+		self.section_files.append_widget(None, hbox)
 
 		# check-button for autosave
 		self.check_autosave = ui.CheckButton(_('Automatically save data when changed'))
-		self.config.bind_widget("file/autosave", self.check_autosave)
+		ui.config_bind(self.config, "file/autosave", self.check_autosave)
 
 		self.tooltips.set_tip(self.check_autosave, _('Automatically save the data file when an entry is added, modified or removed'))
-		self.inputbox_files.add(self.check_autosave)
+		self.section_files.append_widget(None, self.check_autosave)
 
 		# autolock file
 		self.check_autolock = ui.CheckButton(_('Lock file when inactive for'))
-		self.config.bind_widget("file/autolock", self.check_autolock)
+		ui.config_bind(self.config, "file/autolock", self.check_autolock)
 		self.check_autolock.connect("toggled", lambda w: self.spin_autolock_timeout.set_sensitive(w.get_active()))
 		self.tooltips.set_tip(self.check_autolock, _('Automatically lock the data file after a period of inactivity'))
 
-		self.spin_autolock_timeout = ui.SpinButton()
+		self.spin_autolock_timeout = ui.SpinEntry()
 		self.spin_autolock_timeout.set_range(1, 120)
 		self.spin_autolock_timeout.set_sensitive(self.check_autolock.get_active())
-		self.config.bind_widget("file/autolock_timeout", self.spin_autolock_timeout)
+		ui.config_bind(self.config, "file/autolock_timeout", self.spin_autolock_timeout)
 		self.tooltips.set_tip(self.spin_autolock_timeout, _('The period of inactivity before locking the file, in minutes'))
 
 		hbox = ui.HBox()
@@ -1651,13 +1692,13 @@ class Preferences(dialog.Utility):
 		hbox.pack_start(self.check_autolock, False, False)
 		hbox.pack_start(self.spin_autolock_timeout, False, False)
 		hbox.pack_start(ui.Label(_('minutes')))
-		self.inputbox_files.add(hbox)
+		self.section_files.append_widget(None, hbox)
 
 
-	def __init_inputbox_gotocmd(self, page):
-		"Sets up the goto command inputbox"
+	def __init_section_gotocmd(self, page):
+		"Sets up the goto command section"
 
-		self.inputbox_gotocmd = page.add_inputbox(_('Goto Commands'))
+		self.section_gotocmd = page.add_section(_('Goto Commands'))
 
 		for entrytype in entry.ENTRYLIST:
 			if entrytype == entry.FolderEntry:
@@ -1666,7 +1707,7 @@ class Preferences(dialog.Utility):
 			e = entrytype()
 
 			widget = ui.Entry()
-			self.config.bind_widget("launcher/%s" % e.id, widget)
+			ui.config_bind(self.config, "launcher/%s" % e.id, widget)
 
 			tooltip = _('Goto command for %s accounts. The following expansion variables can be used:') % e.typename + "\n\n"
 
@@ -1679,86 +1720,88 @@ class Preferences(dialog.Utility):
 			tooltip += _('%(...%): optional substring expansion')
 
 			self.tooltips.set_tip(widget, tooltip)
-			self.inputbox_gotocmd.add(widget, e.typename)
+			self.section_gotocmd.append_widget(e.typename, widget)
 
 
-	def __init_inputbox_password(self, page):
-		"Sets up the password inputbox"
+	def __init_section_password(self, page):
+		"Sets up the password section"
 
-		self.inputbox_password = page.add_inputbox(_('Passwords'))
+		self.section_password = page.add_section(_('Passwords'))
 
 		# show passwords checkbutton
 		self.check_show_passwords = ui.CheckButton(_('Display passwords and other secrets'))
-		self.config.bind_widget("view/passwords", self.check_show_passwords)
+		ui.config_bind(self.config, "view/passwords", self.check_show_passwords)
 
 		self.tooltips.set_tip(self.check_show_passwords, _('Display passwords and other secrets, such as PIN codes (otherwise, hide with ******)'))
-		self.inputbox_password.add(self.check_show_passwords)
+		self.section_password.append_widget(None, self.check_show_passwords)
 
 		# chain username checkbutton
 		self.check_chain_username = ui.CheckButton(_('Also copy username when copying password'))
-		self.config.bind_widget("clipboard/chain_username", self.check_chain_username)
+		ui.config_bind(self.config, "clipboard/chain_username", self.check_chain_username)
 
 		self.tooltips.set_tip(self.check_chain_username, _('When the password is copied to clipboard, put the username before the password as a clipboard "chain"'))
-		self.inputbox_password.add(self.check_chain_username)
+		self.section_password.append_widget(None, self.check_chain_username)
 
 		# password length spinbutton
-		self.spin_pwlen = ui.SpinButton()
+		self.spin_pwlen = ui.SpinEntry()
 		self.spin_pwlen.set_range(4, 32)
-		self.config.bind_widget("passwordgen/length", self.spin_pwlen)
+		ui.config_bind(self.config, "passwordgen/length", self.spin_pwlen)
 
 		self.tooltips.set_tip(self.spin_pwlen, _('The number of characters in generated passwords - 8 or more are recommended'))
-		self.inputbox_password.add(self.spin_pwlen, _('Length of generated passwords'))
+		self.section_password.append_widget(_('Length of generated passwords'), self.spin_pwlen)
 
 
-	def __init_inputbox_toolbar(self, page):
-		"Sets up the toolbar inputbox"
+	def __init_section_toolbar(self, page):
+		"Sets up the toolbar section"
 
-		self.inputbox_toolbar = page.add_inputbox(_('Toolbar Style'))
+		self.section_toolbar = page.add_section(_('Toolbar Style'))
 
 		# radio-button for desktop default
 		self.radio_toolbar_desktop = ui.RadioButton(None, _('Use desktop default'))
-		self.config.bind_widget("view/toolbar_style", self.radio_toolbar_desktop, "desktop")
+		ui.config_bind(self.config, "view/toolbar_style", self.radio_toolbar_desktop, "desktop")
 
 		self.tooltips.set_tip(self.radio_toolbar_desktop, _('Show toolbar items with default style'))
-		self.inputbox_toolbar.add(self.radio_toolbar_desktop)
+		self.section_toolbar.append_widget(None, self.radio_toolbar_desktop)
 
 		# radio-button for icons and text
 		self.radio_toolbar_both = ui.RadioButton(self.radio_toolbar_desktop, _('Show icons and text'))
-		self.config.bind_widget("view/toolbar_style", self.radio_toolbar_both, "both")
+		ui.config_bind(self.config, "view/toolbar_style", self.radio_toolbar_both, "both")
 
 		self.tooltips.set_tip(self.radio_toolbar_both, _('Show toolbar items with both icons and text'))
-		self.inputbox_toolbar.add(self.radio_toolbar_both)
+		self.section_toolbar.append_widget(None, self.radio_toolbar_both)
 
 		# radio-button for icons and important text
 		self.radio_toolbar_bothhoriz = ui.RadioButton(self.radio_toolbar_desktop, _('Show icons and important text'))
-		self.config.bind_widget("view/toolbar_style", self.radio_toolbar_bothhoriz, "both-horiz")
+		ui.config_bind(self.config, "view/toolbar_style", self.radio_toolbar_bothhoriz, "both-horiz")
 
 		self.tooltips.set_tip(self.radio_toolbar_bothhoriz, _('Show toolbar items with text beside important icons'))
-		self.inputbox_toolbar.add(self.radio_toolbar_bothhoriz)
+		self.section_toolbar.append_widget(None, self.radio_toolbar_bothhoriz)
 
 		# radio-button for icons only
 		self.radio_toolbar_icons = ui.RadioButton(self.radio_toolbar_desktop, _('Show icons only'))
-		self.config.bind_widget("view/toolbar_style", self.radio_toolbar_icons, "icons")
+		ui.config_bind(self.config, "view/toolbar_style", self.radio_toolbar_icons, "icons")
 
 		self.tooltips.set_tip(self.radio_toolbar_icons, _('Show toolbar items with icons only'))
-		self.inputbox_toolbar.add(self.radio_toolbar_icons)
+		self.section_toolbar.append_widget(None, self.radio_toolbar_icons)
 
 		# radio-button for text only
 		self.radio_toolbar_text = ui.RadioButton(self.radio_toolbar_desktop, _('Show text only'))
-		self.config.bind_widget("view/toolbar_style", self.radio_toolbar_text, "text")
+		ui.config_bind(self.config, "view/toolbar_style", self.radio_toolbar_text, "text")
 
 		self.tooltips.set_tip(self.radio_toolbar_text, _('Show toolbar items with text only'))
-		self.inputbox_toolbar.add(self.radio_toolbar_text)
+		self.section_toolbar.append_widget(None, self.radio_toolbar_text)
 
 
 	def run(self):
 		"Runs the preference dialog"
 
 		self.show_all()
-		self.present()
+
+		if dialog.EVENT_FILTER != None:
+			self.window.add_filter(dialog.EVENT_FILTER)
 
 		# for some reason, gtk crashes on close-by-escape unless we do this
-		self.get_response_widget(gtk.RESPONSE_CLOSE).grab_focus()
+		self.get_button(0).grab_focus()
 		self.notebook.grab_focus()
 
 

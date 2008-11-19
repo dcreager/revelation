@@ -1,0 +1,55 @@
+0.5.x:
+- make password drag/drop work with mozilla/firefox
+- port to gtk+ 2.8 / gnome 2.12
+  - ellpisize labels in data view with gtk+ api
+- bugfix: make autolock filter trigger on certain events only
+  (needs pygtk bug #156948 to be fixed first)
+- check errors when opening files from dav:// urls
+- port HIG-improvements from sputnik
+- detect XDG prefix and install mime/icons to correct dir
+- restructure the configuration layout
+- fix insane constant polling with gnome-vfs monitoring
+  (http://blogs.gnome.org/view/ryanl/2006/07/27/0)
+
+0.6.x:
+- ensure complete UTF-8 support
+- fix unicode encoding/decoding on import/export
+  (this also means encoding/decoding the file password)
+- improve the file format
+  - remove namespacing for field identifiers
+  - add a unique id for each entry (md5sum or something)
+  - xml namespace (can identify xml type in fd.o mime system)
+  - add note / comment field to accounts
+  - add remote desktop account type
+  - add im account type
+  - clean up the account types
+  - possibility for custom account types
+  - custom launchers
+  - account type for cd-keys (games, apps etc)
+  - "file" account type - stores file path and password, launches
+    app based on MIME-type on "go to"
+- file merging (union - this *really* need unique entry ids)
+- sorting of the tree
+- add a dropdown widget for list fields (like email protocol etc)
+- recent docs
+- add import/export of GPasMan files
+- add import/export of zsafe files
+- add import/export of gnukeyring files
+- add import/export of web confidential files
+- add import/export from browser (firefox, mozilla, epiphany, galeon)
+- searchable notes?
+
+0.6.x:
+- misc command-line arguments
+- terminal-friendly frontend (curses-based?)
+- dbus-server for getting/setting account data
+- accessibility improvements
+- help / documentation
+
+1.0.x:
+- attempt full HIG compliance
+- misc polishing
+
+2.0.x:
+- use gnome-keyring as backend?
+

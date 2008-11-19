@@ -23,33 +23,257 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 
-import account, config, datahandler, entry, stock, ui, util
-import shinygnome.ui, shinygnome.util
+import config, datahandler, entry, io, ui, util
 
-import gettext, gtk
+import gettext, gnome.ui, gobject, gtk, urllib
 
 _ = gettext.gettext
 
 
+EVENT_FILTER		= None
+UNIQUE_DIALOGS		= {}
+
+
+gtk.rc_parse_string("""
+	style "hig" {
+		GtkDialog::content-area-border	= 0
+		GtkDialog::action-area-border	= 0
+	}
+
+	class "GtkDialog" style "hig"
+""")
+
+
 ##### EXCEPTIONS #####
 
-CancelError		= shinygnome.ui.CancelError
+class CancelError(Exception):
+	"Exception for dialog cancellations"
+	pass
 
 
 
 ##### BASE DIALOGS #####
 
-Dialog 			= shinygnome.ui.Dialog
-Error			= shinygnome.ui.ErrorMessageDialog
-Info			= shinygnome.ui.InfoMessageDialog
-Message			= shinygnome.ui.MessageDialog
-Popup			= shinygnome.ui.Popup
-Question		= shinygnome.ui.QuestionMessageDialog
-Utility			= shinygnome.ui.UtilityDialog
-Warning			= shinygnome.ui.WarningMessageDialog
+class Dialog(gtk.Dialog):
+	"Base class for dialogs"
 
-unique			= shinygnome.ui.unique_dialog
-add_event_filter	= shinygnome.ui.add_dialog_event_filter
+	def __init__(self, parent, title, buttons = (), default = None):
+		gtk.Dialog.__init__(
+			self, title, parent,
+			gtk.DIALOG_DESTROY_WITH_PARENT | gtk.DIALOG_NO_SEPARATOR
+		)
+
+		self.set_border_width(12)
+		self.vbox.set_spacing(12)
+		self.set_resizable(False)
+		self.set_modal(True)
+
+		self.connect("key_press_event", self.__cb_keypress)
+		self.connect("realize", self.__cb_realize)
+
+		for stock, response in buttons:
+			self.add_button(stock, response)
+
+		if default != None:
+			self.set_default_response(default)
+
+		elif len(buttons) > 0:
+			self.set_default_response(buttons[-1][1])
+
+
+	def __cb_keypress(self, widget, data):
+		"Callback for handling key presses"
+
+		# close the dialog on escape
+		if data.keyval == 65307:
+			self.response(gtk.RESPONSE_CLOSE)
+
+
+	def __cb_realize(self, widget, data = None):
+		"Callback for widget realization"
+
+		self.action_area.set_spacing(6)
+
+
+	def get_button(self, index):
+		"Get one of the dialog buttons"
+
+		buttons = self.action_area.get_children()
+
+		if index < len(buttons):
+			return buttons[index]
+
+
+	def run(self):
+		"Runs the dialog"
+
+		self.show_all()
+
+		if EVENT_FILTER != None:
+			self.window.add_filter(EVENT_FILTER)
+
+		while 1:
+			response = gtk.Dialog.run(self)
+
+			if response == gtk.RESPONSE_NONE:
+				continue
+
+			return response
+
+
+
+class Popup(gtk.Window):
+	"Base class for popup (frameless) dialogs"
+
+	def __init__(self, widget = None):
+		gtk.Window.__init__(self)
+		self.set_decorated(False)
+
+		self.border = gtk.Frame()
+		self.border.set_shadow_type(gtk.SHADOW_OUT)
+		gtk.Window.add(self, self.border)
+
+		if widget != None:
+			self.add(widget)
+
+		self.connect("key-press-event", self.__cb_keypress)
+
+
+	def __cb_keypress(self, widget, data):
+		"Callback for key presses"
+
+		if data.keyval == 65307:
+			self.close()
+
+
+	def add(self, widget):
+		"Adds a widget to the window"
+
+		self.border.add(widget)
+
+
+	def close(self):
+		"Closes the dialog"
+
+		self.hide()
+		self.emit("closed")
+		self.destroy()
+
+
+	def realize(self):
+		"Realizes the popup and displays children"
+
+		gtk.Window.realize(self)
+
+		for child in self.get_children():
+			child.show_all()
+
+
+	def show(self, x = None, y = None):
+		"Show the dialog"
+
+		if x != None and y != None:
+			self.move(x, y)
+
+		self.show_all()
+
+
+gobject.signal_new("closed", Popup, gobject.SIGNAL_ACTION, gobject.TYPE_BOOLEAN, ())
+
+
+
+class Utility(Dialog):
+	"A utility dialog"
+
+	def __init__(self, parent, title, buttons = ( ( gtk.STOCK_CLOSE, gtk.RESPONSE_CLOSE ), ), default = None):
+		Dialog.__init__(self, parent, title, buttons, default)
+
+		self.set_border_width(12)
+		self.vbox.set_spacing(18)
+
+		self.sizegroup	= gtk.SizeGroup(gtk.SIZE_GROUP_HORIZONTAL)
+		self.tooltips	= gtk.Tooltips()
+
+
+	def add_section(self, title, description = None):
+		"Adds an input section to the dialog"
+
+		section = ui.InputSection(title, description, self.sizegroup)
+		self.vbox.pack_start(section)
+
+		return section
+
+
+
+class Message(Dialog):
+	"A message dialog"
+
+	def __init__(self, parent, title, text, stockimage, buttons = (), default = None):
+		Dialog.__init__(self, parent, "", buttons, default)
+
+		# hbox with image and contents
+		hbox = ui.HBox()
+		hbox.set_spacing(12)
+		self.vbox.pack_start(hbox)
+		self.vbox.set_spacing(24)
+
+		# set up image
+		if stockimage != None:
+			image = ui.Image(stockimage, gtk.ICON_SIZE_DIALOG)
+			image.set_alignment(0.5, 0)
+			hbox.pack_start(image, False, False)
+
+		# set up message
+		self.contents = ui.VBox()
+		self.contents.set_spacing(10)
+		hbox.pack_start(self.contents)
+
+		label = ui.Label("<span size=\"larger\" weight=\"bold\">%s</span>\n\n%s" % ( util.escape_markup(title), text))
+		label.set_alignment(0, 0)
+		label.set_selectable(True)
+		self.contents.pack_start(label)
+
+
+	def run(self):
+		"Displays the dialog"
+
+		self.show_all()
+		response = Dialog.run(self)
+		self.destroy()
+
+		return response
+
+
+
+class Error(Message):
+	"Displays an error message"
+
+	def __init__(self, parent, title, text, buttons = ( ( gtk.STOCK_OK, gtk.RESPONSE_OK), ), default = None):
+		Message.__init__(self, parent, title, text, gtk.STOCK_DIALOG_ERROR, buttons, default)
+
+
+
+class Info(Message):
+	"Displays an info message"
+
+	def __init__(self, parent, title, text, buttons = ( ( gtk.STOCK_OK, gtk.RESPONSE_OK ), ), default = None):
+		Message.__init__(self, parent, title, text, gtk.STOCK_DIALOG_INFO, buttons, default)
+
+
+
+class Question(Message):
+	"Displays a question"
+
+	def __init__(self, parent, title, text, buttons = ( ( gtk.STOCK_OK, gtk.RESPONSE_OK ), ), default = None):
+		Message.__init__(self, parent, title, text, gtk.STOCK_DIALOG_QUESTION, buttons, default)
+
+
+
+class Warning(Message):
+	"Displays a warning message"
+
+	def __init__(self, parent, title, text, buttons = ( ( gtk.STOCK_OK, gtk.RESPONSE_OK ), ), default = None):
+		Message.__init__(self, parent, title, text, ui.STOCK_WARNING, buttons, default)
 
 
 
@@ -61,7 +285,7 @@ class FileChanged(Warning):
 	def __init__(self, parent, filename):
 		Warning.__init__(
 			self, parent, _('File has changed'), _('The current file \'%s\' has changed. Do you want to reload it?') % filename,
-			( ( gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL ), ( stock.STOCK_RELOAD, gtk.RESPONSE_OK ) )
+			( ( gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL ), ( ui.STOCK_RELOAD, gtk.RESPONSE_OK ) )
 		)
 
 
@@ -81,7 +305,7 @@ class FileChanges(Warning):
 	def __init__(self, parent, title, text):
 		Warning.__init__(
 			self, parent, title, text,
-			( ( stock.STOCK_DISCARD, gtk.RESPONSE_ACCEPT ), ( gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL ), ( gtk.STOCK_SAVE, gtk.RESPONSE_OK ) )
+			( ( ui.STOCK_DISCARD, gtk.RESPONSE_ACCEPT ), ( gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL ), ( gtk.STOCK_SAVE, gtk.RESPONSE_OK ) )
 		)
 
 
@@ -134,6 +358,29 @@ class FileChangesQuit(FileChanges):
 
 
 
+class FileReplace(Warning):
+	"Asks for confirmation when replacing a file"
+
+	def __init__(self, parent, file):
+		Warning.__init__(
+			self, parent, _('Replace existing file?'),
+			_('The file \'%s\' already exists - do you wish to replace this file?') % file,
+			( ( gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL ), ( ui.STOCK_REPLACE, gtk.RESPONSE_OK ) ),
+			gtk.RESPONSE_CANCEL
+		)
+
+
+	def run(self):
+		"Displays the dialog"
+
+		if Warning.run(self) == gtk.RESPONSE_OK:
+			return True
+
+		else:
+			raise CancelError
+
+
+
 class FileSaveInsecure(Warning):
 	"Asks for confirmation when exporting to insecure file"
 
@@ -158,79 +405,204 @@ class FileSaveInsecure(Warning):
 
 ##### FILE SELECTION DIALOGS #####
 
-class ExportFileChooser(shinygnome.ui.SaveFileChooserDialog):
+class FileSelector(gtk.FileChooserDialog):
+	"A normal file selector"
+
+	def __init__(self, parent, title = None, action = gtk.FILE_CHOOSER_ACTION_OPEN, stockbutton = None):
+
+		if stockbutton is None:
+			if action == gtk.FILE_CHOOSER_ACTION_OPEN:
+				stockbutton = gtk.STOCK_OPEN
+
+			elif action == gtk.FILE_CHOOSER_ACTION_SAVE:
+				stockbutton = gtk.STOCK_SAVE
+
+		gtk.FileChooserDialog.__init__(
+			self, title, parent, action,
+			( gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL, stockbutton, gtk.RESPONSE_OK )
+		)
+
+		self.set_local_only(False)
+		self.set_default_response(gtk.RESPONSE_OK)
+
+		self.inputsection = None
+
+
+	def add_widget(self, title, widget):
+		"Adds a widget to the file selection"
+
+		if self.inputsection == None:
+			self.inputsection = ui.InputSection()
+			self.set_extra_widget(self.inputsection)
+
+		self.inputsection.append_widget(title, widget)
+
+
+	def get_filename(self):
+		"Returns the file URI"
+
+		uri = self.get_uri()
+
+		if uri == None:
+			return None
+
+		else:
+			return io.file_normpath(urllib.unquote(uri))
+
+
+	def run(self):
+		"Displays and runs the file selector, returns the filename"
+
+		self.show_all()
+
+		if EVENT_FILTER != None:
+			self.window.add_filter(EVENT_FILTER)
+
+		response = gtk.FileChooserDialog.run(self)
+		filename = self.get_filename()
+		self.destroy()
+
+		if response == gtk.RESPONSE_OK:
+			return filename
+
+		else:
+			raise CancelError
+
+
+
+class ExportFileSelector(FileSelector):
 	"A file selector for exporting files"
 
 	def __init__(self, parent):
-		shinygnome.ui.SaveFileChooserDialog.__init__(self, _('Select File to Export to'), parent, stock.STOCK_EXPORT)
+		FileSelector.__init__(
+			self, parent, _('Select File to Export to'),
+			gtk.FILE_CHOOSER_ACTION_SAVE, ui.STOCK_EXPORT
+		)
 
 		# set up filetype dropdown
-		self.dropdown = ui.SimpleComboBox()
-		self.dropdown.connect("changed", lambda w: setattr(self, "handler", self.dropdown.get_active_item()[-1]))
+		self.dropdown = ui.DropDown()
+		self.add_widget(_('Filetype'), self.dropdown)
 
 		for handler in datahandler.get_export_handlers():
 			self.dropdown.append_item(handler.name, None, handler)
 
-			if handler == datahandler.RevelationXML:
-				self.dropdown.set_active(self.dropdown.get_size() - 1)
-
-		self.add_widget(self.dropdown, _('Filetype'))
+		for index in range(self.dropdown.get_num_items()):
+			if self.dropdown.get_item(index)[2] == datahandler.RevelationXML:
+				self.dropdown.set_active(index)
 
 
 	def run(self):
 		"Displays the dialog"
 
-		return shinygnome.ui.SaveFileChooserDialog.run(self), getattr(self, "handler", None)
+		self.show_all()
+		self.inputsection.show_all()
+
+		if gtk.FileSelection.run(self) == gtk.RESPONSE_OK:
+			filename = self.get_filename()
+			handler = self.dropdown.get_active_item()[2]
+			self.destroy()
+
+			return filename, handler
+
+		else:
+			self.destroy()
+			raise CancelError
 
 
 
-class ImportFileChooser(shinygnome.ui.OpenFileChooserDialog):
-	"A file chooser for importing files"
+class ImportFileSelector(FileSelector):
+	"A file selector for importing files"
 
 	def __init__(self, parent):
-		shinygnome.ui.OpenFileChooserDialog.__init__(self, _('Select File to Import'), parent, stock.STOCK_IMPORT)
+		FileSelector.__init__(
+			self, parent, _('Select File to Import'),
+			gtk.FILE_CHOOSER_ACTION_OPEN, ui.STOCK_IMPORT
+		)
 
 		# set up filetype dropdown
-		self.dropdown = ui.SimpleComboBox()
-		self.dropdown.connect("changed", lambda w: setattr(self, "handler", self.dropdown.get_active_item()[-1]))
+		self.dropdown = ui.DropDown()
+		self.add_widget(_('Filetype'), self.dropdown)
+
 		self.dropdown.append_item(_('Automatically detect'))
 
 		for handler in datahandler.get_import_handlers():
 			self.dropdown.append_item(handler.name, None, handler)
 
-		self.add_widget(self.dropdown, _('Filetype'))
-
 
 	def run(self):
 		"Displays the dialog"
 
-		return shinygnome.ui.OpenFileChooserDialog.run(self), getattr(self, "handler", None)
+		self.show_all()
+		self.inputsection.show_all()
+
+		if gtk.FileSelection.run(self) == gtk.RESPONSE_OK:
+			filename = self.get_filename()
+			handler = self.dropdown.get_active_item()[2]
+			self.destroy()
+
+			return filename, handler
+
+		else:
+			self.destroy()
+			raise CancelError
 
 
 
-class OpenFileChooser(shinygnome.ui.OpenFileChooserDialog):
-	"A file chooser for opening files"
+class OpenFileSelector(FileSelector):
+	"A file selector for opening files"
 
 	def __init__(self, parent):
-		shinygnome.ui.OpenFileChooserDialog.__init__(self, _('Select File to Open'), parent)
+		FileSelector.__init__(
+			self, parent, _('Select File to Open'),
+			gtk.FILE_CHOOSER_ACTION_OPEN, gtk.STOCK_OPEN
+		)
 
-		self.add_filter([
-			shinygnome.ui.FileFilter(_('Revelation files'), None, "application/x-revelation"),
-			shinygnome.ui.FileFilter(_('All files'), "*"),
-		])
+		filter = gtk.FileFilter()
+		filter.set_name(_('Revelation files'))
+		filter.add_mime_type("application/x-revelation")
+		self.add_filter(filter)
+
+		filter = gtk.FileFilter()
+		filter.set_name(_('All files'))
+		filter.add_pattern("*")
+		self.add_filter(filter)
 
 
 
-class SaveFileChooser(shinygnome.ui.SaveFileChooserDialog):
+class SaveFileSelector(FileSelector):
 	"A file selector for saving files"
 
 	def __init__(self, parent):
-		shinygnome.ui.SaveFileChooserDialog.__init__(self, _('Select File to Save to'), parent)
+		FileSelector.__init__(
+			self, parent, _('Select File to Save to'),
+			gtk.FILE_CHOOSER_ACTION_SAVE, gtk.STOCK_SAVE
+		)
 
-		self.add_filter([
-			shinygnome.ui.FileFilter(_('Revelation files'), None, "application/x-revelation"),
-			shinygnome.ui.FileFilter(_('All files'), "*"),
-		])
+		filter = gtk.FileFilter()
+		filter.set_name(_('Revelation files'))
+		filter.add_mime_type("application/x-revelation")
+		self.add_filter(filter)
+
+		filter = gtk.FileFilter()
+		filter.set_name(_('All files'))
+		filter.add_pattern("*")
+		self.add_filter(filter)
+
+		self.set_do_overwrite_confirmation(True)
+		self.connect("confirm-overwrite", self.__cb_confirm_overwrite)
+
+
+	def __cb_confirm_overwrite(self, widget, data = None):
+		"Handles confirm-overwrite signals"
+
+		try:
+			FileReplace(self, io.file_normpath(self.get_uri())).run()
+
+		except CancelError:
+			return gtk.FILE_CHOOSER_CONFIRMATION_SELECT_AGAIN
+
+		else:
+			return gtk.FILE_CHOOSER_CONFIRMATION_ACCEPT_FILENAME
 
 
 
@@ -247,8 +619,8 @@ class Password(Message):
 
 		self.entries = []
 
-		self.inputbox_passwords = ui.InputBox()
-		self.add(self.inputbox_passwords)
+		self.sect_passwords = ui.InputSection()
+		self.contents.pack_start(self.sect_passwords)
 
 
 	def add_entry(self, name, entry = None):
@@ -258,7 +630,7 @@ class Password(Message):
 			entry = ui.Entry()
 			entry.set_visibility(False)
 
-		self.inputbox_passwords.add(entry, name)
+		self.sect_passwords.append_widget(name, entry)
 		self.entries.append(entry)
 
 		return entry
@@ -268,7 +640,6 @@ class Password(Message):
 		"Displays the dialog"
 
 		self.show_all()
-		self.present()
 
 		if len(self.entries) > 0:
 			self.entries[0].grab_focus()
@@ -284,7 +655,7 @@ class PasswordChange(Password):
 		Password.__init__(
 			self, parent, _('Enter new password'),
 			_('Enter a new password for the current data file. The file must be saved before the new password is applied.'),
-			stock.STOCK_PASSWORD_CHANGE
+			ui.STOCK_PASSWORD_CHANGE
 		)
 
 		self.password = password
@@ -339,10 +710,10 @@ class PasswordLock(Password):
 		Password.__init__(
 			self, parent, _('Enter password to unlock file'),
 			_('The current file has been locked, please enter the file password to unlock it.'),
-			stock.STOCK_UNLOCK
+			ui.STOCK_UNLOCK
 		)
 
-		self.get_response_widget(gtk.RESPONSE_CANCEL).set_label(gtk.STOCK_QUIT)
+		self.get_button(1).set_label(gtk.STOCK_QUIT)
 
 		self.password = password
 		self.entry_password = self.add_entry(_('Password'))
@@ -368,7 +739,7 @@ class PasswordLock(Password):
 					Error(self, _('Incorrect password'), _('The password you entered was not correct, please try again.')).run()
 
 			except CancelError:
-				if self.get_response_widget(gtk.RESPONSE_CANCEL).get_property("sensitive") == True:
+				if self.get_button(1).get_property("sensitive") == True:
 					self.destroy()
 					raise
 
@@ -456,90 +827,6 @@ class PasswordSave(Password):
 				return password
 
 
-##### ACCOUNT DIALOGS #####
-
-class AccountEdit(Utility):
-	"A dialog for editing account"
-
-	def __init__(self, parent, title, accounttypes, acct = None):
-		Utility.__init__(self, parent, title, (
-			( gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL ),
-			( acct and stock.STOCK_UPDATE or stock.STOCK_CREATE, gtk.RESPONSE_OK )
-		))
-
-		self.accounttypes	= accounttypes
-
-		# set up the meta inputbox
-		self.input_meta		= self.add_inputbox(title)
-
-		self.entry_name		= ui.Entry()
-		self.entry_name.set_width_chars(50)
-		self.entry_desc		= ui.Entry()
-		self.entry_tags		= ui.Entry()
-		self.dropdown		= ui.AccountTypeDropdown(self.accounttypes)
-		self.dropdown.connect("changed", lambda w: self.__setup_fields(self.dropdown.get_active_accounttype().fields))
-
-		self.input_meta.add(self.entry_name, _('Name'))
-		self.input_meta.add(self.entry_desc, _('Description'))
-		self.input_meta.add(self.entry_tags, _('Tags'))
-		self.input_meta.add(self.dropdown, _('Account Type'))
-
-		self.tooltips.set_tip(self.entry_name, _('The name of the account'))
-		self.tooltips.set_tip(self.entry_desc, _('A description of the account'))
-		self.tooltips.set_tip(self.entry_tags, _('A list of comma-separated keywords for the account'))
-		self.tooltips.set_tip(self.dropdown, _('The type of account'))
-
-		# set up the field inputbox
-		self.input_fields	= self.add_inputbox(_('Account Data'))
-
-
-	def __setup_fields(self, fields):
-		"Generates a field section based on a field list"
-
-		self.input_fields.clear()
-
-		for field in fields:
-			self.input_fields.add(field.get_edit_widget(), field.name)
-
-		self.input_fields.show_all()
-
-
-	def get_account(self):
-		"Creates an account from the dialog contents"
-
-		acct			= account.Account(self.dropdown.get_active_accounttype())
-		acct.name		= self.entry_name.get_text()
-		acct.description	= self.entry_desc.get_text()
-
-		acct.tags.from_string(self.entry_tags.get_text())
-
-		for field, editor in zip(self.dropdown.get_active_accounttype().fields, self.input_fields.get_widgets()):
-			acct.fields.append(account.Field(field.name, editor.get_text(), field.datatype, field.description))
-
-		return acct
-
-
-	def run(self):
-		"Runs the dialog"
-
-		while True:
-			self.show_all()
-
-			if Utility.run(self) != gtk.RESPONSE_OK:
-				self.destroy()
-				raise CancelError
-
-			acct = self.get_account()
-
-			if acct.name == "":
-				Error(self, _('No name'), _('You must enter a name for the account')).run()
-				continue
-
-			self.destroy()
-
-			return acct
-
-
 
 ##### ENTRY DIALOGS #####
 
@@ -551,7 +838,7 @@ class EntryEdit(Utility):
 			self, parent, title,
 			(
 				( gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL ),
-				( e is None and stock.STOCK_NEW_ENTRY or stock.STOCK_UPDATE, gtk.RESPONSE_OK )
+				( e is None and ui.STOCK_NEW_ENTRY or ui.STOCK_UPDATE, gtk.RESPONSE_OK )
 			)
 		)
 
@@ -562,23 +849,23 @@ class EntryEdit(Utility):
 		self.widgetdata		= {}
 
 		# set up the ui
-		self.input_meta		= self.add_inputbox(title)
-		self.input_fields	= self.add_inputbox(_('Account Data'))
+		self.sect_meta		= self.add_section(title)
+		self.sect_fields	= self.add_section(_('Account Data'))
 
 		self.entry_name = ui.Entry()
 		self.entry_name.set_width_chars(50)
 		self.tooltips.set_tip(self.entry_name, _('The name of the entry'))
-		self.input_meta.add(self.entry_name, _('Name'))
+		self.sect_meta.append_widget(_('Name'), self.entry_name)
 
 		self.entry_desc = ui.Entry()
 		self.tooltips.set_tip(self.entry_desc, _('A description of the entry'))
-		self.input_meta.add(self.entry_desc, _('Description'))
+		self.sect_meta.append_widget(_('Description'), self.entry_desc)
 
 		self.dropdown = ui.EntryDropDown()
 		self.dropdown.connect("changed", lambda w: self.__setup_fieldsect(self.dropdown.get_active_type()().fields))
 		eventbox = ui.EventBox(self.dropdown)
 		self.tooltips.set_tip(eventbox, _('The type of entry'))
-		self.input_meta.add(eventbox, _('Type'))
+		self.sect_meta.append_widget(_('Type'), eventbox)
 
 		# populate the dialog with data
 		self.set_entry(e)
@@ -592,7 +879,7 @@ class EntryEdit(Utility):
 			self.fielddata[fieldtype] = fieldentry.get_text()
 
 		self.entry_field = {}
-		self.input_fields.clear()
+		self.sect_fields.clear()
 
 		# generate field entries
 		for field in fields:
@@ -618,11 +905,11 @@ class EntryEdit(Utility):
 			elif hasattr(fieldentry, "entry") == True:
 				self.tooltips.set_tip(fieldentry.entry, field.description)
 
-			self.input_fields.add(fieldentry, field.name)
+			self.sect_fields.append_widget(field.name, fieldentry)
 
 
 		# show widgets
-		self.input_fields.show_all()
+		self.sect_fields.show_all()
 
 
 	def get_entry(self):
@@ -679,7 +966,7 @@ class EntryEdit(Utility):
 		self.widgetdata[fieldtype] = userdata
 
 		if fieldtype == entry.UsernameField and self.entry_field.has_key(entry.UsernameField):
-			self.entry_field[entry.UsernameField].set_items(userdata)
+			self.entry_field[entry.UsernameField].set_values(userdata)
 
 
 
@@ -703,7 +990,7 @@ class EntryRemove(Warning):
 
 		Warning.__init__(
 			self, parent, title, text,
-			( ( gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL ), ( stock.STOCK_REMOVE, gtk.RESPONSE_OK ) ),
+			( ( gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL ), ( ui.STOCK_REMOVE, gtk.RESPONSE_OK ) ),
 			0
 		)
 
@@ -727,21 +1014,21 @@ class FolderEdit(Utility):
 			self, parent, title,
 			(
 				( gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL ),
-				( e == None and stock.STOCK_NEW_FOLDER or stock.STOCK_UPDATE, gtk.RESPONSE_OK )
+				( e == None and ui.STOCK_NEW_FOLDER or ui.STOCK_UPDATE, gtk.RESPONSE_OK )
 			)
 		)
 
 		# set up the ui
-		self.inputbox_folder	= self.add_inputbox(title)
+		self.sect_folder	= self.add_section(title)
 
 		self.entry_name = ui.Entry()
 		self.entry_name.set_width_chars(25)
 		self.tooltips.set_tip(self.entry_name, _('The name of the folder'))
-		self.inputbox_folder.add(self.entry_name, _('Name'))
+		self.sect_folder.append_widget(_('Name'), self.entry_name)
 
 		self.entry_desc = ui.Entry()
 		self.tooltips.set_tip(self.entry_desc, _('A description of the folder'))
-		self.inputbox_folder.add(self.entry_desc, _('Description'))
+		self.sect_folder.append_widget(_('Description'), self.entry_desc)
 
 		# populate the dialog with data
 		self.set_entry(e)
@@ -791,11 +1078,14 @@ class FolderEdit(Utility):
 
 ##### MISCELLANEOUS DIALOGS #####
 
-class About(shinygnome.ui.AboutDialog):
+class About(gtk.AboutDialog):
 	"About dialog"
 
 	def __init__(self, parent):
-		shinygnome.ui.AboutDialog.__init__(self, parent)
+		gtk.AboutDialog.__init__(self)
+
+		if isinstance(parent, gtk.Window):
+			self.set_transient_for(parent)
 
 		self.set_name(config.APPNAME)
 		self.set_version(config.VERSION)
@@ -805,7 +1095,16 @@ class About(shinygnome.ui.AboutDialog):
 		self.set_website(config.URL)
 		self.set_authors(config.AUTHORS)
 		self.set_artists(config.ARTISTS)
-		self.set_logo(parent.render_icon(stock.STOCK_REVELATION, gtk.ICON_SIZE_DIALOG))
+		self.set_logo(parent.render_icon(ui.STOCK_REVELATION, gtk.ICON_SIZE_DIALOG))
+
+
+	def run(self):
+		"Displays the dialog"
+
+		self.show_all()
+		gtk.AboutDialog.run(self)
+
+		self.destroy()
 
 
 
@@ -816,14 +1115,14 @@ class Exception(Error):
 		Error.__init__(
 			self, parent, _('Unknown error'),
 			_('An unknown error occured. Please report the text below to the Revelation developers, along with what you were doing that may have caused the error. You may attempt to continue running Revelation, but it may behave unexpectedly.'),
-			( ( gtk.STOCK_QUIT, gtk.RESPONSE_CANCEL ), ( stock.STOCK_CONTINUE, gtk.RESPONSE_OK ) )
+			( ( gtk.STOCK_QUIT, gtk.RESPONSE_CANCEL ), ( ui.STOCK_CONTINUE, gtk.RESPONSE_OK ) )
 		)
 
 		textview = ui.TextView(None, traceback)
 		scrolledwindow = ui.ScrolledWindow(textview)
 		scrolledwindow.set_size_request(-1, 120)
 
-		self.add(scrolledwindow)
+		self.contents.pack_start(scrolledwindow)
 
 
 	def run(self):
@@ -846,18 +1145,18 @@ class PasswordChecker(Utility):
 		self.set_modal(False)
 		self.set_size_request(300, -1)
 
-		self.inputbox = self.add_inputbox(_('Password Checker'))
+		self.section = self.add_section(_('Password Checker'))
 
 		self.entry = ui.PasswordEntry(None, cfg, clipboard)
 		self.entry.autocheck = False
 		self.entry.set_width_chars(40)
 		self.entry.connect("changed", self.__cb_changed)
 		self.tooltips.set_tip(self.entry, _('Enter a password to check'))
-		self.inputbox.add(self.entry, _('Password'))
+		self.section.append_widget(_('Password'), self.entry)
 
-		self.result = ui.ImageLabel(_('Enter a password to check'), stock.STOCK_UNKNOWN, ui.ICON_SIZE_HEADLINE)
+		self.result = ui.ImageLabel(_('Enter a password to check'), ui.STOCK_UNKNOWN, ui.ICON_SIZE_HEADLINE)
 		self.tooltips.set_tip(self.result, _('The result of the check'))
-		self.inputbox.add(self.result)
+		self.section.append_widget(None, self.result)
 
 		self.connect("response", self.__cb_response)
 
@@ -869,16 +1168,16 @@ class PasswordChecker(Utility):
 
 		try:
 			if len(password) == 0:
-				icon	= stock.STOCK_UNKNOWN
+				icon	= ui.STOCK_UNKNOWN
 				result	= _('Enter a password to check')
 
 			else:
 				util.check_password(password)
-				icon	= stock.STOCK_PASSWORD_STRONG
+				icon	= ui.STOCK_PASSWORD_STRONG
 				result	= _('The password seems good')
 
 		except ValueError, result:
-			icon	= stock.STOCK_PASSWORD_WEAK
+			icon	= ui.STOCK_PASSWORD_WEAK
 			result = _('The password %s') % str(result)
 
 		self.result.set_text(result)
@@ -895,11 +1194,13 @@ class PasswordChecker(Utility):
 		"Displays the dialog"
 
 		self.show_all()
-		self.present()
+
+		if EVENT_FILTER != None:
+			self.window.add_filter(EVENT_FILTER)
 
 		# for some reason, gtk crashes on close-by-escape
 		# if we don't do this
-		self.get_response_widget(gtk.RESPONSE_CLOSE).grab_focus()
+		self.get_button(0).grab_focus()
 		self.entry.grab_focus()
 
 
@@ -910,25 +1211,25 @@ class PasswordGenerator(Utility):
 	def __init__(self, parent, cfg, clipboard = None):
 		Utility.__init__(
 			self, parent, _('Password Generator'),
-			( ( gtk.STOCK_CLOSE, gtk.RESPONSE_CLOSE ), ( stock.STOCK_GENERATE, gtk.RESPONSE_OK ) )
+			( ( gtk.STOCK_CLOSE, gtk.RESPONSE_CLOSE ), ( ui.STOCK_GENERATE, gtk.RESPONSE_OK ) )
 		)
 
 		self.config = cfg
 		self.set_modal(False)
 
-		self.inputbox = self.add_inputbox(_('Password Generator'))
+		self.section = self.add_section(_('Password Generator'))
 
 		self.entry = ui.PasswordEntry(None, cfg, clipboard)
 		self.entry.autocheck = False
 		self.entry.set_editable(False)
 		self.tooltips.set_tip(self.entry, _('The generated password'))
-		self.inputbox.add(self.entry, _('Password'))
+		self.section.append_widget(_('Password'), self.entry)
 
-		self.spin_pwlen = ui.SpinButton()
+		self.spin_pwlen = ui.SpinEntry()
 		self.spin_pwlen.set_range(4, 256)
 		self.spin_pwlen.set_value(self.config.get("passwordgen/length"))
 		self.tooltips.set_tip(self.spin_pwlen, ('The number of characters in generated passwords - 8 or more are recommended'))
-		self.inputbox.add(self.spin_pwlen, _('Length'))
+		self.section.append_widget(_('Length'), self.spin_pwlen)
 
 		self.connect("response", self.__cb_response)
 
@@ -947,7 +1248,71 @@ class PasswordGenerator(Utility):
 		"Displays the dialog"
 
 		self.show_all()
-		self.present()
+		self.get_button(0).grab_focus()
 
-		self.get_response_widget(gtk.RESPONSE_CLOSE).grab_focus()
+		if EVENT_FILTER != None:
+			self.window.add_filter(EVENT_FILTER)
+
+
+
+##### FUNCTIONS #####
+
+def create_unique(dialog, *args):
+	"Creates a unique dialog"
+
+	if present_unique(dialog) == True:
+		return get_unique(dialog)
+
+	else:
+		UNIQUE_DIALOGS[dialog] = dialog(*args)
+		UNIQUE_DIALOGS[dialog].connect("destroy", lambda w: remove_unique(dialog))
+
+		return UNIQUE_DIALOGS[dialog]
+
+
+def get_unique(dialog):
+	"Returns a unique dialog"
+
+	if unique_exists(dialog) == True:
+		return UNIQUE_DIALOGS[dialog]
+
+	else:
+		return None
+
+
+def present_unique(dialog):
+	"Presents a unique dialog, if it exists"
+
+	if unique_exists(dialog) == True:
+		get_unique(dialog).present()
+
+		return True
+
+	else:
+		return False
+
+
+def remove_unique(dialog):
+	"Removes a unique dialog"
+
+	if unique_exists(dialog):
+		UNIQUE_DIALOGS[dialog] = None
+
+
+def run_unique(dialog, *args):
+	"Runs a unique dialog"
+
+	if present_unique(dialog) == True:
+		return None
+
+	else:
+		d = create_unique(dialog, *args)
+
+		return d.run()
+
+
+def unique_exists(dialog):
+	"Checks if a unique dialog exists"
+
+	return UNIQUE_DIALOGS.has_key(dialog) == True and UNIQUE_DIALOGS[dialog] != None
 

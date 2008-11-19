@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 
-from revelation import stock, ui
+from revelation import ui
 
 import copy, gettext, time
 
@@ -165,8 +165,8 @@ class FolderEntry(Entry):
 
 		self.id		= "folder"
 		self.typename	= _('Folder')
-		self.icon	= stock.STOCK_ENTRY_FOLDER
-		self.openicon	= stock.STOCK_ENTRY_FOLDER_OPEN
+		self.icon	= ui.STOCK_ENTRY_FOLDER
+		self.openicon	= ui.STOCK_ENTRY_FOLDER_OPEN
 
 
 
@@ -177,7 +177,7 @@ class CreditcardEntry(Entry):
 
 		self.id		= "creditcard"
 		self.typename	= _('Creditcard')
-		self.icon	= stock.STOCK_ENTRY_CREDITCARD
+		self.icon	= ui.STOCK_ENTRY_CREDITCARD
 
 		self.fields = [
 			CardtypeField(),
@@ -196,7 +196,7 @@ class CryptoKeyEntry(Entry):
 
 		self.id		= "cryptokey"
 		self.typename	= _('Crypto Key')
-		self.icon	= stock.STOCK_ENTRY_CRYPTOKEY
+		self.icon	= ui.STOCK_ENTRY_CRYPTOKEY
 
 		self.fields = [
 			HostnameField(),
@@ -214,7 +214,7 @@ class DatabaseEntry(Entry):
 
 		self.id		= "database"
 		self.typename	= _('Database')
-		self.icon	= stock.STOCK_ENTRY_DATABASE
+		self.icon	= ui.STOCK_ENTRY_DATABASE
 
 		self.fields = [
 			HostnameField(),
@@ -232,7 +232,7 @@ class DoorEntry(Entry):
 
 		self.id		= "door"
 		self.typename	= _('Door lock')
-		self.icon	= stock.STOCK_ENTRY_DOOR
+		self.icon	= ui.STOCK_ENTRY_DOOR
 
 		self.fields = [
 			LocationField(),
@@ -248,7 +248,7 @@ class EmailEntry(Entry):
 
 		self.id		= "email"
 		self.typename	= _('Email')
-		self.icon	= stock.STOCK_ENTRY_EMAIL
+		self.icon	= ui.STOCK_ENTRY_EMAIL
 
 		self.fields = [
 			EmailField(),
@@ -266,7 +266,7 @@ class FTPEntry(Entry):
 
 		self.id		= "ftp"
 		self.typename	= _('FTP')
-		self.icon	= stock.STOCK_ENTRY_FTP
+		self.icon	= ui.STOCK_ENTRY_FTP
 
 		self.fields = [
 			HostnameField(),
@@ -284,7 +284,7 @@ class GenericEntry(Entry):
 
 		self.id		= "generic"
 		self.typename	= _('Generic')
-		self.icon	= stock.STOCK_ENTRY_GENERIC
+		self.icon	= ui.STOCK_ENTRY_GENERIC
 
 		self.fields = [
 			HostnameField(),
@@ -301,7 +301,7 @@ class PhoneEntry(Entry):
 
 		self.id		= "phone"
 		self.typename	= _('Phone')
-		self.icon	= stock.STOCK_ENTRY_PHONE
+		self.icon	= ui.STOCK_ENTRY_PHONE
 
 		self.fields = [
 			PhonenumberField(),
@@ -317,7 +317,7 @@ class ShellEntry(Entry):
 
 		self.id		= "shell"
 		self.typename	= _('Shell')
-		self.icon	= stock.STOCK_ENTRY_SHELL
+		self.icon	= ui.STOCK_ENTRY_SHELL
 
 		self.fields = [
 			HostnameField(),
@@ -335,7 +335,7 @@ class WebEntry(Entry):
 
 		self.id		= "website"
 		self.typename	= _('Website')
-		self.icon	= stock.STOCK_ENTRY_WEBSITE
+		self.icon	= ui.STOCK_ENTRY_WEBSITE
 
 		self.fields = [
 			URLField(),
